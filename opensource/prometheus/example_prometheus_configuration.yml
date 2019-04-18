@@ -1,0 +1,58 @@
+
+#my global config
+global:
+  scrape_interval:     15s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'Prometheus Server'
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+    static_configs:
+    - targets: ['localhost:9090']
+
+# EC2 service discovery for node metrics
+  - job_name: 'OCP Nodes(SD)'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    ec2_sd_configs:
+    - region: <AWS_REGION_HERE>
+      profile: instance-profile
+      access_key: <ACCESS_KEY_HERE>
+      secret_key: <SECRET_KEY_HERE>
+      refresh_interval: 1m
+      port: 9105
+    relabel_configs:
+    # Drop the instances which are stopped
+    - source_labels: [__meta_ec2_instance_state]
+      regex: stopped
+      action: drop
+    # Only monitor instances with a Name starting with "up-ss-ocp*"= up-ss-ocp.*
+    - source_labels: [__meta_ec2_tag_Name]
+      regex: <TAG NAME TO FILTER BY>
+      action: keep
+    - source_labels: [__meta_ec2_tag_Name]
+      target_label: Name
+    - source_labels: [__meta_ec2_private_ip]
+      regex: (.*)
+      replacement: ${1}:9105
+      action: replace
+      target_label: __address__
