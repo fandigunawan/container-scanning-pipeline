@@ -57,7 +57,7 @@ pipeline {
             //sourceFile: "/anchore_gates.json",
             includePathPattern:'**/*.json',
             storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
-            userMetadata: []
+            profileName: '', userMetadata: []
 
       } // steps
     } // stage
