@@ -54,7 +54,8 @@ pipeline {
             entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
             gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
             selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false,
-             sourceFile: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/archive/AnchoreReport.${env.JOB_NAME}_${env.BUILD_NUMBER}/anchore_gates.json",
+            path: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/archive/AnchoreReport.${env.JOB_NAME}_${env.BUILD_NUMBER}",
+            sourceFile: "/anchore_gates.json",
             storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
             profileName: 'dsopdsop-pipeline-jenkins-s3-uploader', userMetadata: []
 
