@@ -57,7 +57,7 @@ pipeline {
             //sourceFile: "/anchore_gates.json",
             includePathPattern:'**/*.json',
             storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
-            profileName: 'dsopdsop-pipeline-jenkins-s3-uploader', userMetadata: []
+            userMetadata: []
 
       } // steps
     } // stage
