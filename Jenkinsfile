@@ -77,7 +77,7 @@ pipeline {
 
     stage('Push to External Registry (TODO)') {
       steps {
-        input message: "Push image ${IMAGE_TAG} to registry?"
+        //input message: "Push image ${IMAGE_TAG} to registry?"
         echo 'Pushing to Registry'
       } // steps
     } // stage
