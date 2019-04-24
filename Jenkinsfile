@@ -49,15 +49,15 @@ pipeline {
 
         //TODO: Push reports to git repo
         
-        /*s3Upload consoleLogLevel: 'INFO', dontWaitForConcurrentBuildCompletion: false,
-            entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
-            gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
-            selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false,
-            path: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/archive/AnchoreReport.${env.JOB_NAME}_${env.BUILD_NUMBER}",
-            //sourceFile: "/anchore_gates.json",
-            includePathPattern:'**/*.json',
-            storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
-            profileName: 'dsopdsop-pipeline-jenkins-s3-uploader', userMetadata: []*/
+        //s3Upload consoleLogLevel: 'INFO', dontWaitForConcurrentBuildCompletion: false,
+        //    entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
+        //    gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
+        //    selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false,
+        //    path: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/archive/AnchoreReport.${env.JOB_NAME}_${env.BUILD_NUMBER}",
+        //    //sourceFile: "/anchore_gates.json",
+        //    includePathPattern:'**/*.json',
+        //    storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
+        //    profileName: 'dsopdsop-pipeline-jenkins-s3-uploader', userMetadata: []
 
       } // steps
     } // stage
