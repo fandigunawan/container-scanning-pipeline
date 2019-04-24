@@ -53,7 +53,7 @@ pipeline {
         s3Upload consoleLogLevel: 'INFO', dontWaitForConcurrentBuildCompletion: false,
             entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
             gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
-            selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false, sourceFile: 'Anchore Reoport.${env.JOB_NAME}_${env.BUILD_NUMBER}/anchore_gates.json',
+            selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false, sourceFile: "Anchore Reoport.${env.JOB_NAME}_${env.BUILD_NUMBER}/anchore_gates.json",
             storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
             profileName: 'dsopdsop-pipeline-jenkins-s3-uploader', userMetadata: []
 
