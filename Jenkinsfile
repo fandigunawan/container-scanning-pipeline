@@ -56,7 +56,7 @@ pipeline {
             selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false,
             path: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/archive/AnchoreReport.${env.JOB_NAME}_${env.BUILD_NUMBER}",
             //sourceFile: "/anchore_gates.json",
-            includePathPattern:'**/*.json'
+            includePathPattern:'**/*.json',
             storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
             profileName: 'dsopdsop-pipeline-jenkins-s3-uploader', userMetadata: []
 
