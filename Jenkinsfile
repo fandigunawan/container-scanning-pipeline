@@ -6,16 +6,16 @@ pipeline {
     stage('Build Image (TODO)') {
       //agent { label 'docker' }
       steps {
-        echo 'Building ${JENKINS_IMAGE_TAG}'
-        // sh "docker build -t ${JENKINS_IMAGE_TAG} ."
+        echo 'Building ${IMAGE_TAG}'
+        // sh "docker build -t ${IMAGE_TAG} ."
       }
     }
     stage('Push to Staging (TODO)') {
       //agent { label 'docker' }
       steps {
-        echo 'Pushing ${JENKINS_IMAGE_TAG} to Nexus Staging'
+        echo 'Pushing ${IMAGE_TAG} to Nexus Staging'
         /*withDockerRegistry([url: 'nexus-docker.52.61.140.4.nip.io', credentialsId: 'admin/admin123']) {
-          sh "docker push nexus-docker.52.61.140.4.nip.io/${JENKINS_IMAGE_TAG}"
+          sh "docker push nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}"
         }*/
       }
     }
@@ -43,9 +43,9 @@ pipeline {
         echo 'Anchore Scan'
 
         //Below is example command that will be needed in Push to Staging step.
-        sh "echo 'nexus-docker.52.61.140.4.nip.io/up/openjdk:latest' > anchore_images"
+        sh "echo 'nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}' > anchore_images"
 
-        anchore bailOnFail: true, bailOnPluginFail: false, name: 'anchore_images'
+        anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
         //TODO: Push reports to git repo
 
@@ -54,7 +54,7 @@ pipeline {
 
     stage('Push to External Registry (TODO)') {
       steps {
-        input message: "Push image ${JENKINS_IMAGE_TAG} to registry?"
+        input message: "Push image ${IMAGE_TAG} to registry?"
         echo 'Pushing to Registry'
       } // steps
     } // stage
@@ -62,5 +62,4 @@ pipeline {
   } // stages
 
 } // pipeline
-
 
