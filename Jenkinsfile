@@ -48,6 +48,14 @@ pipeline {
         anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
         //TODO: Push reports to git repo
+        
+        //TEST: Testing s3 upload capabilities
+        s3Upload consoleLogLevel: 'INFO', dontWaitForConcurrentBuildCompletion: false,
+            entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
+            gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
+            selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false, sourceFile: 'anchore_gates.json',
+            storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
+            profileName: 'dsopdsop-pipeline-jenkins-s3-uploader', userMetadata: []
 
       } // steps
     } // stage
