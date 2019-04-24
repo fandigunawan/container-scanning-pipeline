@@ -41,12 +41,12 @@ pipeline {
               stage('SSH to OpenSCAP Node') {
                 sshCommand remote: remote, command: "sudo docker login -u admin -p admin123 nexus-docker.52.61.140.4.nip.io"
                 sshCommand remote: remote, command: "sudo docker pull nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}"
-                sshCommand remote: remote, command: "sudo oscap-docker image nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
-                sshCommand remote: remote, command: "sudo oscap-docker image-cve nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG} --report report-cve.html"
-                sshGet remote: remote, from: "/home/ec2-user/report.html", into: '/var/lib/jenkins/jobs/oscap-test/workspace/openscap-compliance-report.html', override: true
-                sshGet remote: remote, from: "/home/ec2-user/report-cve.html", into: '/var/lib/jenkins/jobs/oscap-test/workspace/openscap-cve-report.html', override: true
-                publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: '/var/lib/jenkins/jobs/oscap-test/workspace/', reportFiles: 'openscap-compliance-report.html', reportName: 'OpenSCAP Compliance Report', reportTitles: 'OpenSCAP Compliance Report'])
-                publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: '/var/lib/jenkins/jobs/oscap-test/workspace/', reportFiles: 'openscap-cve-report.html', reportName: 'OpenSCAP Vulnerability Report', reportTitles: 'OpenSCAP Vulnerability Report'])
+                sshCommand remote: remote, command: "sudo oscap-docker image nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+                sshCommand remote: remote, command: "sudo oscap-docker image-cve nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG} --report /tmp/report-cve.html"
+                sshGet remote: remote, from: "/tmp/report.html", into: './openscap-compliance-report.html', override: true
+                sshGet remote: remote, from: "/tmp/report-cve.html", into: './openscap-cve-report.html', override: true
+                publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: './', reportFiles: 'openscap-compliance-report.html', reportName: 'OpenSCAP Compliance Report', reportTitles: 'OpenSCAP Compliance Report'])
+                publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: './', reportFiles: 'openscap-cve-report.html', reportName: 'OpenSCAP Vulnerability Report', reportTitles: 'OpenSCAP Vulnerability Report'])
                 // archiveArtifacts '/var/lib/jenkins/jobs/oscap-test/workspace/openscap-compliance-report.html'
               } // script
             } // stage 
