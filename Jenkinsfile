@@ -3,30 +3,20 @@ pipeline {
   agent { label 'master' }
 
   stages {
-    stage('Build Image (TODO)') {
+  
+    stage('Pull from Staging') {
       //agent { label 'docker' }
       steps {
-        echo 'Building ${IMAGE_TAG}'
-        // sh "docker build -t ${IMAGE_TAG} ."
-      }
-    }
-    stage('Push to Staging (TODO)') {
-      //agent { label 'docker' }
-      steps {
-        echo 'Pushing ${IMAGE_TAG} to Nexus Staging'
+        echo "Pushing ${IMAGE_TAG} to Nexus Staging"
+        
+        //TODO Test docker on agent eventually
         /*withDockerRegistry([url: 'nexus-docker.52.61.140.4.nip.io', credentialsId: 'admin/admin123']) {
           sh "docker push nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}"
         }*/
       }
     }
- 
-    stage('Unit testing (TODO)') {
-      steps {
-        echo 'Unit testing'
-      } // steps
-    } // stage
 
-    stage('OpenSCAP Compliance Scan (TODO)') { 
+    stage('OpenSCAP Config') { 
       steps { 
         echo 'OpenSCAP Compliance Scan'
         script {
@@ -38,7 +28,7 @@ pipeline {
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
-              stage('SSH to OpenSCAP Node') {
+              stage('OpenSCAP Scan') {
                 sshCommand remote: remote, command: "sudo docker login -u admin -p admin123 nexus-docker.52.61.140.4.nip.io"
                 sshCommand remote: remote, command: "sudo docker pull nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}"
                 sshCommand remote: remote, command: "sudo oscap-docker image nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
