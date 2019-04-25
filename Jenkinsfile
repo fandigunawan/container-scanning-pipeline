@@ -45,9 +45,32 @@ pipeline {
       } // steps
     } // stage
 
-    stage('Twistlock Scan (TODO)') {
-      steps {      
-        echo 'Twistlock Scan'
+    stage('Twistlock Scan') {
+      steps {
+        echo 'Twistlock Compliance Scan'
+        // Using the OpenScap node to overcome docker inside docker limitations,
+        // this may use a dedicated node eventually, or be refactored to follow best practice TBD
+        script {
+          def remote = [:]
+          remote.name = "node"
+          remote.host = "ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com"
+          remote.allowAnyHosts = true
+          node {
+                // using the oscap user, this is temporary
+            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+              remote.user = userName
+              remote.identityFile = identity
+              stage('SSH to Twistlock Node') {
+                // Start the container, import the TwistCLI binary, scan image
+                sshCommand remote: remote, command: "sudo curl -k -ssl -u jenkins-svc:redhat12 https://twistlock-console-twistlock.us-gov-west-1.compute.internal/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user jenkins-svc --password redhat12 --address https://twistlock-console-twistlock.us-gov-west-1.compute.internal --details ${IMAGE_TAG}"
+                // Clean up
+                //  Stop or remove the container image if needed..
+                // ToDo - Catch, or call from the console, the twistcli scan results, and complile them with the rest of the pipeline
+                // Possibly make an API call to /images/scan/id
+              } // script
+            } // stage
+          } // withCredentials
+        } //node
       } // steps
     } // stage
 
