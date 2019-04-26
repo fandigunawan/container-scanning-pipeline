@@ -11,8 +11,6 @@ pipeline {
 
   environment {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
-    NEXUS_USERNAME = 'admin'
-    NEXUS_PASSWORD = 'admin123'
     S3_REPORT_LOCATION = 's3://dsop-pipeline-artifacts'
     TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
@@ -67,7 +65,11 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
               stage('OpenSCAP Scan') {
-                sshCommand remote: remote, command: "sudo docker login -u ${NEXUS_USERNAME} -p ${NEXUS_PASSWORD} ${NEXUS_SERVER}"
+
+                withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                  sshCommand remote: remote, command: "sudo docker login -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                }
+
                 sshCommand remote: remote, command: "sudo docker pull ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
                 sshCommand remote: remote, command: "sudo oscap-docker image ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                 sshCommand remote: remote, command: "sudo oscap-docker image-cve ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --report /tmp/report-cve.html"
@@ -110,7 +112,6 @@ pipeline {
               stage('SSH to Twistlock Node') {
                 // Start the container, import the TwistCLI binary, scan image
                 withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                  password_escaped = PASSWORD.replaceAll("&", "\\\\&")
                   sshCommand remote: remote, command: "sudo curl -k -ssl -u ${USERNAME}:'${PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${REPO_NAME}:${IMAGE_TAG} --user ${USERNAME} --password '${PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
                 }// withCredentials
                 // Clean up
