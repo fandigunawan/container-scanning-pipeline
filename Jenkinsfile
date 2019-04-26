@@ -1,3 +1,10 @@
+//Can run groovy code outside of pipeline
+//Need to get ISO Time to use for storing artifacts
+DATETIME_TAG = java.time.LocalDateTime.now()
+
+
+
+
 // Example Declarative Pipeline with Anchore Scans
 pipeline {
   agent { label 'master' }
@@ -11,6 +18,8 @@ pipeline {
     TWISTLOCK_USERNAME = 'jenkins-svc'
     TWISTLOCK_PASSWORD = 'redhat12'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
+    DATETIME_TAG = '${DATETIME_TAG}'
+
   }  // environment
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
