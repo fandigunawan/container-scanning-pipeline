@@ -8,6 +8,9 @@ pipeline {
     NEXUS_PASSWORD = 'admin123'
     S3_REPORT_LOCATION = 's3://dsop-pipeline-artifacts'
     TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
+    TWISTLOCK_USERNAME = 'jenkins-svc'
+    TWISTLOCK_PASSWORD = 'redhat12'
+    REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
   }
 
   stages {
@@ -72,7 +75,7 @@ pipeline {
               remote.identityFile = identity
               stage('SSH to Twistlock Node') {
                 // Start the container, import the TwistCLI binary, scan image
-                sshCommand remote: remote, command: "sudo curl -k -ssl -u jenkins-svc:redhat12 https://twistlock-console-twistlock.us-gov-west-1.compute.internal/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user jenkins-svc --password redhat12 --address https://twistlock-console-twistlock.us-gov-west-1.compute.internal --details ${IMAGE_TAG}"
+                sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password ${TWISTLOCK_PASSWORD} --address ${TWISTLOCK_SERVER} --details ${IMAGE_TAG}"
                 // Clean up
                 //  Stop or remove the container image if needed..
                 // ToDo - Catch, or call from the console, the twistcli scan results, and complile them with the rest of the pipeline
@@ -89,7 +92,7 @@ pipeline {
         echo 'Anchore Scan'
 
         //Below is example command that will be needed in Push to Staging step.
-        sh "echo 'nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}' > anchore_images"
+        sh "echo '${NEXUS_SERVER}/${IMAGE_TAG}' > anchore_images"
 
         anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
