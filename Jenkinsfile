@@ -2,13 +2,18 @@
 pipeline {
   agent { label 'master' }
 
+  environment {
+    NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
+
+  }
+
   stages {
-  
+
     stage('Pull from Staging') {
       //agent { label 'docker' }
       steps {
         echo "Pushing ${IMAGE_TAG} to Nexus Staging"
-        
+
         //TODO Test docker on agent eventually
         /*withDockerRegistry([url: 'nexus-docker.52.61.140.4.nip.io', credentialsId: 'admin/admin123']) {
           sh "docker push nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}"
@@ -16,8 +21,8 @@ pipeline {
       }
     }
 
-    stage('OpenSCAP Config') { 
-      steps { 
+    stage('OpenSCAP Config') {
+      steps {
         echo 'OpenSCAP Compliance Scan'
         script {
           def remote = [:]
@@ -29,7 +34,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
               stage('OpenSCAP Scan') {
-                sshCommand remote: remote, command: "sudo docker login -u admin -p admin123 nexus-docker.52.61.140.4.nip.io"
+                sshCommand remote: remote, command: "sudo docker login -u admin -p admin123 ${NEXUS_SERVER}"
                 sshCommand remote: remote, command: "sudo docker pull nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}"
                 sshCommand remote: remote, command: "sudo oscap-docker image nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                 sshCommand remote: remote, command: "sudo oscap-docker image-cve nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG} --report /tmp/report-cve.html"
@@ -41,7 +46,7 @@ pipeline {
                 publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}", reportFiles: 'openscap-cve-report.html', reportName: 'OpenSCAP Vulnerability Report', reportTitles: 'OpenSCAP Vulnerability Report'])
                 //archiveArtifacts "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-compliance-report.html"
               } // script
-            } // stage 
+            } // stage
           } // withCredentials
         } //node
       } // steps
@@ -77,7 +82,7 @@ pipeline {
     } // stage
 
     stage('Anchore Scan') {
-      steps {      
+      steps {
         echo 'Anchore Scan'
 
         //Below is example command that will be needed in Push to Staging step.
@@ -86,7 +91,7 @@ pipeline {
         anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
         //TODO: Push reports to git repo
-        
+
         // s3Upload consoleLogLevel: 'INFO', dontWaitForConcurrentBuildCompletion: false,
         //    entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
         //    gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
@@ -110,4 +115,3 @@ pipeline {
   } // stages
 
 } // pipeline
-
