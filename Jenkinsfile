@@ -82,9 +82,7 @@ pipeline {
 		// Pull latest report from the twistlock console
 		sshCommand remote: remote, command: "curl -k -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} -H 'Content-Type: application/json' -X GET ${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/up/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli | python -m json.tool | /usr/bin/aws s3 cp - ${S3_REPORT_LOCATION}/twistlock/${IMAGE_TAG}.json"
                 // Clean up
-                //  Stop or remove the container image if needed..
-                // ToDo - Catch, or call from the console, the twistcli scan results, and complile them with the rest of the pipeline
-                // Possibly make an API call to /images/scan/id
+		sshCommand remote: remote, command: "sudo docker rmi ${NEXUS_SERVER}/${IMAGE_TAG}"
               } // script
             } // stage
           } // withCredentials
