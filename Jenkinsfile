@@ -13,6 +13,8 @@ pipeline {
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
   }
 
+  parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore')}
+  
   stages {
 
     stage('Pull from Staging') {
