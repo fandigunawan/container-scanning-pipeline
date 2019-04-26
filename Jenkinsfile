@@ -164,7 +164,6 @@ pipeline {
       steps {
         //input message: "Push image ${REPO_NAME}:${IMAGE_TAG} to registry?"
         echo 'Pushing to Registry'
-        sh "gpg --list-keys"
       } // steps
     } // stage
 
