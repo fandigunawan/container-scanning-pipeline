@@ -110,7 +110,7 @@ pipeline {
               stage('SSH to Twistlock Node') {
                 // Start the container, import the TwistCLI binary, scan image
                 withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                  password_escaped = PASSWORD.replaceAll("&", "\\&")
+                  password_escaped = PASSWORD.replaceAll("&", "/\\&/")
                   sshCommand remote: remote, command: "sudo curl -k -ssl -u ${USERNAME}:${PASSWORD} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${REPO_NAME}:${IMAGE_TAG} --user ${USERNAME} --password ${password_escaped} --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
                 }// withCredentials
                 // Clean up
