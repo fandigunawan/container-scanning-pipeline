@@ -16,9 +16,8 @@ pipeline {
     S3_REPORT_LOCATION = 's3://dsop-pipeline-artifacts'
     TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
     TWISTLOCK_USERNAME = 'jenkins-svc'
-    TWISTLOCK_PASSWORD = 'redhat12'
+    TWISTLOCK_PASSWORD = credentials('TwistLock_Password')
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
-    TEST_TWISTLOCK = credentials('Something')
   }  // environment
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
@@ -42,7 +41,6 @@ pipeline {
       steps {
         echo "Pushing ${REPO_NAME}:${IMAGE_TAG} to Nexus Staging"
         echo "Artifact path is   ${S3_REPORT_LOCATION}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}"
-        echo "test ${TEST_TWISTLOCK}"
 
         //TODO Test docker on agent eventually
         /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
