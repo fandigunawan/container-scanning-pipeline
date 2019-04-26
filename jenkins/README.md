@@ -16,10 +16,10 @@ Looking to just stand up a new pipeline? Start on Step 2
 ```
 From Jenkins Dashboard go to Manage Jenkins > Manage Plugins > Available
 Install the following plugins:
-Anchore Container Scanner
-SSH Pipeline Steps
-SSH Plugin
-SSH Credentials
+ - Anchore Container Scanner
+ - SSH Pipeline Steps
+ - SSH Plugin
+ - SSH Credentials
 
 ```
 2. Create Openscap Credentials (Ignore if you did not do step 1.):
