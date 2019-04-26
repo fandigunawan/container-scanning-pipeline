@@ -11,7 +11,7 @@ pipeline {
     TWISTLOCK_USERNAME = 'jenkins-svc'
     TWISTLOCK_PASSWORD = 'redhat12'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
-  }
+  }  // environment
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
     description: "Which tools to run?", name: 'toolsToRun')
@@ -19,7 +19,7 @@ pipeline {
     string(defaultValue: "up/ubi7-hardened-dev:latest", name: 'IMAGE_TAG',
      description: "Image tag to be used by Docker, Nexus and all Scanning tools")
 
-    }
+    } // parameters
 
   stages {
 
@@ -40,8 +40,9 @@ pipeline {
         anyOf {
           environment name: "toolsToRun", value: "All"
           environment name: "toolsToRun", value: "OpenSCAP"
-        }
-      }
+        } // anyOf
+      } // when
+
       steps {
         echo 'OpenSCAP Compliance Scan'
         script {
@@ -77,8 +78,9 @@ pipeline {
         anyOf {
           environment name: "toolsToRun", value: "All"
           environment name: "toolsToRun", value: "Twistlock"
-        }
-      }
+        } // anyOf
+      } // when
+
       steps {
         echo 'Twistlock Compliance Scan'
         // Using the OpenScap node to overcome docker inside docker limitations,
@@ -112,8 +114,8 @@ pipeline {
         anyOf {
           environment name: "toolsToRun", value: "All"
           environment name: "toolsToRun", value: "Anchore"
-        }
-      }
+        }  // anyOf
+      } // when
       steps {
         echo 'Anchore Scan'
 
