@@ -62,6 +62,7 @@ pipeline {
           remote.allowAnyHosts = true
           node {
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+              openscap_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
               remote.user = userName
               remote.identityFile = identity
               stage('OpenSCAP Scan') {
@@ -74,7 +75,7 @@ pipeline {
                 sshCommand remote: remote, command: "sudo oscap-docker image ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                 sshCommand remote: remote, command: "sudo oscap-docker image-cve ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --report /tmp/report-cve.html"
                 sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/report-cve.html"
-                sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html ${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/report.html"
+                sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html ${openscap_artifact_path}/report.html"
                 sshGet remote: remote, from: "/tmp/report.html", into: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-compliance-report.html", override: true
                 sshGet remote: remote, from: "/tmp/report-cve.html", into: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-cve-report.html", override: true
                 publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}", reportFiles: 'openscap-compliance-report.html', reportName: 'OpenSCAP Compliance Report', reportTitles: 'OpenSCAP Compliance Report'])
