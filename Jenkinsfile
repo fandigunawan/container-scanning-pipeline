@@ -14,7 +14,12 @@ pipeline {
   }
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
-    description: "Which tools to run?", name: 'toolsToRun')}
+    description: "Which tools to run?", name: 'toolsToRun'),
+
+    string(defaultValue: "up/ubi7-hardened-dev:latest", name: 'IMAGE_TAG',
+     description: "Image tag to be used by Docker, Nexus and all Scanning tools")
+
+    }
 
   stages {
 
