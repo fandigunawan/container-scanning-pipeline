@@ -36,6 +36,12 @@ pipeline {
     }
 
     stage('OpenSCAP Config') {
+      when {
+        anyOf {
+          environment name: "toolsToRun", value: "All"
+          environment name: "toolsToRun", value: "OpenSCAP"
+        }
+      }
       steps {
         echo 'OpenSCAP Compliance Scan'
         script {
