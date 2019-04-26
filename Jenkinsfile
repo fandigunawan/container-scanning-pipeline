@@ -111,7 +111,7 @@ pipeline {
                 // Start the container, import the TwistCLI binary, scan image
                 withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                   password_escaped = PASSWORD.replaceAll("&", "\\\\&")
-                  sshCommand remote: remote, command: "sudo curl -k -ssl -u ${USERNAME}:${password_escaped} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${REPO_NAME}:${IMAGE_TAG} --user ${USERNAME} --password '${PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
+                  sshCommand remote: remote, command: "sudo curl -k -ssl -u ${USERNAME}:'${PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${REPO_NAME}:${IMAGE_TAG} --user ${USERNAME} --password '${PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
                 }// withCredentials
                 // Clean up
                 //  Stop or remove the container image if needed..
