@@ -73,6 +73,12 @@ pipeline {
     } // stage
 
     stage('Twistlock Scan') {
+      when {
+        anyOf {
+          environment name: "toolsToRun", value: "All"
+          environment name: "toolsToRun", value: "Twistlock"
+        }
+      }
       steps {
         echo 'Twistlock Compliance Scan'
         // Using the OpenScap node to overcome docker inside docker limitations,
@@ -102,6 +108,12 @@ pipeline {
     } // stage
 
     stage('Anchore Scan') {
+      when {
+        anyOf {
+          environment name: "toolsToRun", value: "All"
+          environment name: "toolsToRun", value: "Anchore"
+        }
+      }
       steps {
         echo 'Anchore Scan'
 
