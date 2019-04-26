@@ -21,7 +21,7 @@ pipeline {
         echo "Pushing ${IMAGE_TAG} to Nexus Staging"
 
         //TODO Test docker on agent eventually
-        /*withDockerRegistry([url: 'nexus-docker.52.61.140.4.nip.io', credentialsId: 'admin/admin123']) {
+        /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
           sh "docker push ${NEXUS_SERVER}/${IMAGE_TAG}"
         }*/
       }
@@ -33,7 +33,7 @@ pipeline {
         script {
           def remote = [:]
           remote.name = "node"
-          remote.host = "ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com"
+          remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
           node {
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
@@ -66,7 +66,7 @@ pipeline {
         script {
           def remote = [:]
           remote.name = "node"
-          remote.host = "ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com"
+          remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
           node {
                 // using the oscap user, this is temporary
