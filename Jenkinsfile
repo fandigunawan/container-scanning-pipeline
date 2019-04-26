@@ -14,7 +14,12 @@ pipeline {
   }
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
-    description: "Which tools to run?", name: 'toolsToRun')}
+    description: "Which tools to run?", name: 'toolsToRun')
+
+    string(defaultValue: "up/ubi7-hardened-dev:latest", name: 'IMAGE_TAG',
+     description: "Image tag to be used by Docker, Nexus and all Scanning tools")
+
+    }
 
   stages {
 
@@ -31,6 +36,12 @@ pipeline {
     }
 
     stage('OpenSCAP Config') {
+      when {
+        anyOf {
+          environment name: "toolsToRun", value: "All"
+          environment name: "toolsToRun", value: "OpenSCAP"
+        }
+      }
       steps {
         echo 'OpenSCAP Compliance Scan'
         script {
@@ -62,6 +73,12 @@ pipeline {
     } // stage
 
     stage('Twistlock Scan') {
+      when {
+        anyOf {
+          environment name: "toolsToRun", value: "All"
+          environment name: "toolsToRun", value: "Twistlock"
+        }
+      }
       steps {
         echo 'Twistlock Compliance Scan'
         // Using the OpenScap node to overcome docker inside docker limitations,
@@ -91,6 +108,12 @@ pipeline {
     } // stage
 
     stage('Anchore Scan') {
+      when {
+        anyOf {
+          environment name: "toolsToRun", value: "All"
+          environment name: "toolsToRun", value: "Anchore"
+        }
+      }
       steps {
         echo 'Anchore Scan'
 
