@@ -1,6 +1,6 @@
 //Can run groovy code outside of pipeline
 //Need to get ISO Time to use for storing artifacts
-DATETIME_TAG = java.time.LocalDateTime.now().getDateString()
+DATETIME_TAG = java.time.LocalDateTime.now().getDateTimeString()
 DATETIME_TAG = DATETIME_TAG.replaceAll(":", "")
 
 
