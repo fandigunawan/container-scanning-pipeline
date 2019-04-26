@@ -39,7 +39,7 @@ pipeline {
       //agent { label 'docker' }
       steps {
         echo "Pushing ${IMAGE_TAG} to Nexus Staging"
-        echo "ISO time is  ${DATETIME_TAG}"
+        echo "Artifact path is   ${S3_REPORT_LOCATION}"
 
         //TODO Test docker on agent eventually
         /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
