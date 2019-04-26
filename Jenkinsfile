@@ -18,7 +18,7 @@ pipeline {
     TWISTLOCK_USERNAME = 'jenkins-svc'
     TWISTLOCK_PASSWORD = 'redhat12'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
-    TEST_TWISTLOCK = 'credentials('Something')'
+    TEST_TWISTLOCK = credentials('Something')
   }  // environment
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
