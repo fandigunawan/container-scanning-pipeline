@@ -110,7 +110,7 @@ pipeline {
               remote.identityFile = identity
               stage('SSH to Twistlock Node') {
                 // Start the container, import the TwistCLI binary, scan image
-                sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:${$TwistLock_Password} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password ${$TwistLock_Password} --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
+                sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:${TwistLock_Password} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password ${TwistLock_Password} --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
                 // Clean up
                 //  Stop or remove the container image if needed..
                 // ToDo - Catch, or call from the console, the twistcli scan results, and complile them with the rest of the pipeline
