@@ -173,7 +173,7 @@ pipeline {
         //input message: "Push image ${REPO_NAME}:${IMAGE_TAG} to registry?"
         echo 'Pushing to Registry'
         sh "echo 'My very cool container' > sometext.txt"
-        sh "g=\$(mktemp -d) && trap \"rm -rf \$g\" EXIT || exit 255; echo '${SIGNING_KEY}' | gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} - ;gpg --detach-sign -o sig.gpg --armor --batch --passphrase ${SIGNING_KEY_PASSPHRASE} sometext.txt;cat sometext.txt; rm -fr \$g"
+        sh "g=\$(mktemp -d) && trap \"rm -rf \$g\" EXIT || exit 255;f=\$(mktemp) && trap \"rm \$f\" EXIT || exit 255; echo '${SIGNING_KEY}'  > \$f; gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$f ;gpg --detach-sign -o sig.gpg --armor --batch --passphrase ${SIGNING_KEY_PASSPHRASE} sometext.txt;cat sig.gpg; rm -fr \$g; rm \$f; rm sig.gpg"
       } // steps
     } // stage
 
