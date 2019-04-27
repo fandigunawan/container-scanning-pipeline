@@ -12,7 +12,6 @@ pipeline {
   environment {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 's3://dsop-pipeline-artifacts'
-    TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
   }  // environment
 
@@ -90,6 +89,10 @@ pipeline {
     } // stage
 
     stage('Twistlock Scan') {
+      environment {
+        TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
+      }  // environment
+
       when {
         anyOf {
           environment name: "toolsToRun", value: "All"
@@ -161,10 +164,15 @@ pipeline {
 
 
     stage('Push to External Registry (TODO)') {
+      environment {
+        SIGNING_KEY = credentials('ContainerSigningKey')
+        SIGNING_KEY_PASSPHRASE = credentials('ContainerSigningKeyPassphrase')
+      }  // environment
+
       steps {
         //input message: "Push image ${REPO_NAME}:${IMAGE_TAG} to registry?"
         echo 'Pushing to Registry'
-        sh "gpg --list-keys"
+        sh "g=$(mktemp -d) && trap "rm -rf $g" EXIT || exit 255; echo '${SIGNING_KEY}' | gpg --homedir $g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} - ;gpg --detach-sign -o sig.gpg --armor --batch --passphrase ${SIGNING_KEY_PASSPHRASE} sometext.txt;cat sometext.txt; rm -fr $g"
       } // steps
     } // stage
 
