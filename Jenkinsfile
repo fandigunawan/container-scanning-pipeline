@@ -2,52 +2,83 @@
 pipeline {
   agent { label 'master' }
 
+  environment {
+    NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
+    NEXUS_USERNAME = 'admin'
+    NEXUS_PASSWORD = 'admin123'
+    S3_REPORT_LOCATION = 's3://dsop-pipeline-artifacts'
+    TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
+    TWISTLOCK_USERNAME = 'jenkins-svc'
+    TWISTLOCK_PASSWORD = 'redhat12'
+    REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
+  }
+
+  parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
+    description: "Which tools to run?", name: 'toolsToRun')
+
+    string(defaultValue: "up/ubi7-hardened-dev:latest", name: 'IMAGE_TAG',
+     description: "Image tag to be used by Docker, Nexus and all Scanning tools")
+
+    }
+
   stages {
-  
+
     stage('Pull from Staging') {
       //agent { label 'docker' }
       steps {
         echo "Pushing ${IMAGE_TAG} to Nexus Staging"
-        
+
         //TODO Test docker on agent eventually
-        /*withDockerRegistry([url: 'nexus-docker.52.61.140.4.nip.io', credentialsId: 'admin/admin123']) {
-          sh "docker push nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}"
+        /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
+          sh "docker push ${NEXUS_SERVER}/${IMAGE_TAG}"
         }*/
       }
     }
 
-    stage('OpenSCAP Config') { 
-      steps { 
+    stage('OpenSCAP Config') {
+      when {
+        anyOf {
+          environment name: "toolsToRun", value: "All"
+          environment name: "toolsToRun", value: "OpenSCAP"
+        }
+      }
+      steps {
         echo 'OpenSCAP Compliance Scan'
         script {
           def remote = [:]
           remote.name = "node"
-          remote.host = "ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com"
+          remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
           node {
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
               stage('OpenSCAP Scan') {
-                sshCommand remote: remote, command: "sudo docker login -u admin -p admin123 nexus-docker.52.61.140.4.nip.io"
-                sshCommand remote: remote, command: "sudo docker pull nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}"
-                sshCommand remote: remote, command: "sudo oscap-docker image nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
-                sshCommand remote: remote, command: "sudo oscap-docker image-cve nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG} --report /tmp/report-cve.html"
-                sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html s3://dsop-pipeline-artifacts/openscap/report-cve.html"
-                sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html s3://dsop-pipeline-artifacts/openscap/report.html"
+                sshCommand remote: remote, command: "sudo docker login -u ${NEXUS_USERNAME} -p ${NEXUS_PASSWORD} ${NEXUS_SERVER}"
+                sshCommand remote: remote, command: "sudo docker pull ${NEXUS_SERVER}/${IMAGE_TAG}"
+                sshCommand remote: remote, command: "sudo oscap-docker image ${NEXUS_SERVER}/${IMAGE_TAG} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+                sshCommand remote: remote, command: "sudo oscap-docker image-cve ${NEXUS_SERVER}/${IMAGE_TAG} --report /tmp/report-cve.html"
+                sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${S3_REPORT_LOCATION}/openscap/report-cve.html"
+                sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html ${S3_REPORT_LOCATION}/openscap/report.html"
                 sshGet remote: remote, from: "/tmp/report.html", into: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-compliance-report.html", override: true
                 sshGet remote: remote, from: "/tmp/report-cve.html", into: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-cve-report.html", override: true
                 publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}", reportFiles: 'openscap-compliance-report.html', reportName: 'OpenSCAP Compliance Report', reportTitles: 'OpenSCAP Compliance Report'])
                 publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}", reportFiles: 'openscap-cve-report.html', reportName: 'OpenSCAP Vulnerability Report', reportTitles: 'OpenSCAP Vulnerability Report'])
                 //archiveArtifacts "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-compliance-report.html"
               } // script
-            } // stage 
+            } // stage
           } // withCredentials
         } //node
       } // steps
     } // stage
 
     stage('Twistlock Scan') {
+      when {
+        anyOf {
+          environment name: "toolsToRun", value: "All"
+          environment name: "toolsToRun", value: "Twistlock"
+        }
+      }
       steps {
         echo 'Twistlock Compliance Scan'
         // Using the OpenScap node to overcome docker inside docker limitations,
@@ -55,7 +86,7 @@ pipeline {
         script {
           def remote = [:]
           remote.name = "node"
-          remote.host = "ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com"
+          remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
           node {
                 // using the oscap user, this is temporary
@@ -64,11 +95,11 @@ pipeline {
               remote.identityFile = identity
               stage('SSH to Twistlock Node') {
                 // Start the container, import the TwistCLI binary, scan image
-                sshCommand remote: remote, command: "sudo curl -k -ssl -u jenkins-svc:redhat12 https://twistlock-console-twistlock.us-gov-west-1.compute.internal/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user jenkins-svc --password redhat12 --address https://twistlock-console-twistlock.us-gov-west-1.compute.internal --details ${IMAGE_TAG}"
+                sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password ${TWISTLOCK_PASSWORD} --address ${TWISTLOCK_SERVER} --details ${IMAGE_TAG}"
+		// Pull latest report from the twistlock console
+		sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${S3_REPORT_LOCATION}/twistlock/${IMAGE_TAG}.json"
                 // Clean up
-                //  Stop or remove the container image if needed..
-                // ToDo - Catch, or call from the console, the twistcli scan results, and complile them with the rest of the pipeline
-                // Possibly make an API call to /images/scan/id
+		sshCommand remote: remote, command: "sudo docker rmi ${NEXUS_SERVER}/${IMAGE_TAG}"
               } // script
             } // stage
           } // withCredentials
@@ -77,16 +108,22 @@ pipeline {
     } // stage
 
     stage('Anchore Scan') {
-      steps {      
+      when {
+        anyOf {
+          environment name: "toolsToRun", value: "All"
+          environment name: "toolsToRun", value: "Anchore"
+        }
+      }
+      steps {
         echo 'Anchore Scan'
 
         //Below is example command that will be needed in Push to Staging step.
-        sh "echo 'nexus-docker.52.61.140.4.nip.io/${IMAGE_TAG}' > anchore_images"
+        sh "echo '${NEXUS_SERVER}/${IMAGE_TAG}' > anchore_images"
 
         anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
         //TODO: Push reports to git repo
-        
+
         // s3Upload consoleLogLevel: 'INFO', dontWaitForConcurrentBuildCompletion: false,
         //    entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
         //    gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
@@ -110,4 +147,3 @@ pipeline {
   } // stages
 
 } // pipeline
-
