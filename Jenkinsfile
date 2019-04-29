@@ -184,6 +184,16 @@ pipeline {
       }// parallel
     } // stage
 
+    stage('Write JSON documentaion') {
+      steps {
+        script {
+          def json = JsonOutput.toJson([name: 'John Doe', age: 42])
+          
+        } // script
+        echo "${json}"
+      } // steps
+    } // stage
+
     stage('Push to External Registry (TODO)') {
       environment {
         SIGNING_KEY = credentials('ContainerSigningKey')
@@ -197,6 +207,7 @@ pipeline {
         sh "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} sometext.txt;cat \$f;"
       } // steps
     } // stage
+
 
     stage('Clean up Docker artifacts') {
       steps {
