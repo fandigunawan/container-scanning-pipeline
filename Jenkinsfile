@@ -193,8 +193,10 @@ pipeline {
 
           def json = JsonOutput.toJson([name: 'John Doe', age: 42])
 
+          echo "${json}"
+
         } // script
-        echo "${json}"
+
       } // steps
     } // stage
 
