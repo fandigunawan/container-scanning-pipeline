@@ -3,6 +3,9 @@
 DATETIME_TAG = java.time.LocalDateTime.now()
 DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 
+//This is needed for JSON output step
+import groovy.json.JsonOutput
+
 
 
 // Example Declarative Pipeline with Anchore Scans
@@ -187,7 +190,7 @@ pipeline {
     stage('Write JSON documentaion') {
       steps {
         script {
-          import groovy.json.JsonOutput
+
           def json = JsonOutput.toJson([name: 'John Doe', age: 42])
 
         } // script
