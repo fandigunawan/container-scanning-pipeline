@@ -207,7 +207,10 @@ pipeline {
 
           json_location = sh(script: "f=\$(mktemp);echo '${json_documentation}' > \$f; echo \$f",
                              returnStdout: true).trim()
-          echo "${json_location}"
+
+          s3Upload(file: "${json_location}",
+                  bucket: "${S3_REPORT_BUCKET}",
+                  path:"/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
         } // script
 
 
