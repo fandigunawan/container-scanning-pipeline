@@ -185,11 +185,6 @@ pipeline {
       steps {
         script
 
-          def json = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
-                git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"]
-                ])
-
-          echo "${json}"
 
         } // script
 
