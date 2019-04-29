@@ -90,6 +90,10 @@ pipeline {
     } // stage
 
     stage('Twistlock Scan') {
+      environment {
+        TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
+      }  // environment
+
       when {
         anyOf {
           environment name: "toolsToRun", value: "All"
@@ -157,9 +161,16 @@ pipeline {
 
 
     stage('Push to External Registry (TODO)') {
+      environment {
+        SIGNING_KEY = credentials('ContainerSigningKey')
+        SIGNING_KEY_PASSPHRASE = credentials('ContainerSigningKeyPassphrase')
+      }  // environment
+
       steps {
         //input message: "Push image ${REPO_NAME}:${IMAGE_TAG} to registry?"
         echo 'Pushing to Registry'
+        sh "echo 'My very cool container' > sometext.txt"
+        sh "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} sometext.txt;cat \$f;"
       } // steps
     } // stage
 
