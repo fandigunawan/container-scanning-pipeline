@@ -7,7 +7,7 @@ DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 import groovy.json.JsonOutput
 
 //variables to grab version numbers
-anchorVersion = 0
+//anchorVersion = 0
 
 
 // Example Declarative Pipeline with Anchore Scans
