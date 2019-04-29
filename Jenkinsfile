@@ -187,8 +187,9 @@ pipeline {
     stage('Write JSON documentaion') {
       steps {
         script {
+          import groovy.json.JsonOutput
           def json = JsonOutput.toJson([name: 'John Doe', age: 42])
-          
+
         } // script
         echo "${json}"
       } // steps
