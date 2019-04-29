@@ -205,7 +205,8 @@ pipeline {
                         openSCAP: [version: "${openScapVersion}"],
                         twistLock: [version: "${twistLockVersion}"] ]])
 
-          sh "f=\$(mktemp) && trap \"rm \$f;\" EXIT || exit 255;echo '${json_documentation}' > \$f; echo \$f"
+          def json_location = sh "f=\$(mktemp) && trap \"rm \$f;\" EXIT || exit 255;echo '${json_documentation}' > \$f; echo \$f"
+          echo "${json_location}"
         } // script
 
 
