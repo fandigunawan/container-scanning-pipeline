@@ -50,137 +50,139 @@ pipeline {
       }
     }
 
-    stage('OpenSCAP Config') {
-      when {
-        anyOf {
-          environment name: "toolsToRun", value: "All"
-          environment name: "toolsToRun", value: "OpenSCAP"
-        } // anyOf
-      } // when
+    stage('Run tools in parallel') {
+      parallel {
+        stage('OpenSCAP Config') {
+          when {
+            anyOf {
+              environment name: "toolsToRun", value: "All"
+              environment name: "toolsToRun", value: "OpenSCAP"
+            } // anyOf
+          } // when
 
-      steps {
-        echo 'OpenSCAP Compliance Scan'
-        script {
-          def remote = [:]
-          remote.name = "node"
-          remote.host = "${env.REMOTE_HOST}"
-          remote.allowAnyHosts = true
-          openscap_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+          steps {
+            echo 'OpenSCAP Compliance Scan'
+            script {
+              def remote = [:]
+              remote.name = "node"
+              remote.host = "${env.REMOTE_HOST}"
+              remote.allowAnyHosts = true
+              openscap_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
 
-          node {
-            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-              image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
-              remote.user = userName
-              remote.identityFile = identity
-              stage('OpenSCAP Scan') {
+              node {
+                withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+                  image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
+                  remote.user = userName
+                  remote.identityFile = identity
+                  stage('OpenSCAP Scan') {
 
-                withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                  sshCommand remote: remote, command: "sudo docker login -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
-                }
+                    withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                      sshCommand remote: remote, command: "sudo docker login -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                    }
 
-                sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
-                sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
-                sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
-                sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${openscap_artifact_path}report-cve.html"
-                sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html ${openscap_artifact_path}report.html"
-                sshGet remote: remote, from: "/tmp/report.html", into: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-compliance-report.html", override: true
-                sshGet remote: remote, from: "/tmp/report-cve.html", into: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-cve-report.html", override: true
-                publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}", reportFiles: 'openscap-compliance-report.html', reportName: "OpenSCAP Compliance Report", reportTitles: "OpenSCAP Compliance Report"])
-                publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}", reportFiles: 'openscap-cve-report.html', reportName: "OpenSCAP Vulnerability Report", reportTitles: "OpenSCAP Vulnerability Report"])
-                //archiveArtifacts "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-compliance-report.html"
-              } // script
-            } // stage
-          } // withCredentials
-        } //node
-      } // steps
+                    sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+                    sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+                    sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
+                    sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${openscap_artifact_path}report-cve.html"
+                    sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html ${openscap_artifact_path}report.html"
+                    sshGet remote: remote, from: "/tmp/report.html", into: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-compliance-report.html", override: true
+                    sshGet remote: remote, from: "/tmp/report-cve.html", into: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-cve-report.html", override: true
+                    publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}", reportFiles: 'openscap-compliance-report.html', reportName: "OpenSCAP Compliance Report", reportTitles: "OpenSCAP Compliance Report"])
+                    publishHTML([alwaysLinkToLastBuild: false, keepAll: false, reportDir: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}", reportFiles: 'openscap-cve-report.html', reportName: "OpenSCAP Vulnerability Report", reportTitles: "OpenSCAP Vulnerability Report"])
+                    //archiveArtifacts "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-compliance-report.html"
+                  } // script
+                } // stage
+              } // withCredentials
+            } //node
+          } // steps
+        } // stage
+
+        stage('Twistlock Scan') {
+          environment {
+            TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
+          }  // environment
+
+          when {
+            anyOf {
+              environment name: "toolsToRun", value: "All"
+              environment name: "toolsToRun", value: "Twistlock"
+            } // anyOf
+          } // when
+
+          steps {
+            echo 'Twistlock Compliance Scan'
+            // Using the OpenScap node to overcome docker inside docker limitations,
+            // this may use a dedicated node eventually, or be refactored to follow best practice TBD
+            script {
+              def remote = [:]
+              remote.name = "node"
+              remote.host = "${env.REMOTE_HOST}"
+              remote.allowAnyHosts = true
+              twistlock_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
+
+              node {
+                    // using the oscap user, this is temporary
+                withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+                  remote.user = userName
+                  remote.identityFile = identity
+                  stage('SSH to Twistlock Node') {
+                    // Start the container, import the TwistCLI binary, scan image
+                    withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
+                        sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${IMAGE_TAG}"
+    		            // Pull latest report from the twistlock console
+    		            sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${twistlock_artifact_path}${IMAGE_TAG}.json"
+                    }// withCredentials
+
+                  } // stage
+                } // withCredentials
+              } // node
+            } // script
+          } // steps
+        } // stage
+
+        stage('Anchore Scan') {
+          when {
+            anyOf {
+              environment name: "toolsToRun", value: "All"
+              environment name: "toolsToRun", value: "Anchore"
+            }  // anyOf
+          } // when
+          steps {
+            echo 'Anchore Scan'
+
+            //Below is example command that will be needed in Push to Staging step.
+            sh "echo '${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}' > anchore_images"
+
+            anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
+
+            script {
+              def remote = [:]
+              remote.name = "node"
+              remote.host = "${env.REMOTE_HOST}"
+              remote.allowAnyHosts = true
+              anchore_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
+
+              node {
+              } // Node
+            } // script
+
+            //TODO: Push reports to git repo
+
+            // s3Upload consoleLogLevel: 'INFO', dontWaitForConcurrentBuildCompletion: false,
+            //    entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
+            //    gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
+            //    selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false,
+            //    path: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/archive/AnchoreReport.${env.JOB_NAME}_${env.BUILD_NUMBER}",
+            //    //sourceFile: "/anchore_gates.json",
+            //    includePathPattern:'**/*.json',
+            //    storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
+            //    profileName: '', userMetadata: []
+
+          } // steps
+        } // stage
+
+      }// parallel
     } // stage
-
-    stage('Twistlock Scan') {
-      environment {
-        TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
-      }  // environment
-
-      when {
-        anyOf {
-          environment name: "toolsToRun", value: "All"
-          environment name: "toolsToRun", value: "Twistlock"
-        } // anyOf
-      } // when
-
-      steps {
-        echo 'Twistlock Compliance Scan'
-        // Using the OpenScap node to overcome docker inside docker limitations,
-        // this may use a dedicated node eventually, or be refactored to follow best practice TBD
-        script {
-          def remote = [:]
-          remote.name = "node"
-          remote.host = "${env.REMOTE_HOST}"
-          remote.allowAnyHosts = true
-          twistlock_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
-
-          node {
-                // using the oscap user, this is temporary
-            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-              remote.user = userName
-              remote.identityFile = identity
-              stage('SSH to Twistlock Node') {
-                // Start the container, import the TwistCLI binary, scan image
-                withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
-                    sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${IMAGE_TAG}"
-		            // Pull latest report from the twistlock console
-		            sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${twistlock_artifact_path}${IMAGE_TAG}.json"
-                }// withCredentials
-
-              } // stage
-            } // withCredentials
-          } // node
-        } // script
-      } // steps
-    } // stage
-
-    stage('Anchore Scan') {
-      when {
-        anyOf {
-          environment name: "toolsToRun", value: "All"
-          environment name: "toolsToRun", value: "Anchore"
-        }  // anyOf
-      } // when
-      steps {
-        echo 'Anchore Scan'
-
-        //Below is example command that will be needed in Push to Staging step.
-        sh "echo '${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}' > anchore_images"
-
-        anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
-
-        script {
-          def remote = [:]
-          remote.name = "node"
-          remote.host = "${env.REMOTE_HOST}"
-          remote.allowAnyHosts = true
-          anchore_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
-
-          node {
-          } // Node
-        } // script
-
-        //TODO: Push reports to git repo
-
-        // s3Upload consoleLogLevel: 'INFO', dontWaitForConcurrentBuildCompletion: false,
-        //    entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
-        //    gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
-        //    selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false,
-        //    path: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/archive/AnchoreReport.${env.JOB_NAME}_${env.BUILD_NUMBER}",
-        //    //sourceFile: "/anchore_gates.json",
-        //    includePathPattern:'**/*.json',
-        //    storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
-        //    profileName: '', userMetadata: []
-
-      } // steps
-    } // stage
-
-
-
 
     stage('Push to External Registry (TODO)') {
       environment {
