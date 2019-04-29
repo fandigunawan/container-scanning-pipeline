@@ -117,9 +117,12 @@ pipeline {
               remote.identityFile = identity
               stage('SSH to Twistlock Node') {
                 // Start the container, import the TwistCLI binary, scan image
-                sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password ${TWISTLOCK_PASSWORD} --address ${TWISTLOCK_SERVER} --details ${IMAGE_TAG}"
-		// Pull latest report from the twistlock console
-		sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${S3_REPORT_LOCATION}/twistlock/${IMAGE_TAG}.json"
+                withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
+                    sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password ${TWISTLOCK_PASSWORD} --address ${TWISTLOCK_SERVER} --details ${IMAGE_TAG}"
+		            // Pull latest report from the twistlock console
+		            sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${S3_REPORT_LOCATION}/twistlock/${IMAGE_TAG}.json"
+                }// withCredentials
+                
               } // stage
             } // withCredentials
           } // node
