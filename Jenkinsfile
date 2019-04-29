@@ -98,12 +98,10 @@ pipeline {
                 sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password ${TWISTLOCK_PASSWORD} --address ${TWISTLOCK_SERVER} --details ${IMAGE_TAG}"
 		// Pull latest report from the twistlock console
 		sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${S3_REPORT_LOCATION}/twistlock/${IMAGE_TAG}.json"
-                // Clean up
-		sshCommand remote: remote, command: "sudo docker rmi ${NEXUS_SERVER}/${IMAGE_TAG}"
-              } // script
-            } // stage
-          } // withCredentials
-        } //node
+              } // stage
+            } // withCredentials
+          } // node
+        } // script
       } // steps
     } // stage
 
@@ -144,6 +142,28 @@ pipeline {
       } // steps
     } // stage
 
+    stage('Clean up Docker artifacts') {
+      steps {
+        echo 'Cleaning up docker artifacts'
+        // this may use a dedicated node eventually, or be refactored to follow best practice TBD
+        script {
+          def remote = [:]
+          remote.name = "node"
+          remote.host = "${env.REMOTE_HOST}"
+          remote.allowAnyHosts = true
+          node {
+                // using the oscap user, this is temporary
+            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+              remote.user = userName
+              remote.identityFile = identity
+              stage('SSH to worker Node') {
+                // clean up all docker artifacts
+                sshCommand remote: remote, command: "if [[ \$(sudo docker images -q) ]]; then sudo docker rmi \$(sudo docker images -q) --force; fi && if [[ \$(sudo docker ps -a -q) ]]; then sudo docker rm \$(sudo docker ps -a -q); fi"
+	      } // stage
+	    } //withCredentials
+	  } // node
+        } // script
+      } // steps
+      } // steps
   } // stages
-
 } // pipeline
