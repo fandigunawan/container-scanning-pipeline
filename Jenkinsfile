@@ -12,16 +12,8 @@ pipeline {
   environment {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 's3://dsop-pipeline-artifacts'
+    TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
-    // built in variables we can use to track information
-    //BUILD_TAG=jenkins-Datagen-17
-    //GIT_COMMIT=ce9a3c1404e8c91be604088670e93434c4253f03
-    //JOB_NAME=Datagen
-    //BUILD_ID=2011-06-22_15-26-06
-    //GIT_BRANCH=master
-    //BUILD_NUMBER=17
-
-
   }  // environment
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
@@ -125,17 +117,13 @@ pipeline {
               remote.identityFile = identity
               stage('SSH to Twistlock Node') {
                 // Start the container, import the TwistCLI binary, scan image
-                withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                  sshCommand remote: remote, command: "sudo curl -k -ssl -u ${USERNAME}:'${PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${REPO_NAME}:${IMAGE_TAG} --user ${USERNAME} --password '${PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
-                }// withCredentials
-                // Clean up
-                //  Stop or remove the container image if needed..
-                // ToDo - Catch, or call from the console, the twistcli scan results, and complile them with the rest of the pipeline
-                // Possibly make an API call to /images/scan/id
-              } // script
-            } // stage
-          } // withCredentials
-        } //node
+                sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password ${TWISTLOCK_PASSWORD} --address ${TWISTLOCK_SERVER} --details ${IMAGE_TAG}"
+		// Pull latest report from the twistlock console
+		sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:${TWISTLOCK_PASSWORD} -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${S3_REPORT_LOCATION}/twistlock/${IMAGE_TAG}.json"
+              } // stage
+            } // withCredentials
+          } // node
+        } // script
       } // steps
     } // stage
 
@@ -186,6 +174,28 @@ pipeline {
       } // steps
     } // stage
 
+    stage('Clean up Docker artifacts') {
+      steps {
+        echo 'Cleaning up docker artifacts'
+        // this may use a dedicated node eventually, or be refactored to follow best practice TBD
+        script {
+          def remote = [:]
+          remote.name = "node"
+          remote.host = "${env.REMOTE_HOST}"
+          remote.allowAnyHosts = true
+          node {
+                // using the oscap user, this is temporary
+            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+              remote.user = userName
+              remote.identityFile = identity
+              stage('SSH to worker Node') {
+                // clean up all docker artifacts
+                sshCommand remote: remote, command: "if [[ \$(sudo docker images -q) ]]; then sudo docker rmi \$(sudo docker images -q) --force; fi && if [[ \$(sudo docker ps -a -q) ]]; then sudo docker rm \$(sudo docker ps -a -q); fi"
+	      } // stage
+	    } //withCredentials
+	  } // node
+        } // script
+      } // steps
+      } // steps
   } // stages
-
 } // pipeline
