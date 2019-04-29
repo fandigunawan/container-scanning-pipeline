@@ -191,7 +191,7 @@ pipeline {
       steps {
         script {
 
-          def json = JsonOutput.toJson([git: [hash: "${GIT_COMMIT}""]])
+          def json = JsonOutput.toJson([git: [hash: "${GIT_COMMIT}"]])
 
           echo "${json}"
 
