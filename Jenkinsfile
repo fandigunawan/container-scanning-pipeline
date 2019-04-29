@@ -13,6 +13,15 @@ pipeline {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 's3://dsop-pipeline-artifacts'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
+    // built in variables we can use to track information
+    //BUILD_TAG=jenkins-Datagen-17
+    //GIT_COMMIT=ce9a3c1404e8c91be604088670e93434c4253f03
+    //JOB_NAME=Datagen
+    //BUILD_ID=2011-06-22_15-26-06
+    //GIT_BRANCH=master
+    //BUILD_NUMBER=17
+
+
   }  // environment
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
