@@ -16,12 +16,6 @@ pipeline {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 's3://dsop-pipeline-artifacts'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
-    // variable to track git hash version
-    //BUILD_TAG
-    //GIT_COMMIT
-    //BUILD_ID
-    //GIT_BRANCH
-    //BUILD_NUMBER
   }  // environment
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
@@ -191,7 +185,7 @@ pipeline {
       steps {
         script {
 
-          def json = JsonOutput.toJson([git: [hash: "${GIT_COMMIT}"]])
+          def json = JsonOutput.toJson([git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"], jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"]])
 
           echo "${json}"
 
