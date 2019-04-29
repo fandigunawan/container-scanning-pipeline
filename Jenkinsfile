@@ -185,7 +185,10 @@ pipeline {
       steps {
         script
 
-          def json = JsonOutput.toJson([timestamp: "${DATETIME_TAG}", git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"], jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"], tools: [anchore: [], openSCAP: [], twistLock]])
+          def json = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
+                git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
+                jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
+                tools: [anchore: [], openSCAP: [], twistLock: [] ]])
 
           echo "${json}"
 
