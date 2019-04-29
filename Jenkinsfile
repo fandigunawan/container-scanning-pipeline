@@ -6,6 +6,10 @@ DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 //This is needed for JSON output step
 import groovy.json.JsonOutput
 
+//variables to store version information in
+anchoreVersion = 0.0
+openScapVersion = 0.0
+twistLockVersion = 0.0
 
 
 // Example Declarative Pipeline with Anchore Scans
@@ -77,6 +81,7 @@ pipeline {
                       sshCommand remote: remote, command: "sudo docker login -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
                     }
 
+                    openScapVersion = sshCommand remote: remote, command: "echo '1.1'"
                     sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
                     sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                     sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
@@ -188,7 +193,7 @@ pipeline {
           def json = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
                 jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
-                tools: [anchore: [], openSCAP: [], twistLock: [] ]])
+                tools: [anchore: [], openSCAP: [version: "${openScapVersion}"], twistLock: [] ]])
 
           echo "${json}"
 
