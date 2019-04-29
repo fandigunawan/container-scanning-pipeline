@@ -12,8 +12,13 @@ pipeline {
   environment {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 's3://dsop-pipeline-artifacts'
-    TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
+    // variable to track git hash version
+    //BUILD_TAG
+    //GIT_COMMIT
+    //BUILD_ID
+    //GIT_BRANCH
+    //BUILD_NUMBER
   }  // environment
 
   parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
@@ -60,9 +65,10 @@ pipeline {
           remote.name = "node"
           remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
+          openscap_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+
           node {
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-              openscap_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
               image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
               remote.user = userName
               remote.identityFile = identity
@@ -110,6 +116,8 @@ pipeline {
           remote.name = "node"
           remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
+          twistlock_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
+
           node {
                 // using the oscap user, this is temporary
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
@@ -120,9 +128,9 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
                     sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${IMAGE_TAG}"
 		            // Pull latest report from the twistlock console
-		            sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${S3_REPORT_BUCKET}/twistlock/${IMAGE_TAG}.json"
+		            sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${twistlock_artifact_path}${IMAGE_TAG}.json"
                 }// withCredentials
-                
+
               } // stage
             } // withCredentials
           } // node
@@ -144,6 +152,17 @@ pipeline {
         sh "echo '${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}' > anchore_images"
 
         anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
+
+        script {
+          def remote = [:]
+          remote.name = "node"
+          remote.host = "${env.REMOTE_HOST}"
+          remote.allowAnyHosts = true
+          anchore_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
+
+          node {
+          } // Node
+        } // script
 
         //TODO: Push reports to git repo
 
