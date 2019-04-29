@@ -1,3 +1,3 @@
-# tool-configs
+# Container Hardening Pipeline
 
-A Storage area for tool configurations and documentation
+A staging area for testing and developing the container hardening pipeline
