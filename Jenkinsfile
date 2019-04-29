@@ -7,6 +7,7 @@ DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 import groovy.json.JsonOutput
 
 //variables to store version information in
+json_documentation = ""
 anchoreVersion = 0.0
 openScapVersion = 0.0
 twistLockVersion = 0.0
@@ -197,7 +198,7 @@ pipeline {
       steps {
         script {
 
-          def json = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
+          json_documentation = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
                 jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
                 tools: [anchore: [version: "${anchoreVersion}"],
@@ -206,7 +207,7 @@ pipeline {
 
         } // script
 
-        sh "f=\$(mktemp) && trap \"rm \$f;\" EXIT || exit 255;echo '${json}' > \$f"
+        sh "f=\$(mktemp) && trap \"rm \$f;\" EXIT || exit 255;echo '${json_documentation}' > \$f"
 
       } // steps
     } // stage
