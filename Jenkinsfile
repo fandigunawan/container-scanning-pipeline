@@ -5,10 +5,11 @@ DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 
 //This is needed for JSON output step
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 //variables to store version information in
 json_documentation = ""
-anchoreVersion = "Didn't run"
+anchoreVersion = new JsonSlurper().parseText("")
 openScapVersion = "Didn't run"
 twistLockVersion = "Didn't run"
 
@@ -174,7 +175,7 @@ pipeline {
               // get version
               sh(script:"curl -k https://anchore-api.52.61.140.4.nip.io/version > anchor_version.json")
               anchoreVersion = sh(script: "cat anchor_version.json", returnStdout: true)
-
+              anchoreVersion = new JsonSlurper().parseText(anchoreVersion)
               node {
               } // Node
             } // script
@@ -204,27 +205,23 @@ pipeline {
           json_documentation = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
                 jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
-                tools: [anchore: [version: "${anchoreVersion}"],
+                tools: [anchore: [],
                         openSCAP: [version: "${openScapVersion}"],
                         twistLock: [version: "${twistLockVersion}"] ]])
-
+          json_documentation.tools.anchore = anchoreVersion
           echo "{$json_documentation}"
 
-          echo "ping1"
           writeFile(file: 'documentation.json', text: json_documentation.toString())
-          echo "ping2"
 
 
           withAWS(credentials:'s3BucketCredentials') {
 
               def currentIdent = awsIdentity()
-              echo "ping4"
 
               s3Upload(file: "documentation.json",
                     bucket: "${S3_REPORT_BUCKET}",
                     path:"/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
 
-              echo "ping5"
 
           }
         } // script
