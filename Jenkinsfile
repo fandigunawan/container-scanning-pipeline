@@ -214,7 +214,6 @@ pipeline {
           def tmpJSON = new JsonSlurper().parseText(json_documentation)
           def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
           tmpJSON.tools.anchore = anchorJSON
-          echo "ping 1"
 
 
           // json_documentation.tools.anchore = anchoreVersion
@@ -222,7 +221,9 @@ pipeline {
 
 
 
-          writeFile(file: 'documentation.json', text: json_documentation.toString())
+          writeFile(file: 'documentation.json', text: tmpJSON)
+
+          sh(script: "cat documentation.json",  returnStdout: true)
 
           //must clear out all JsonSlurper variables
           anchorJSON = null
