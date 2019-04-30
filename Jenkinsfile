@@ -160,6 +160,8 @@ pipeline {
             //Below is example command that will be needed in Push to Staging step.
             sh "echo '${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}' > anchore_images"
 
+
+
             anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
             script {
@@ -170,7 +172,7 @@ pipeline {
               anchore_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               // get version
-              anchoreVersion = sshCommand remote: remote, command: "echo 'Need TODO'"
+              //anchoreVersion = sshCommand remote: remote, command: "echo 'Need TODO'"
 
               node {
               } // Node
