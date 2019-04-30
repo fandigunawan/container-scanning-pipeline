@@ -224,7 +224,7 @@ pipeline {
           echo "ping 3"
 
 
-          writeFile(file: 'documentation.json', text: json_documentation.toString())
+          writeFile(file: 'documentation.json', text: "${json_documentation}")
           echo "ping 4"
 
           sh(script: "cat documentation.json",  returnStdout: true)
