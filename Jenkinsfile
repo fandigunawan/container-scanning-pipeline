@@ -175,7 +175,12 @@ pipeline {
               // get version
               sh(script:"curl -k https://anchore-api.52.61.140.4.nip.io/version > anchor_version.json")
               anchoreVersion = sh(script: "cat anchor_version.json", returnStdout: true)
+
+              echo "${anchoreVersion}"
+
               anchoreVersion = new JsonSlurper().parseText(anchoreVersion)
+              echo "ping 1"
+              
               node {
               } // Node
             } // script
