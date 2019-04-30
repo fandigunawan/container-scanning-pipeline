@@ -211,20 +211,25 @@ pipeline {
                         openSCAP: [version: "${openScapVersion}"],
                         twistLock: [version: "${twistLockVersion}"] ]])
 
+          echo "ping 1"
           def tmpJSON = new JsonSlurper().parseText(json_documentation)
           def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
           tmpJSON.tools.anchore = anchorJSON
 
+          echo "ping 2"
 
           // json_documentation.tools.anchore = anchoreVersion
           def jsonString = tmpJSON.toString()
           echo "{$jsonString}"
 
+          echo "ping 3"
 
 
           writeFile(file: 'documentation.json', text: jsonString)
+          echo "ping 4"
 
           sh(script: "cat documentation.json",  returnStdout: true)
+          echo "ping 5"
 
           //must clear out all JsonSlurper variables
           anchorJSON = null
