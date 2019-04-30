@@ -229,6 +229,7 @@ pipeline {
           //must clear out all JsonSlurper variables
           anchorJSON = null
           tmpJSON = null
+          jsonString = null
 
           withAWS(credentials:'s3BucketCredentials') {
 
