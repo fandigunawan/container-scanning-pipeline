@@ -84,8 +84,6 @@ pipeline {
 
                     //grab version and parse
                     openScapVersion = sshCommand remote: remote, command: "oscap -V"
-                    def matches = (openScapVersion =~ /[0-9]+[.][0-9]+[.][0-9]+/)
-                    openScapVersion = matches[0]
 
                     sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
                     sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
