@@ -221,6 +221,7 @@ pipeline {
           tmpJSON = null
 
           // json_documentation.tools.anchore = anchoreVersion
+          json_documentation = new JsonBuilder(tmpJSON).toPrettyString()
           echo "{$json_documentation}"
 
           writeFile(file: 'documentation.json', text: json_documentation.toString())
