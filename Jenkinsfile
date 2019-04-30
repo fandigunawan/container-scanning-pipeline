@@ -178,7 +178,7 @@ pipeline {
 
               echo "${anchoreVersion}"
 
-              // anchoreVersion = new JsonSlurper().parseText(anchoreVersion)
+              anchoreJSON = new JsonSlurper().parseText(anchoreVersion)
               echo "ping 1"
 
               node {
