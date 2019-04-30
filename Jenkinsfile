@@ -208,21 +208,29 @@ pipeline {
                         twistLock: [version: "${twistLockVersion}"] ]])
 
           echo "{$json_documentation}"
+
+          echo "ping1"
           fp = new File( "${manager.build.workspace.remote}/temp" ).mkdirs()
+          echo "ping2"
 
           if(fp != null)
           {
               String str = "${json_documentation}";
               fp.write(str, null); //writing to file
           }
+          echo "ping3"
 
           withAWS(credentials:'s3BucketCredentials') {
 
               def currentIdent = awsIdentity()
+              echo "ping4"
 
               s3Upload(file: "${fp.getName() }",
                     bucket: "${S3_REPORT_BUCKET}",
                     path:"/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
+
+              echo "ping5"
+
           }
         } // script
 
