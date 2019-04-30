@@ -172,7 +172,8 @@ pipeline {
               anchore_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               // get version
-              anchoreVersion = sh "echo 'Need TODO'"
+              anchoreVersion = sh(script:"curl -k https://anchore-api.52.61.140.4.nip.io/version",
+                                  returnStatus: true)
 
               node {
               } // Node
