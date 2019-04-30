@@ -209,9 +209,9 @@ pipeline {
           def json_documentation = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
                 jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
-                tools: [anchore: [],
-                        openSCAP: [version: "${openScapVersion}"],
-                        twistLock: [version: "${twistLockVersion}"] ]])
+                tools: [anchore: anchorJSON,
+                        openSCAP: "${openScapVersion},
+                        twistLock: ${twistLockVersion}" ]])
 
           echo "ping 1"
 //          def tmpJSON = new JsonSlurper().parseText(json_documentation)
