@@ -204,28 +204,27 @@ pipeline {
       steps {
         script {
 
+        def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
+
           json_documentation = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
                 jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
-                tools: [anchore: [],
+                tools: [anchore: anchorJSON,
                         openSCAP: [version: "${openScapVersion}"],
                         twistLock: [version: "${twistLockVersion}"] ]])
 
           echo "ping 1"
-          def tmpJSON = new JsonSlurper().parseText(json_documentation)
-          def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
-          tmpJSON.tools.anchore = anchorJSON
+//          def tmpJSON = new JsonSlurper().parseText(json_documentation)
+//          tmpJSON.tools.anchore = anchorJSON
 
           echo "ping 2"
 
-          // json_documentation.tools.anchore = anchoreVersion
-          def jsonString = tmpJSON.toString()
-          echo "{$tmpJSON}"
+          echo "{$json_documentation}"
 
           echo "ping 3"
 
 
-          writeFile(file: 'documentation.json', text: jsonString)
+          writeFile(file: 'documentation.json', text: json_documentation)
           echo "ping 4"
 
           sh(script: "cat documentation.json",  returnStdout: true)
