@@ -6,7 +6,6 @@ DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 //This is needed for JSON output step
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import groovy.json.JsonBuilder
 
 //variables to store version information in
 json_documentation = ""
@@ -222,7 +221,7 @@ pipeline {
           tmpJSON = null
 
           // json_documentation.tools.anchore = anchoreVersion
-          json_documentation = new JsonBuilder(tmpJSON).toPrettyString()
+          json_documentation = tmpJSON.toPrettyString()
           echo "{$json_documentation}"
 
           writeFile(file: 'documentation.json', text: json_documentation.toString())
