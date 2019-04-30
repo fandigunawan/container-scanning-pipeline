@@ -173,7 +173,7 @@ pipeline {
 
               // get version
               sh(script:"curl -k https://anchore-api.52.61.140.4.nip.io/version > anchor_version.json")
-              anchoreVersion = sh(script: "cat anchor_version.json", returnStatus: true)
+              anchoreVersion = sh(script: "cat anchor_version.json")
 
               node {
               } // Node
