@@ -213,17 +213,13 @@ pipeline {
                         openSCAP: "${openScapVersion}",
                         twistLock: "${twistLockVersion}" ])
 
-
-
-          echo "{$json_documentation}"
-
           //must clear out all JsonSlurper variables
           // to prevent a serialization error
           anchorJSON = null
 
           writeFile(file: 'documentation.json', text: json_documentation.toString())
-          echo "ping 4"
 
+          //this is to provide a way to check what was saved in Jenkins job log
           jsonText = readFile(file: 'documentation.json')
           echo "${jsonText}"
 
