@@ -180,7 +180,7 @@ pipeline {
 
               anchoreVersion = new JsonSlurper().parseText(anchoreVersion)
               echo "ping 1"
-              
+
               node {
               } // Node
             } // script
@@ -213,7 +213,7 @@ pipeline {
                 tools: [anchore: [],
                         openSCAP: [version: "${openScapVersion}"],
                         twistLock: [version: "${twistLockVersion}"] ]])
-          json_documentation.tools.anchore = anchoreVersion
+          // json_documentation.tools.anchore = anchoreVersion
           echo "{$json_documentation}"
 
           writeFile(file: 'documentation.json', text: json_documentation.toString())
