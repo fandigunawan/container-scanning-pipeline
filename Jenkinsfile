@@ -216,7 +216,8 @@ pipeline {
               def user = currentIdent.user
               def arn = currentIdent.arn
               echo "${account} - ${user} - ${arn}"
-              
+              echo "ping3"
+
               s3Upload(file: "${json_location}",
                     bucket: "${S3_REPORT_BUCKET}",
                     path:"/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
