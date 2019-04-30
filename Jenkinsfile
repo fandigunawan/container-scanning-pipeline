@@ -178,10 +178,6 @@ pipeline {
 
               echo "${anchoreVersion}"
 
-              def tmp = new JsonSlurper().parseText(anchoreVersion)
-              echo "ping 1"
-              tmp = null
-
               node {
               } // Node
             } // script
@@ -214,6 +210,13 @@ pipeline {
                 tools: [anchore: [],
                         openSCAP: [version: "${openScapVersion}"],
                         twistLock: [version: "${twistLockVersion}"] ]])
+
+                def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
+                echo "ping 1"
+
+          //must clear out all JsonSlurper variables
+          anchorJSON = null
+
           // json_documentation.tools.anchore = anchoreVersion
           echo "{$json_documentation}"
 
@@ -230,6 +233,8 @@ pipeline {
 
 
           }
+
+
         } // script
 
 
