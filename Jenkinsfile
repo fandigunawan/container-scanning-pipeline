@@ -224,8 +224,8 @@ pipeline {
           writeFile(file: 'documentation.json', text: json_documentation.toString())
           echo "ping 4"
 
-          sh(script: "cat documentation.json",  returnStdout: true)
-          echo "ping 5"
+          jsonText = readFile(file: 'documentation.json')
+          echo "${jsonText}"
 
 
           withAWS(credentials:'s3BucketCredentials') {
