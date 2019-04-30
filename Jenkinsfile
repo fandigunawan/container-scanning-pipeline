@@ -213,17 +213,13 @@ pipeline {
                         openSCAP: "${openScapVersion}",
                         twistLock: "${twistLockVersion}" ])
 
-          echo "ping 1"
 
 
           echo "{$json_documentation}"
 
-          echo "ping 3"
-
           //must clear out all JsonSlurper variables
+          // to prevent a serialization error
           anchorJSON = null
-          tmpJSON = null
-          jsonString = null
 
           writeFile(file: 'documentation.json', text: json_documentation.toString())
           echo "ping 4"
