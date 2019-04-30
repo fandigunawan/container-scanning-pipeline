@@ -208,7 +208,7 @@ pipeline {
           json_location = sh(script: "f=\$(mktemp);echo '${json_documentation}' > \$f; echo \$f",
                              returnStdout: true).trim()
 
-          withAWS(role:'dsop-pipeline-jenkins-s3-uploader', duration: '3600', roleSessionName: 'json_metada') {
+          withAWS(credentials:'s3BucketCredentials') {
               s3Upload(file: "${json_location}",
                     bucket: "${S3_REPORT_BUCKET}",
                     path:"/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
