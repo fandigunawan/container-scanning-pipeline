@@ -19,7 +19,7 @@ pipeline {
 
   environment {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
-    S3_REPORT_BUCKET = 's3://dsop-pipeline-artifacts'
+    S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
   }  // environment
 
@@ -43,7 +43,7 @@ pipeline {
       //agent { label 'docker' }
       steps {
         echo "Pushing ${REPO_NAME}:${IMAGE_TAG} to Nexus Staging"
-        echo "Artifact path is   ${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}"
+        echo "Artifact path is   s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}"
 
         //TODO Test docker on agent eventually
         /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
@@ -69,7 +69,7 @@ pipeline {
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
-              openscap_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+              openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
 
               node {
                 withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
@@ -121,7 +121,7 @@ pipeline {
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
-              twistlock_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
+              twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
 
               node {
                     // using the oscap user, this is temporary
@@ -167,7 +167,7 @@ pipeline {
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
-              anchore_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
+              anchore_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               // get version
               anchoreVersion = sshCommand remote: remote, command: "echo 'Need TODO'"
