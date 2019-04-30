@@ -217,11 +217,11 @@ pipeline {
 
 
           // json_documentation.tools.anchore = anchoreVersion
-          echo "{$tmpJSON}"
+          echo "{$tmpJSON.toString()}"
 
 
 
-          writeFile(file: 'documentation.json', text: tmpJSON)
+          writeFile(file: 'documentation.json', text: $tmpJSON.toString())
 
           sh(script: "cat documentation.json",  returnStdout: true)
 
