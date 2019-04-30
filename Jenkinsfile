@@ -211,7 +211,7 @@ pipeline {
                 jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
                 tools: [anchore: anchorJSON,
                         openSCAP: "${openScapVersion}",
-                        twistLock: ${twistLockVersion}" ]])
+                        twistLock: "${twistLockVersion}" ]])
 
           echo "ping 1"
 //          def tmpJSON = new JsonSlurper().parseText(json_documentation)
