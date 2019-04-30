@@ -203,13 +203,8 @@ pipeline {
 
           json_location = sh(script: "f=\$(mktemp);echo '${json_documentation}' > \$f; echo \$f",
                              returnStdout: true).trim()
-          def myIdent =  awsIdentity()
-          echo "AWS Indentity: ${myIdent}"
+
           withAWS(credentials:'s3BucketCredentials') {
-
-              def myIdent =  awsIdentity()
-              echo "AWS Indentity2: ${myIdent}"
-
 
               s3Upload(file: "${json_location}",
                     bucket: "${S3_REPORT_BUCKET}",
