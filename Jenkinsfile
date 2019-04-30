@@ -210,7 +210,7 @@ pipeline {
                 git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
                 jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
                 tools: [anchore: anchorJSON,
-                        openSCAP: "${openScapVersion},
+                        openSCAP: "${openScapVersion}",
                         twistLock: ${twistLockVersion}" ]])
 
           echo "ping 1"
