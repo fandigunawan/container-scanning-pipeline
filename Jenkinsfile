@@ -139,6 +139,7 @@ pipeline {
     		                sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}'"
                     } // withCredentials
                   } // stage
+                } // withCredentials
               } // node
             } // script
           } // steps
