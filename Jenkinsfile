@@ -216,13 +216,15 @@ pipeline {
           tmpJSON.tools.anchore = anchorJSON
           echo "ping 1"
 
-          //must clear out all JsonSlurper variables
-          anchorJSON = null
-          tmpJSON = null
 
           // json_documentation.tools.anchore = anchoreVersion
           json_documentation = tmpJSON.toPrettyString()
           echo "{$json_documentation}"
+
+          //must clear out all JsonSlurper variables
+          anchorJSON = null
+          tmpJSON = null
+
 
           writeFile(file: 'documentation.json', text: json_documentation.toString())
 
