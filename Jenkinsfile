@@ -208,15 +208,19 @@ pipeline {
                         twistLock: [version: "${twistLockVersion}"] ]])
 
           echo "{$json_documentation}"
-          json_location = sh(script: "f=\$(mktemp);echo '${json_documentation}' > \$f; echo \$f",
-                             returnStdout: true).trim()
+          fp = new File( "${manager.build.workspace.remote}/temp" ).mkdirs()
 
+          if(fp != null)
+          {
+              String str = "${json_documentation}";
+              fp.write(str, null); //writing to file
+          }
 
           withAWS(credentials:'s3BucketCredentials') {
 
               def currentIdent = awsIdentity()
 
-              s3Upload(file: "${json_location}",
+              s3Upload(file: "${fp.getName() }",
                     bucket: "${S3_REPORT_BUCKET}",
                     path:"/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
           }
