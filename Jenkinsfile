@@ -210,7 +210,9 @@ pipeline {
           def account = currentIdent.account
           def user = currentIdent.user
           def arn = currentIdent.arn
+          sh "echo hello world"
           sh "echo ${account} - ${user} - ${arn}"
+
           withAWS(credentials:'s3BucketCredentials') {
 
               s3Upload(file: "${json_location}",
