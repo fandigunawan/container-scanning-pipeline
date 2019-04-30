@@ -214,10 +214,7 @@ pipeline {
                         twistLock: "${twistLockVersion}" ])
 
           echo "ping 1"
-//          def tmpJSON = new JsonSlurper().parseText(json_documentation)
-//          tmpJSON.tools.anchore = anchorJSON
 
-          echo "ping 2"
 
           echo "{$json_documentation}"
 
@@ -228,7 +225,7 @@ pipeline {
           tmpJSON = null
           jsonString = null
 
-          writeFile(file: 'documentation.json', text: "Bogus text")
+          writeFile(file: 'documentation.json', text: json_documentation.toString())
           echo "ping 4"
 
           sh(script: "cat documentation.json",  returnStdout: true)
