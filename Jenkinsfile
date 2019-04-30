@@ -206,11 +206,12 @@ pipeline {
           json_location = sh(script: "f=\$(mktemp);echo '${json_documentation}' > \$f; echo \$f",
                              returnStdout: true).trim()
 
+          echo "ping1"
           def currentIdent = awsIdentity()
+          echo "ping2"
           def account = currentIdent.account
           def user = currentIdent.user
           def arn = currentIdent.arn
-          echo "hello world"
           echo "${account} - ${user} - ${arn}"
 
           withAWS(credentials:'s3BucketCredentials') {
