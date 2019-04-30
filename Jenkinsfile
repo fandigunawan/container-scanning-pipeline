@@ -8,9 +8,9 @@ import groovy.json.JsonOutput
 
 //variables to store version information in
 json_documentation = ""
-anchoreVersion = 0.0
-openScapVersion = 0.0
-twistLockVersion = 0.0
+anchoreVersion = "Didn't run"
+openScapVersion = "Didn't run"
+twistLockVersion = "Didn't run"
 
 
 // Example Declarative Pipeline with Anchore Scans
@@ -82,7 +82,11 @@ pipeline {
                       sshCommand remote: remote, command: "sudo docker login -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
                     }
 
+                    //grab version and parse
                     openScapVersion = sshCommand remote: remote, command: "oscap -V"
+                    def matches = (openScapVersion =~ /[0-9]+[.][0-9]+[.][0-9]+/)
+                    openScapVersion = matches[0]
+
                     sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
                     sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                     sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
