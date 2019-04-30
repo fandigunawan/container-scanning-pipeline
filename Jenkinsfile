@@ -218,7 +218,7 @@ pipeline {
 
 
           // json_documentation.tools.anchore = anchoreVersion
-          json_documentation = tmpJSON.toPrettyString()
+          json_documentation = tmpJSON.toString()
           echo "{$json_documentation}"
 
           //must clear out all JsonSlurper variables
