@@ -210,7 +210,7 @@ pipeline {
           echo "{$json_documentation}"
 
           echo "ping1"
-          writeFile('documentation.json', json_documentation.toString())
+          writeFile(file: 'documentation.json', text: json_documentation.toString())
           echo "ping2"
 
 
