@@ -172,7 +172,7 @@ pipeline {
               anchore_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               // get version
-              //anchoreVersion = sshCommand remote: remote, command: "echo 'Need TODO'"
+              anchoreVersion = sh "echo 'Need TODO'"
 
               node {
               } // Node
