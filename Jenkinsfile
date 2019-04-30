@@ -9,7 +9,7 @@ import groovy.json.JsonSlurper
 
 //variables to store version information in
 json_documentation = ""
-anchoreVersion = new JsonSlurper().parseText("")
+anchoreVersion = new JsonSlurper().parseText("{Version: 'Did not run'}")
 openScapVersion = "Didn't run"
 twistLockVersion = "Didn't run"
 
