@@ -206,7 +206,7 @@ pipeline {
 
         def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
 
-          json_documentation = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
+          def json_documentation = JsonOutput.toJson([timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
                 jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
                 tools: [anchore: anchorJSON,
@@ -224,7 +224,7 @@ pipeline {
           echo "ping 3"
 
 
-          writeFile(file: 'documentation.json', text: "${json_documentation}")
+          writeFile(file: 'documentation.json', text: json_documentation.toString())
           echo "ping 4"
 
           sh(script: "cat documentation.json",  returnStdout: true)
@@ -234,6 +234,7 @@ pipeline {
           anchorJSON = null
           tmpJSON = null
           jsonString = null
+          json_documentation = null
 
           withAWS(credentials:'s3BucketCredentials') {
 
