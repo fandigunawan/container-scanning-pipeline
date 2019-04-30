@@ -223,6 +223,10 @@ pipeline {
 
           echo "ping 3"
 
+          //must clear out all JsonSlurper variables
+          anchorJSON = null
+          tmpJSON = null
+          jsonString = null
 
           writeFile(file: 'documentation.json', text: "Bogus text")
           echo "ping 4"
@@ -230,11 +234,6 @@ pipeline {
           sh(script: "cat documentation.json",  returnStdout: true)
           echo "ping 5"
 
-          //must clear out all JsonSlurper variables
-          anchorJSON = null
-          tmpJSON = null
-          jsonString = null
-          json_documentation = null
 
           withAWS(credentials:'s3BucketCredentials') {
 
