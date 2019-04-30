@@ -218,16 +218,15 @@ pipeline {
 
 
           // json_documentation.tools.anchore = anchoreVersion
-          json_documentation = tmpJSON.toString()
-          echo "{$json_documentation}"
+          echo "{$tmpJSON}"
 
-          //must clear out all JsonSlurper variables
-          anchorJSON = null
-          tmpJSON = null
 
 
           writeFile(file: 'documentation.json', text: json_documentation.toString())
 
+          //must clear out all JsonSlurper variables
+          anchorJSON = null
+          tmpJSON = null
 
           withAWS(credentials:'s3BucketCredentials') {
 
