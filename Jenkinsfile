@@ -220,7 +220,7 @@ pipeline {
 
           // json_documentation.tools.anchore = anchoreVersion
           def jsonString = tmpJSON.toString()
-          echo "{$jsonString}"
+          echo "{$tmpJSON}"
 
           echo "ping 3"
 
