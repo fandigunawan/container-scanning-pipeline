@@ -9,9 +9,9 @@ import groovy.json.JsonSlurper
 
 //variables to store version information in
 json_documentation = ""
-anchoreVersion = "Didn't run"
-openScapVersion = "Didn't run"
-twistLockVersion = "Didn't run"
+anchoreVersion = '{}'
+openScapVersion = '{}'
+twistLockVersion = '{}'
 
 
 // Example Declarative Pipeline with Anchore Scans
@@ -174,12 +174,13 @@ pipeline {
 
               // get version
               sh(script:"curl -k https://anchore-api.52.61.140.4.nip.io/version > anchor_version.json")
-              def temp = sh(script: "cat anchor_version.json", returnStdout: true)
+              anchoreVersion = sh(script: "cat anchor_version.json", returnStdout: true)
 
               echo "${temp}"
 
-              anchoreVersion = new JsonSlurper().parseText(temp)
+              tmp = new JsonSlurper().parseText(anchoreVersion)
               echo "ping 1"
+              tmp = null
 
               node {
               } // Node
