@@ -82,7 +82,7 @@ pipeline {
                       sshCommand remote: remote, command: "sudo docker login -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
                     }
 
-                    openScapVersion = sshCommand remote: remote, command: "echo 'Need TODO'"
+                    openScapVersion = sshCommand remote: remote, command: "oscap -V"
                     sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
                     sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                     sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
