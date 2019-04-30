@@ -209,14 +209,7 @@ pipeline {
 
           withAWS(credentials:'s3BucketCredentials') {
 
-              echo "ping1"
               def currentIdent = awsIdentity()
-              echo "ping2"
-              def account = currentIdent.account
-              def user = currentIdent.user
-              def arn = currentIdent.arn
-              echo "${account} - ${user} - ${arn}"
-              echo "ping3"
 
               s3Upload(file: "${json_location}",
                     bucket: "${S3_REPORT_BUCKET}",
