@@ -209,6 +209,17 @@ pipeline {
 
               withCredentials([usernamePassword(credentialsId: 'JenkinsCredentials', usernameVariable: 'JENKINS_USERNAME', passwordVariable: 'JENKINS_PASSWORD')]) {
                 def s3 = get_artifacts("${JENKINS_SERVER}", jobid="${JOB_NAME}", build_no="${BUILD_NUMBER}", username="${JENKINS_USERNAME}", password="${JENKINS_PASSWORD}", ssl_verify=False)
+                echo s3
+                withAWS(credentials:'s3BucketCredentials') {
+
+                    def currentIdent = awsIdentity()
+
+                  //  s3Upload(file: "documentation.json",
+                  //        bucket: "${S3_REPORT_BUCKET}",
+                  //        path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
+
+
+                }
               }
 
               // get version
