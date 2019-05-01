@@ -242,18 +242,20 @@ pipeline {
 
         def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
         def twistLockJSON = new JsonSlurper().parseText(twistLockVersion)
+        def openScapJSON = new JsonSlurper().parseText(openScapVersion)
 
           def json_documentation = JsonOutput.toJson(timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
                 jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
                 tools: [anchore: anchorJSON,
-                        openSCAP: "${openScapVersion}",
+                        openSCAP: openScapJSON,
                         twistLock: twistLockJSON ])
 
           //must clear out all JsonSlurper variables
           // to prevent a serialization error
           anchorJSON = null
           twistLockJSON = null
+          openScapJSON = null
 
           writeFile(file: 'documentation.json', text: json_documentation.toString())
 
