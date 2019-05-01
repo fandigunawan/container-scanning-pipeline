@@ -259,7 +259,7 @@ pipeline {
                     path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
 
 
-          }
+          } // withAWS
 
 
         } // script
@@ -296,13 +296,24 @@ pipeline {
               sshPut remote: remote, from: "${SIGNING_KEY}", into: './signingkey'
               signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;rm ./signingkey;cat \$f;"
 
-              echo "ping1"
               def signatureMatch = signature =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
               if (signatureMatch) {
-                echo "ping2"
+
+                withAWS(credentials:'s3BucketCredentials') {
+
+                    def currentIdent = awsIdentity()
+
+                    writeFile(file: 'signature.sha', text: signatureMatch[0)
+
+                    s3Upload(file: "signature.sha",
+                          bucket: "${S3_REPORT_BUCKET}",
+                          path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/signature.sha")
+
+
+                } //withAWS
+
                 echo signatureMatch[0]
-              }
-              echo "ping3"
+              }  // if
 
               //must set regexp variables to null to prevent java.io.NotSerializableException
               signatureMatch = null
