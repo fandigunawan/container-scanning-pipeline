@@ -20,6 +20,7 @@ pipeline {
 
   environment {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
+    JENKINS_SERVER = 'jenkins-jenkins-demo.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
   }  // environment
@@ -198,12 +199,17 @@ pipeline {
 
             anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
+
             script {
               def remote = [:]
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
               anchore_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
+
+              withCredentials([usernamePassword(credentialsId: 'JenkinsCredentials', usernameVariable: 'JENKINS_USERNAME', passwordVariable: 'JENKINS_PASSWORD')]) {
+                def s3 = get_artifacts("${JENKINS_SERVER}", jobid="${JOB_NAME}", build_no="${BUILD_NUMBER}", username="${JENKINS_USERNAME}", password="${JENKINS_PASSWORD}", ssl_verify=False)
+              }
 
               // get version
               sh(script:"curl -k https://anchore-api.52.61.140.4.nip.io/version > anchor_version.json")
