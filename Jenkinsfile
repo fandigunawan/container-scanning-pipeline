@@ -111,8 +111,11 @@ pipeline {
 
                     //grab version and parse
                     openScapVersion = sshCommand remote: remote, command: "oscap -V"
-                    versionMatch = openScapVersion =~ /[0-9]+[.]/
+                    def versionMatch = openScapVersion =~ /[0-9]+[.]/
 
+                    //must set regexp variables to null to prevent java.io.NotSerializableException
+                    versionMatch = null
+                    
                     sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                     sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
                     sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${openscap_artifact_path}report-cve.html"
