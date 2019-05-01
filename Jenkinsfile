@@ -19,7 +19,7 @@ pipeline {
   agent { label 'master' }
 
   environment {
-    NEXUS_SERVER = 'nexus.52.61.140.4.nip.io' 
+    NEXUS_SERVER = 'nexus.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
   }  // environment
@@ -80,7 +80,7 @@ pipeline {
                   stage('OpenSCAP Scan') {
 
                     withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                      sshCommand remote: remote, command: "sudo docker login -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                      sshCommand remote: remote, command: "sudo docker login --tlsverify=false -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
                     }
 
                     //grab version and parse
