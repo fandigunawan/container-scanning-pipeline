@@ -281,8 +281,8 @@ pipeline {
 
         //siging the image
         withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-          sshCommand: remote: remote, command: sudo docker save -o /root/{IMAGE_TAG}
-          sshCommand: remote: remote, command: "g=\$(mktemp -d)  && trap \"rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} /root/${IMAGE_TAG};cat /root/${IMAGE_TAG};"
+          sshCommand remote: remote, command: sudo docker save -o /root/{IMAGE_TAG}
+          sshCommand remote: remote, command: "g=\$(mktemp -d)  && trap \"rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} /root/${IMAGE_TAG};cat /root/${IMAGE_TAG};"
         } // withCredentials
       } // steps
     } // stage
