@@ -297,7 +297,7 @@ pipeline {
               signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;rm ./signingkey;cat \$f;"
 
               echo "ping1"
-              def signatureMatch = signature =~ /-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
+              def signatureMatch = signature =~ /[-]{5}BEGIN PGP SIGNATURE[-]{5}.*[-]{5}END PGP SIGNATURE[-]{5}/
               if (signatureMatch) {
                 echo "ping2"
                 echo signatureMatch[0]
