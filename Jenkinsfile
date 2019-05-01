@@ -217,6 +217,15 @@ pipeline {
                   buildNumber: "${BUILD_NUMBER}"],
                   target: '/tmp/anchore_gates.json'])
 
+              step([$class: 'CopyArtifact',
+                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/anchore_security.json",
+                  fingerprintArtifacts: true,
+                  flatten: true,
+                  projectName: "${JOB_NAME}",
+                  selector: [$class: 'SpecificBuildSelector',
+                  buildNumber: "${BUILD_NUMBER}"],
+                  target: '/tmp/anchore_security.json'])
+
                 // echo s3
                 withAWS(credentials:'s3BucketCredentials') {
 
@@ -226,6 +235,9 @@ pipeline {
                           bucket: "${S3_REPORT_BUCKET}",
                           path:"${anchore_artifact_path}anchore_gates.json")
 
+                    s3Upload(file: "/tmp/anchore_gates.json",
+                          bucket: "${S3_REPORT_BUCKET}",
+                          path:"${anchore_artifact_path}anchore_security.json")
 
                 } //withAWS
 
