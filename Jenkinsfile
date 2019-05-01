@@ -80,7 +80,7 @@ pipeline {
                   stage('OpenSCAP Scan') {
 
                     withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                      sshCommand remote: remote, command: "sudo docker login --tlsverify=false -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                      sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
                     }
 
                     //grab version and parse
