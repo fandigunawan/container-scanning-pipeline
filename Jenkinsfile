@@ -6,7 +6,7 @@ DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 //This is needed for JSON output step
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-from jenkinsapi.artifact import Artifact
+import jenkinsapi.artifact.Artifact
 
 //variables to store version information in
 json_documentation = ""
