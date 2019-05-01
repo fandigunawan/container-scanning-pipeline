@@ -291,8 +291,7 @@ pipeline {
         echo 'Pushing to Registry'
         withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
           ssh command: remote, command: sudo docker save -o /root/{IMAGE_TAG}
-          // sh "echo 'My very cool container' > sometext.txt"
-          sh "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} /root/${IMAGE_TAG};cat \$f;"
+          ssh command: remote, command: "g=\$(mktemp -d)  && trap \"rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} /root/${IMAGE_TAG};cat /root/${IMAGE_TAG};"
         } // withCredentials
       } // steps
     } // stage
