@@ -271,7 +271,7 @@ pipeline {
 
               s3Upload(file: "documentation.json",
                     bucket: "${S3_REPORT_BUCKET}",
-                    path:"/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
+                    path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
 
 
           }
