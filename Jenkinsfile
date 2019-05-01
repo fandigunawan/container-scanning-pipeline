@@ -46,10 +46,24 @@ pipeline {
         echo "Pushing ${REPO_NAME}:${IMAGE_TAG} to Nexus Staging"
         echo "Artifact path is   s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}"
 
+        script {
+          def remote = [:]
+          remote.name = "node"
+          remote.host = "${env.REMOTE_HOST}"
+          remote.allowAnyHosts = true
+          openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+
+          node {
+            withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+              sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+            }
+            sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+          } // node
+        }// script
+
         //TODO Test docker on agent eventually
         /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
           sh "docker push ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
-          sleep(time: 2, unit: 'SECONDS')
         }*/
       }
     }
@@ -87,7 +101,6 @@ pipeline {
                     //grab version and parse
                     openScapVersion = sshCommand remote: remote, command: "oscap -V"
 
-                    sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
                     sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                     sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
                     sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${openscap_artifact_path}report-cve.html"
