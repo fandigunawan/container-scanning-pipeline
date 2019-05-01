@@ -303,7 +303,7 @@ pipeline {
 
                     def currentIdent = awsIdentity()
 
-                    writeFile(file: 'signature.sha', text: signatureMatch[0)
+                    writeFile(file: 'signature.sha', text: signatureMatch[0])
 
                     s3Upload(file: "signature.sha",
                           bucket: "${S3_REPORT_BUCKET}",
