@@ -110,8 +110,9 @@ pipeline {
                     }
 
                     //grab version and parse
-                    openScapVersion = sshCommand remote: remote, command: "oscap -V"
-                    def versionMatch = openScapVersion =~ /[0-9]+[.][0-9]+[.][0-9]+/
+                    openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
+                    echo openScapVersionDump
+                    def versionMatch = openScapVersionDump =~ /[0-9]+[.][0-9]+[.][0-9]+/
                     if (versionMatch) {
                       openScapVersion = '{"version": "' + versionMatch[0] + '"}'
                       echo openScapVersion
