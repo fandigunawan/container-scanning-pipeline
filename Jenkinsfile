@@ -66,7 +66,8 @@ pipeline {
                 sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
               } // stage
             } //withCredentials
-          } //node 
+          } //node
+        } // script
 
 
 
