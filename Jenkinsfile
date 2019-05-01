@@ -20,7 +20,6 @@ pipeline {
 
   environment {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
-    JENKINS_SERVER = 'jenkins-jenkins-demo.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
   }  // environment
@@ -218,7 +217,6 @@ pipeline {
                   buildNumber: "${BUILD_NUMBER}"],
                   target: '/tmp/anchore_gates.json'])
 
-                def s3 = get_artifacts("${JENKINS_SERVER}", jobid="${JOB_NAME}", build_no="${BUILD_NUMBER}", username="${JENKINS_USERNAME}", password="${JENKINS_PASSWORD}", ssl_verify=false)
                 // echo s3
                 withAWS(credentials:'s3BucketCredentials') {
 
