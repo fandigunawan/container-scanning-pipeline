@@ -19,7 +19,7 @@ pipeline {
   agent { label 'master' }
 
   environment {
-    NEXUS_SERVER = 'nexus.52.61.140.4.nip.io'
+    NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
   }  // environment
