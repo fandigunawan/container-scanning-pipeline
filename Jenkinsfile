@@ -288,6 +288,8 @@ pipeline {
           node {
 
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+              remote.user = userName
+              remote.identityFile = identity
               echo "ping1"
               sshCommand remote: remote, command: "sudo docker save -o /root/{IMAGE_TAG}"
               echo "ping2"
