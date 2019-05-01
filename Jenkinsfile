@@ -54,12 +54,22 @@ pipeline {
           openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
 
           node {
-            withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-              sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
-            }
-            sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
-          } // node
-        }// script
+            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+              image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
+              remote.user = userName
+              remote.identityFile = identity
+              stage('OpenSCAP Scan') {
+
+                withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                  sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                } // withCredentials
+                sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+              } // stage
+            } //withCredentials
+          } //node 
+
+
+
 
         //TODO Test docker on agent eventually
         /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
