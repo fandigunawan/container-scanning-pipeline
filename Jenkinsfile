@@ -291,7 +291,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
               echo "ping1"
-              sshCommand remote: remote, command: "sudo docker save -o /tmp/${IMAGE_TAG} ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
+              sshCommand remote: remote, command: "docker save -o /tmp/${IMAGE_TAG} ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
               echo "ping2"
               sshCommand remote: remote, command: "g=\$(mktemp -d)  && trap \"rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} /tmp/${IMAGE_TAG};cat /tmp/${IMAGE_TAG};"
               echo "ping3"
