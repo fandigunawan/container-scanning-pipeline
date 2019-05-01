@@ -49,6 +49,7 @@ pipeline {
         //TODO Test docker on agent eventually
         /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
           sh "docker push ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
+          sleep(time: 1, unit: 'SECONDS')
         }*/
       }
     }
