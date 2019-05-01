@@ -215,17 +215,6 @@ pipeline {
               } // Node
             } // script
 
-            //TODO: Push reports to git repo
-
-            // s3Upload consoleLogLevel: 'INFO', dontWaitForConcurrentBuildCompletion: false,
-            //    entries: [[bucket: 'dsop-pipeline-artifacts', excludedFile: '', flatten: false,
-            //    gzipFiles: false, keepForever: false, managedArtifacts: false, noUploadOnFailure: false,
-            //    selectedRegion: 'us-gov-east-1', showDirectlyInBrowser: false,
-            //    path: "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/archive/AnchoreReport.${env.JOB_NAME}_${env.BUILD_NUMBER}",
-            //    //sourceFile: "/anchore_gates.json",
-            //    includePathPattern:'**/*.json',
-            //    storageClass: 'STANDARD', uploadFromSlave: false, useServerSideEncryption: false]], pluginFailureResultConstraint: 'FAILURE',
-            //    profileName: '', userMetadata: []
 
           } // steps
         } // stage
@@ -290,8 +279,8 @@ pipeline {
         //input message: "Push image ${REPO_NAME}:${IMAGE_TAG} to registry?"
         echo 'Pushing to Registry'
         withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-          ssh command: remote, command: sudo docker save -o /root/{IMAGE_TAG}
-          ssh command: remote, command: "g=\$(mktemp -d)  && trap \"rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} /root/${IMAGE_TAG};cat /root/${IMAGE_TAG};"
+          sshCommand: remote, command: sudo docker save -o /root/{IMAGE_TAG}
+          sshCommand: remote, command: "g=\$(mktemp -d)  && trap \"rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} /root/${IMAGE_TAG};cat /root/${IMAGE_TAG};"
         } // withCredentials
       } // steps
     } // stage
