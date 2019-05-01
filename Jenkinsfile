@@ -59,7 +59,7 @@ pipeline {
               image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
               remote.user = userName
               remote.identityFile = identity
-              stage('OpenSCAP Scan') {
+              stage('Pulling docker image') {
 
                 withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
                   sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
@@ -208,7 +208,7 @@ pipeline {
               anchore_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               withCredentials([usernamePassword(credentialsId: 'JenkinsCredentials', usernameVariable: 'JENKINS_USERNAME', passwordVariable: 'JENKINS_PASSWORD')]) {
-                def s3 = get_artifacts("${JENKINS_SERVER}", jobid="${JOB_NAME}", build_no="${BUILD_NUMBER}", username="${JENKINS_USERNAME}", password="${JENKINS_PASSWORD}", ssl_verify=False)
+                def s3 = get_artifacts("${JENKINS_SERVER}", jobid="${JOB_NAME}", build_no="${BUILD_NUMBER}", username="${JENKINS_USERNAME}", password="${JENKINS_PASSWORD}", ssl_verify=false)
                 // echo s3
                 withAWS(credentials:'s3BucketCredentials') {
 
