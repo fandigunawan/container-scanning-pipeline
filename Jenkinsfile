@@ -297,26 +297,32 @@ pipeline {
               signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;rm ./signingkey;cat \$f;"
 
               def signatureMatch = signature =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
+              def signature = ""
               if (signatureMatch) {
 
-                withAWS(credentials:'s3BucketCredentials') {
-
-                    def currentIdent = awsIdentity()
-
-                    writeFile(file: 'signature.sha', text: signatureMatch[0])
-
-                    s3Upload(file: "signature.sha",
-                          bucket: "${S3_REPORT_BUCKET}",
-                          path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/signature.sha")
-
-
-                } //withAWS
-
-                echo signatureMatch[0]
-              }  // if
-
+                 signature = signatureMatch[0]
+              }
               //must set regexp variables to null to prevent java.io.NotSerializableException
               signatureMatch = null
+
+
+              withAWS(credentials:'s3BucketCredentials') {
+
+                  def currentIdent = awsIdentity()
+                  echo "ping1"
+                  writeFile(file: 'signature.sha', text: signature)
+                  echo "ping2"
+
+                  s3Upload(file: "signature.sha",
+                        bucket: "${S3_REPORT_BUCKET}",
+                        path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/signature.sha")
+
+                  echo "ping3"
+
+
+              } //withAWS
+
+
 
             } // withCredentials
           } // node
