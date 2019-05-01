@@ -49,7 +49,7 @@ pipeline {
         //TODO Test docker on agent eventually
         /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
           sh "docker push ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
-          sleep(time: 1, unit: 'SECONDS')
+          sleep(time: 2, unit: 'SECONDS')
         }*/
       }
     }
@@ -135,6 +135,8 @@ pipeline {
                   stage('SSH to Twistlock Node') {
                     // Start the container, import the TwistCLI binary, scan image
                     withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
+
+                        echo "${NEXUS_SERVER}"
                         sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
 
                         // get version
