@@ -290,7 +290,8 @@ pipeline {
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
-              signature = sshCommand remote: remote,sudo: true, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"rm \$e;rm \$f;rm -rf \$g\" EXIT || exit 255;docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;cat \$f;"
+              signature = sshCommand remote: remote,sudo: true, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"rm \$e;rm \$f;rm -rf \$g\" EXIT || exit 255;docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};"
+              \\ gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;cat \$f;
 
               echo signature
             } // withCredentials
