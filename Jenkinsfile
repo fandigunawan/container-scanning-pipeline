@@ -11,7 +11,7 @@ import groovy.json.JsonSlurper
 json_documentation = ""
 anchoreVersion = '{}'
 openScapVersion = '{}'
-twistLockVersion = '{version: 19.0.317}'
+twistLockVersion = '{"version": "19.0.317"}'
 
 
 // Example Declarative Pipeline with Anchore Scans
