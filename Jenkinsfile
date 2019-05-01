@@ -290,7 +290,7 @@ pipeline {
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
-              signature = sshCommand remote: remote,, command: "g=\$(mktemp -d) && f=\$(mktemp) && img=\$(mktemp) && trap \"rm \$img;rm \$f;rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};"
+              signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && img=\$(mktemp) && trap \"rm \$img;rm \$f;rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};"
 
               echo signature
             } // withCredentials
