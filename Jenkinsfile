@@ -113,7 +113,7 @@ pipeline {
                     openScapVersion = sshCommand remote: remote, command: "oscap -V"
                     def versionMatch = openScapVersion =~ /[0-9]+[.][0-9]+[.][0-9]+/
                     if (versionMatch) {
-                      openScapVersion = "\{\"version\": \"${versionMatch[0]}\"\}"
+                      openScapVersion = '{"version": "' + versionMatch[0] + '"}'
                       echo openScapVersion
                     }
                     //must set regexp variables to null to prevent java.io.NotSerializableException
