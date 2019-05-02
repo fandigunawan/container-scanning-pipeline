@@ -71,8 +71,11 @@ pipeline {
               stage('OpenSCAP Scan') {
 
                 withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                  sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};docker pull ${image_full_path}"
+                  sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
                 } // withCredentials
+
+                sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+
 
               } // stage
             } //withCredentials
