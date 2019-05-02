@@ -68,27 +68,17 @@ pipeline {
               image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
               remote.user = userName
               remote.identityFile = identity
-              stage('OpenSCAP Scan') {
 
-                withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                  sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
-                } // withCredentials
+              withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
+              } // withCredentials
 
-                sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+              sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
 
-
-              } // stage
             } //withCredentials
           } //node
         } // script
 
-
-
-
-        //TODO Test docker on agent eventually
-        /*withDockerRegistry([url: '${env.NEXUS_SERVER}', credentialsId: '${env.NEXUS_USERNAME}/${env.NEXUS_PASSWORD}']) {
-          sh "docker push ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
-        }*/
       }
     }
 
