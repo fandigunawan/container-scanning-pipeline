@@ -14,7 +14,7 @@ openScapVersion = '{}'
 twistLockVersion = '{"version": "19.0.317"}'
 
 
-// Example Declarative Pipeline with Anchore Scans
+// Start of pipeline
 pipeline {
   agent { label 'master' }
 
@@ -24,17 +24,23 @@ pipeline {
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
   }  // environment
 
-  parameters { choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
-    description: "Which tools to run?", name: 'toolsToRun')
+  parameters {
 
-    string(defaultValue: "up/ubi7-hardened-dev", name: 'REPO_NAME',
-     description: "Name of repo to be used by Docker, Nexus and all Scanning tools")
+    choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
+          description: "Which tools to run?",
+          name: 'toolsToRun')
 
-     string(defaultValue: "latest", name: 'IMAGE_TAG',
-      description: "Image tag to be used by Docker, Nexus and all Scanning tools")
+    string(defaultValue: "up/ubi7-hardened-dev",
+            name: 'REPO_NAME',
+            description: "Name of repo to be used by Docker, Nexus and all Scanning tools")
 
-     string(defaultValue: "RedHat", name: 'VENDOR_PRODUCT',
-      description: "What vendor is being scanned")
+     string(defaultValue: "latest",
+            name: 'IMAGE_TAG',
+            description: "Image tag to be used by Docker, Nexus and all Scanning tools")
+
+     string(defaultValue: "RedHat",
+            name: 'VENDOR_PRODUCT',
+            description: "What vendor is being scanned")
 
     } // parameters
 
@@ -309,15 +315,11 @@ pipeline {
               withAWS(credentials:'s3BucketCredentials') {
 
                   def currentIdent = awsIdentity()
-                  echo "ping1"
                   writeFile(file: 'signature.sha', text: signature)
-                  echo "ping2"
 
                   s3Upload(file: "signature.sha",
                         bucket: "${S3_REPORT_BUCKET}",
                         path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/signature.sha")
-
-                  echo "ping3"
 
 
               } //withAWS
