@@ -47,12 +47,14 @@ pipeline {
   stages {
 
     stage('Pull from Staging') {
-      //agent { label 'docker' }
+
       steps {
+
         echo "Pushing ${REPO_NAME}:${IMAGE_TAG} to Nexus Staging"
         echo "Artifact path is   s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}"
 
         script {
+
           def remote = [:]
           remote.name = "node"
           remote.host = "${env.REMOTE_HOST}"
@@ -60,16 +62,18 @@ pipeline {
           openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
 
           node {
+
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+
               image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
               remote.user = userName
               remote.identityFile = identity
               stage('OpenSCAP Scan') {
 
                 withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                  sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                  sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};docker pull ${image_full_path}"
                 } // withCredentials
-                sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+
               } // stage
             } //withCredentials
           } //node
