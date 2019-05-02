@@ -144,6 +144,7 @@ pipeline {
         } // stage
 
         stage('Twistlock Scan') {
+
           environment {
             TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
           }  // environment
@@ -157,9 +158,11 @@ pipeline {
 
           steps {
             echo 'Twistlock Compliance Scan'
+
             // Using the OpenScap node to overcome docker inside docker limitations,
             // this may use a dedicated node eventually, or be refactored to follow best practice TBD
             script {
+
               def remote = [:]
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
@@ -167,25 +170,28 @@ pipeline {
               twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
 
               node {
-                    // using the oscap user, this is temporary
+
+                // using the oscap user, this is temporary
                 withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+
                   remote.user = userName
                   remote.identityFile = identity
-                  stage('SSH to Twistlock Node') {
-                    // Start the container, import the TwistCLI binary, scan image
-                    withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
 
-                        echo "${NEXUS_SERVER}"
-                        sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
+                  // Start the container, import the TwistCLI binary, scan image
+                  withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
 
-                        // TODO get version can't find an API call for this
-                        // twistLockVersion = sshCommand remote: remote, command: " curl -k -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET ${TWISTLOCK_SERVER}/api/v1/settings/_Ping"
-                        echo "${twistLockVersion}"
+                      echo "${NEXUS_SERVER}"
+                      sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
 
-                        // Pull latest report from the twistlock console
-    		                sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${twistlock_artifact_path}${IMAGE_TAG}.json"
-                    } // withCredentials
-                  } // stage
+                      // TODO get version can't find an API call for this
+                      // twistLockVersion = sshCommand remote: remote, command: " curl -k -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET ${TWISTLOCK_SERVER}/api/v1/settings/_Ping"
+                      echo "${twistLockVersion}"
+
+                      // Pull latest report from the twistlock console
+                      // and save to s3
+  		                sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${twistlock_artifact_path}${IMAGE_TAG}.json"
+
+                  } // withCredentials
                 } // withCredentials
               } // node
             } // script
@@ -193,6 +199,7 @@ pipeline {
         } // stage
 
         stage('Anchore Scan') {
+        
           when {
             anyOf {
               environment name: "toolsToRun", value: "All"
