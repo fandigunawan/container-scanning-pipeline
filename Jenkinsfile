@@ -68,6 +68,10 @@ pipeline {
               image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
               remote.user = userName
               remote.identityFile = identity
+<<<<<<< HEAD
+=======
+              stage('Pulling docker image') {
+>>>>>>> master
 
               withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
                 sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
@@ -214,8 +218,46 @@ pipeline {
             anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
             script {
+              def remote = [:]
+              remote.name = "node"
+              remote.host = "${env.REMOTE_HOST}"
+              remote.allowAnyHosts = true
+              anchore_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
-              anchore_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
+              // curl -k -X GET --header 'Accept: application/json' --header 'Authorization: Basic YWRtaW46cmVkaGF0MTI=' 'https://anchore-api.52.61.140.4.nip.io/v1/images/sha256:193bb8f21e5f4ede1cf1ae3e150d89b6dcf1153a8a70a5f807b9854f1b01c34f/check?history=false&detail=true&tag=latest&policyId=2b23d6f7-33e9-45fc-91dd-e5ff63184e80'
+
+              step([$class: 'CopyArtifact',
+                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/anchore_gates.json",
+                  fingerprintArtifacts: true,
+                  flatten: true,
+                  projectName: "${JOB_NAME}",
+                  selector: [$class: 'SpecificBuildSelector',
+                  buildNumber: "${BUILD_NUMBER}"],
+                  target: '/tmp/anchore_gates.json'])
+
+              step([$class: 'CopyArtifact',
+                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/anchore_security.json",
+                  fingerprintArtifacts: true,
+                  flatten: true,
+                  projectName: "${JOB_NAME}",
+                  selector: [$class: 'SpecificBuildSelector',
+                  buildNumber: "${BUILD_NUMBER}"],
+                  target: '/tmp/anchore_security.json'])
+
+                // echo s3
+                withAWS(credentials:'s3BucketCredentials') {
+
+                    def currentIdent = awsIdentity()
+
+                    s3Upload(file: "/tmp/anchore_gates.json",
+                          bucket: "${S3_REPORT_BUCKET}",
+                          path:"${anchore_artifact_path}")
+
+                    s3Upload(file: "/tmp/anchore_gates.json",
+                          bucket: "${S3_REPORT_BUCKET}",
+                          path:"${anchore_artifact_path}")
+
+                } //withAWS
 
               // get version
               sh(script:"curl -k https://anchore-api.52.61.140.4.nip.io/version > anchor_version.json")
@@ -223,6 +265,8 @@ pipeline {
 
               echo "${anchoreVersion}"
 
+              node {
+              } // Node
             } // script
 
 
