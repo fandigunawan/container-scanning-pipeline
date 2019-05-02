@@ -215,7 +215,7 @@ pipeline {
 
             script {
 
-              anchore_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
+              anchore_artifact_path = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               //copying anchor reports  from jenkins artifacts
               step([$class: 'CopyArtifact',
