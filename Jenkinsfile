@@ -241,11 +241,11 @@ pipeline {
 
                     s3Upload(file: "/tmp/anchore_gates.json",
                           bucket: "${S3_REPORT_BUCKET}",
-                          path:"${anchore_artifact_path}")
+                          path:"${anchore_artifact_path}anchore_gates.json")
 
                     s3Upload(file: "/tmp/anchore_gates.json",
                           bucket: "${S3_REPORT_BUCKET}",
-                          path:"${anchore_artifact_path}")
+                          path:"${anchore_artifact_path}anchore_gates.json")
 
                 } //withAWS
 
