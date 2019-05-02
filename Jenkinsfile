@@ -305,7 +305,7 @@ pipeline {
       } // steps
     } // stage
 
-    stage('Push to External Registry (TODO)') {
+    stage('Signing image') {
       environment {
         //this is file reference
         SIGNING_KEY = credentials('ContainerSigningKey')
@@ -362,29 +362,38 @@ pipeline {
       } // steps
     } // stage
 
+    stage('Push to External Registry (TODO)') {
+
+    } // stage Push to External Registry
 
     stage('Clean up Docker artifacts') {
       steps {
+
         echo 'Cleaning up docker artifacts'
+
         // this may use a dedicated node eventually, or be refactored to follow best practice TBD
         script {
+
           def remote = [:]
           remote.name = "node"
           remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
+
           node {
-                // using the oscap user, this is temporary
+
+            // using the oscap user, this is temporary
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+
               remote.user = userName
               remote.identityFile = identity
-              stage('SSH to worker Node') {
-                // clean up all docker artifacts
-                sshCommand remote: remote, command: "if [[ \$(sudo docker images -q) ]]; then sudo docker rmi \$(sudo docker images -q) --force; fi && if [[ \$(sudo docker ps -a -q) ]]; then sudo docker rm \$(sudo docker ps -a -q); fi"
-	      } // stage
-	    } //withCredentials
-	  } // node
+
+              sshCommand remote: remote, command: "if [[ \$(sudo docker images -q) ]]; then sudo docker rmi \$(sudo docker images -q) --force; fi && if [[ \$(sudo docker ps -a -q) ]]; then sudo docker rm \$(sudo docker ps -a -q); fi"
+
+	          } //withCredentials
+	        } // node
         } // script
       } // steps
-      } // steps
+    } // stage Clean up Docker artifacts
+
   } // stages
 } // pipeline
