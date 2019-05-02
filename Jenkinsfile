@@ -78,13 +78,15 @@ pipeline {
             } //withCredentials
           } //node
         } // script
-
-      }
-    }
+      }// steps
+    } //stage
 
     stage('Run tools in parallel') {
+
       parallel {
-        stage('OpenSCAP Config') {
+
+        stage('OpenSCAP Scan') {
+
           when {
             anyOf {
               environment name: "toolsToRun", value: "All"
@@ -94,7 +96,9 @@ pipeline {
 
           steps {
             echo 'OpenSCAP Compliance Scan'
+
             script {
+
               def remote = [:]
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
@@ -102,34 +106,38 @@ pipeline {
               openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
 
               node {
+
                 withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+
                   image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
                   remote.user = userName
                   remote.identityFile = identity
-                  stage('OpenSCAP Scan') {
 
-                    withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                      sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
-                    }
+                  withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                  }
 
-                    //grab version and parse
-                    openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
-                    echo openScapVersionDump
-                    def versionMatch = openScapVersionDump =~ /[0-9]+[.][0-9]+[.][0-9]+/
-                    if (versionMatch) {
-                      openScapVersion = '{"version": "' + versionMatch[0] + '"}'
-                      echo openScapVersion
-                    }
-                    //must set regexp variables to null to prevent java.io.NotSerializableException
-                    versionMatch = null
+                  //grab openSCAP version and parse
+                  openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
+                  echo openScapVersionDump
+                  def versionMatch = openScapVersionDump =~ /[0-9]+[.][0-9]+[.][0-9]+/
+                  if (versionMatch) {
+                    openScapVersion = '{"version": "' + versionMatch[0] + '"}'
+                    echo openScapVersion
+                  }
 
-                    sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
-                    sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
-                    sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${openscap_artifact_path}report-cve.html"
-                    sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html ${openscap_artifact_path}report.html"
-                    //archiveArtifacts "/var/lib/jenkins/jobs/${env.JOB_NAME}/builds/${env.BUILD_NUMBER}/openscap-compliance-report.html"
-                  } // script
-                } // stage
+                  //must set regexp variables to null to prevent java.io.NotSerializableException
+                  versionMatch = null
+
+                  //run scans
+                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+                  sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
+
+                  //copy files to s3
+                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${openscap_artifact_path}report-cve.html"
+                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html ${openscap_artifact_path}report.html"
+
+                } // script
               } // withCredentials
             } //node
           } // steps
