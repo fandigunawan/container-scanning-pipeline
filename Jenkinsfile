@@ -239,8 +239,6 @@ pipeline {
                 // copying anchore reports to S3
                 withAWS(credentials:'s3BucketCredentials') {
 
-                    def currentIdent = awsIdentity()
-
                     s3Upload(file: "/tmp/anchore_gates.json",
                           bucket: "${S3_REPORT_BUCKET}",
                           path:"${anchore_artifact_path}")
@@ -258,25 +256,26 @@ pipeline {
               echo "${anchoreVersion}"
 
             } // script
-
-
           } // steps
         } // stage
-
       }// parallel
     } // stage
 
     stage('Write JSON documentaion') {
       steps {
+
         script {
 
-        def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
-        def twistLockJSON = new JsonSlurper().parseText(twistLockVersion)
-        def openScapJSON = new JsonSlurper().parseText(openScapVersion)
+          def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
+          def twistLockJSON = new JsonSlurper().parseText(twistLockVersion)
+          def openScapJSON = new JsonSlurper().parseText(openScapVersion)
 
           def json_documentation = JsonOutput.toJson(timestamp: "${DATETIME_TAG}",
-                git: [hash: "${GIT_COMMIT}", branch: "${GIT_BRANCH}"],
-                jenkins: [buildTag: "${BUILD_TAG}", buildID: "${BUILD_ID}", buildNumber: "${BUILD_NUMBER}"],
+                git: [hash: "${GIT_COMMIT}",
+                      branch: "${GIT_BRANCH}"],
+                jenkins: [buildTag: "${BUILD_TAG}",
+                          buildID: "${BUILD_ID}",
+                          buildNumber: "${BUILD_NUMBER}"],
                 tools: [anchore: anchorJSON,
                         openSCAP: openScapJSON,
                         twistLock: twistLockJSON ])
@@ -287,29 +286,22 @@ pipeline {
           twistLockJSON = null
           openScapJSON = null
 
-          writeFile(file: 'documentation.json', text: json_documentation.toString())
 
-          //this is to provide a way to check what was saved in Jenkins job log
+          //save it to text file to prevent serialization problem
+          writeFile(file: 'documentation.json', text: json_documentation.toString())
           jsonText = readFile(file: 'documentation.json')
           echo "${jsonText}"
 
 
+          //save documentation to S3
           withAWS(credentials:'s3BucketCredentials') {
-
-              def currentIdent = awsIdentity()
-
               s3Upload(file: "documentation.json",
                     bucket: "${S3_REPORT_BUCKET}",
                     path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
-
-
           } // withAWS
 
 
         } // script
-
-
-
       } // steps
     } // stage
 
