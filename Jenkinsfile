@@ -46,7 +46,7 @@ pipeline {
 
   stages {
 
-    stage('Pull from Staging') {
+    stage('Pull docker image') {
 
       steps {
 
@@ -215,14 +215,10 @@ pipeline {
             anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
             script {
-              def remote = [:]
-              remote.name = "node"
-              remote.host = "${env.REMOTE_HOST}"
-              remote.allowAnyHosts = true
+
               anchore_artifact_path = "${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
-              // curl -k -X GET --header 'Accept: application/json' --header 'Authorization: Basic YWRtaW46cmVkaGF0MTI=' 'https://anchore-api.52.61.140.4.nip.io/v1/images/sha256:193bb8f21e5f4ede1cf1ae3e150d89b6dcf1153a8a70a5f807b9854f1b01c34f/check?history=false&detail=true&tag=latest&policyId=2b23d6f7-33e9-45fc-91dd-e5ff63184e80'
-
+              //copying anchor reports  from jenkins artifacts
               step([$class: 'CopyArtifact',
                   filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/anchore_gates.json",
                   fingerprintArtifacts: true,
@@ -241,7 +237,7 @@ pipeline {
                   buildNumber: "${BUILD_NUMBER}"],
                   target: '/tmp/anchore_security.json'])
 
-                // echo s3
+                // copying anchore reports to S3
                 withAWS(credentials:'s3BucketCredentials') {
 
                     def currentIdent = awsIdentity()
@@ -262,8 +258,6 @@ pipeline {
 
               echo "${anchoreVersion}"
 
-              node {
-              } // Node
             } // script
 
 
