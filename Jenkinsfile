@@ -180,7 +180,7 @@ pipeline {
                   // Start the container, import the TwistCLI binary, scan image
                   withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
 
-                      echo "${NEXUS_SERVER}"
+                      //run the TwistLock scan
                       sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
 
                       // TODO get version can't find an API call for this
@@ -199,7 +199,7 @@ pipeline {
         } // stage
 
         stage('Anchore Scan') {
-        
+
           when {
             anyOf {
               environment name: "toolsToRun", value: "All"
@@ -209,18 +209,12 @@ pipeline {
           steps {
             echo 'Anchore Scan'
 
-            //Below is example command that will be needed in Push to Staging step.
+            //run the anchore report using plugin
             sh "echo '${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}' > anchore_images"
-
-
-
             anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
             script {
-              def remote = [:]
-              remote.name = "node"
-              remote.host = "${env.REMOTE_HOST}"
-              remote.allowAnyHosts = true
+
               anchore_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               // get version
@@ -229,8 +223,6 @@ pipeline {
 
               echo "${anchoreVersion}"
 
-              node {
-              } // Node
             } // script
 
 
