@@ -38,7 +38,7 @@ pipeline {
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
     S3_OSCAP_REPORT = "report.html"
-    S3_OSCAP_LOCATION = ""
+    S3_OSCAP_LOCATION = " "
 
     S3_TWISTLOCK_REPORT = ""
     S3_TWISTLOCK_LOCATION = ""
