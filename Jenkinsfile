@@ -29,6 +29,8 @@ pipeline {
     S3_SIGNATURE_FILENAME = ""
     S3_DOCUMENTATION_LOCATION = ""
     S3_DOCUMENTATION_FILENAME = ""
+    S3_TAR_LOCATION = ""
+    S3_TAR_FILENAME = ""
   }  // environment
 
   parameters {
@@ -380,6 +382,9 @@ pipeline {
     stage('Create tar of all output') {
       steps {
         script {
+
+          S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+          S3_TAR_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
           withAWS(credentials:'s3BucketCredentials') {
 
             repoNoSlash = REPO_NAME.replaceAll("/", "-")
@@ -389,13 +394,13 @@ pipeline {
                     path: "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/",
                     force:true)
 
-              sh "tar cvfz ${repoNoSlash}-${IMAGE_TAG}-full.tar.gz output/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
+              sh "tar cvfz ${S3_TAR_FILENAME} output/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
 
-              s3Upload(file: "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz",
+              s3Upload(file: "${S3_TAR_FILENAME}",
                     bucket: "${S3_REPORT_BUCKET}",
                     path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/")
 
-              sh "rm -fr output;rm ${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+              sh "rm -fr output;rm ${S3_TAR_FILENAME}"
 
           } //withAWS
         } //script
@@ -408,7 +413,7 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
 
 
-            headerSlug = "<!DOCTYPE html><html><body>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
+            headerSlug = "<!DOCTYPE html><html><body><h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1><p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
             footerSlug = "-------------------------------------------------------</body></html>"
             repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
@@ -438,10 +443,11 @@ pipeline {
 
             // add this run
             newFile = headerSlug +
-                "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}\n<p>" +
+                "<h2>Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}</h2>\n<p>" +
                 "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
+                "Tar of all artifacts - <a href=\"${S3_HTML_LINK}${S3_TAR_LOCATION}/${S3_TAR_FILENAME}\"> ${S3_TAR_FILENAME}  </a><br>\n" +
                 "<p><p>" +
                 //previousRuns +
                 footerSlug
