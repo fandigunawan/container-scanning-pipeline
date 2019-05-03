@@ -27,6 +27,8 @@ pipeline {
     S3_IMAGE_NAME = ""
     S3_SIGNATURE_LOCATION = ""
     S3_SIGNATURE_FILENAME = ""
+    S3_DOCUMENTATION_LOCATION = ""
+    S3_DOCUMENTATION_FILENAME = ""
   }  // environment
 
   parameters {
@@ -275,6 +277,9 @@ pipeline {
           def twistLockJSON = new JsonSlurper().parseText(twistLockVersion)
           def openScapJSON = new JsonSlurper().parseText(openScapVersion)
 
+          S3_DOCUMENTATION_FILENAME = "documentation.json"
+          S3_DOCUMENTATION_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_DOCUMENTATION_FILENAME}"
+
           def json_documentation = JsonOutput.toJson(timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}",
                       branch: "${GIT_BRANCH}"],
@@ -302,7 +307,7 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
               s3Upload(file: "documentation.json",
                     bucket: "${S3_REPORT_BUCKET}",
-                    path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
+                    path:"${S3_DOCUMENTATION_LOCATION}")
           } // withAWS
 
 
@@ -434,8 +439,10 @@ pipeline {
             // add this run
             newFile = headerSlug +
                 "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}\n<p>" +
-                "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><p>\n" +
-                "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><p>\n" +
+                "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><br>\n" +
+                "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
+                "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
+                "<p><p>" +
                 //previousRuns +
                 footerSlug
 
