@@ -21,7 +21,10 @@ pipeline {
   environment {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
+    S3_HTML_LINK = "https://dsop-pipeline-artifacts.s3-website-us-gov-west-1.amazonaws.com"
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
+    S3_IMAGE_LOCATION = ""
+    S3_IMAGE_NAME = ""
   }  // environment
 
   parameters {
@@ -327,12 +330,15 @@ pipeline {
           //siging the image
           node {
 
+            //store path and name of image on s3
+            S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
+            S3_IMAGE_LOCATION = "/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}"
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
 
               sshPut remote: remote, from: "${SIGNING_KEY}", into: './signingkey'
-              signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;/usr/sbin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${repoNoSlash}-${IMAGE_TAG};rm ./signingkey;cat \$f;"
+              signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;/usr/sbin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}${S3_IMAGE_LOCATION};rm ./signingkey;cat \$f;"
 
               def signatureMatch = signature =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
               def signature = ""
@@ -420,10 +426,13 @@ pipeline {
             echo previousRuns
 
             // add this run
-            newFile = headerSlug + "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}" + previousRuns
+            newFile = headerSlug +
+                "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}\n" +
+                "Image scanned - <h ref=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </h>"
+                + previousRuns
 
             echo newFile
-            
+
             writeFile(file: 'repo_map.html', text: newFile)
 
 
