@@ -391,6 +391,8 @@ pipeline {
         script {
           withAWS(credentials:'s3BucketCredentials') {
 
+
+            headerSlug = "Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts\n-------------------------------------------------------\n\n\n\n"
             repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
             //first time this runs there is no file so need to create
@@ -400,7 +402,7 @@ pipeline {
                       path: "${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
                       force:true)
             } catch(AmazonS3Exception) {
-              sh "echo 'Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts\n-------------------------------------------------------' > repo_map.html"
+              sh "echo '${headerSlug}' > repo_map.html"
             }
 
 
@@ -417,6 +419,10 @@ pipeline {
 
             echo previousRuns
 
+            // add this run
+            newFile = headerSlug + "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}" + previousRuns
+
+            writeFile(file: 'repo_map.html', text: newFile)
 
 
 
