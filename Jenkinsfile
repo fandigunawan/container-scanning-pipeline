@@ -403,7 +403,8 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
 
 
-            headerSlug = "Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
+            headerSlug = "<!DOCTYPE html><html><body>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
+            footerSlug = "-------------------------------------------------------</body></html>"
             repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
             //first time this runs there is no file so need to create
@@ -435,7 +436,8 @@ pipeline {
                 "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}\n<p>" +
                 "Image scanned - <h ref=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </h><p>" +
                 "PGP Signature - <h ref=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </h><p>" +
-                previousRuns
+                previousRuns +
+                footerSlug
 
             echo newFile
 
