@@ -410,7 +410,7 @@ pipeline {
             def headerMatch = map =~ /(?s)(-------------------------------------------------------)(.*)/
             def previousRuns = ""
             if (headerMatch) {
-               previousRuns = headerMatch[0][1]
+               previousRuns = headerMatch[0][2]
             }
             //must set regexp variables to null to prevent java.io.NotSerializableException
             headerMatch = null
