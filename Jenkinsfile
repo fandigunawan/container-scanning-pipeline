@@ -40,6 +40,9 @@ pipeline {
     S3_OSCAP_REPORT = "report.html"
     S3_OSCAP_LOCATION = ""
 
+    S3_TWISTLOCK_REPORT = ""
+    S3_TWISTLOCK_LOCATION = ""
+
 
   }  // environment
 
@@ -188,7 +191,10 @@ pipeline {
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
-              twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
+
+              S3_TWISTLOCK_REPORT = "${IMAGE_TAG}.json"
+              S3_TWISTLOCK_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
+              twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_TWISTLOCK_LOCATION}"
 
               node {
 
@@ -210,7 +216,7 @@ pipeline {
 
                       // Pull latest report from the twistlock console
                       // and save to s3
-  		                sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${twistlock_artifact_path}${IMAGE_TAG}.json"
+  		                sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${twistlock_artifact_path}${S3_TWISTLOCK_REPORT}"
 
                   } // withCredentials
                 } // withCredentials
@@ -455,12 +461,13 @@ pipeline {
 
             // add this run
             newFile = headerSlug +
-                "<h2>Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}</h2>\n<p>" +
+                "<h2>Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}</h2>\n" +
                 "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
-                "<h3>Tool reports:</h3>\n<br>" +
+                "<h4>Tool reports:</h3>\n" +
                 "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
+                "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
                 "<p><p>" +
                 //previousRuns +
                 footerSlug
