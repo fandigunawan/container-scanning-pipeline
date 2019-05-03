@@ -434,8 +434,8 @@ pipeline {
             // add this run
             newFile = headerSlug +
                 "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}\n<p>" +
-                "Image scanned - <h ref=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </h><p>" +
-                "PGP Signature - <h ref=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </h><p>" +
+                "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </h><p>\n" +
+                "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </h><p>\n" +
                 previousRuns +
                 footerSlug
 
