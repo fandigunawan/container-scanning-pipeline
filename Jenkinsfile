@@ -408,14 +408,14 @@ pipeline {
             map = readFile(file: 'repo_map.html')
 
             def headerMatch = map =~ /(?s)(-------------------------------------------------------)(.*)/
-            def header = ""
+            def previousRuns = ""
             if (headerMatch) {
-               header = headerMatch[0][0]
+               previousRuns = headerMatch[0][1]
             }
             //must set regexp variables to null to prevent java.io.NotSerializableException
             headerMatch = null
 
-            echo header
+            echo previousRuns
 
 
 
