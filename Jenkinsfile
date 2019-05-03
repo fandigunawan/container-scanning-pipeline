@@ -386,6 +386,30 @@ pipeline {
       } // steps
     } // stage Create tar of all output
 
+    stage('Update directory') {
+      steps {
+        script {
+          withAWS(credentials:'s3BucketCredentials') {
+
+            repoNoSlash = REPO_NAME.replaceAll("/", "-")
+
+            s3Download(file:'output',
+                    bucket:"${S3_REPORT_BUCKET}",
+                    path: "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/",
+                    force:true)
+
+              sh "tar cvfz ${repoNoSlash}-${IMAGE_TAG}-full.tar.gz output/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
+
+              s3Upload(file: "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz",
+                    bucket: "${S3_REPORT_BUCKET}",
+                    path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/")
+
+              sh "rm -fr output;rm ${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+
+          } //withAWS
+        } //script
+      } // steps
+    } // stage Update directory
 
 
     stage('Push to External Registry (TODO)') {
