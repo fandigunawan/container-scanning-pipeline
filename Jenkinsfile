@@ -215,7 +215,7 @@ pipeline {
 
             script {
 
-              anchore_artifact_path = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore"
+              anchore_artifact_path = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               //copying anchor reports  from jenkins artifacts
               step([$class: 'CopyArtifact',
@@ -241,11 +241,11 @@ pipeline {
 
                     s3Upload(file: "/tmp/anchore_gates.json",
                           bucket: "${S3_REPORT_BUCKET}",
-                          path:"${anchore_artifact_path}/anchore_gates.json")
+                          path:"${anchore_artifact_path}")
 
                     s3Upload(file: "/tmp/anchore_security.json",
                           bucket: "${S3_REPORT_BUCKET}",
-                          path:"${anchore_artifact_path}/anchore_security.json")
+                          path:"${anchore_artifact_path}")
 
                 } //withAWS
 
@@ -372,7 +372,7 @@ pipeline {
                     path: "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/",
                     force:true)
 
-              sh "tar -cvfz output.tar.gz output"
+              sh "tar cvfz output.tar.gz output"
 
               s3Upload(file: "output.tar.gz",
                     bucket: "${S3_REPORT_BUCKET}",
