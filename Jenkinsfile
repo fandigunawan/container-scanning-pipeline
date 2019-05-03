@@ -400,14 +400,29 @@ pipeline {
                       path: "${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
                       force:true)
             } catch(AmazonS3Exception) {
-              sh "echo 'Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts' > repo_map.html"
+              sh "echo 'Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts\n-------------------------------------------------------' > repo_map.html"
             }
 
-            sh "echo 'Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts\n-------------------------------------------------------' > repo_map.html"
 
-              s3Upload(file: "repo_map.html",
-                    bucket: "${S3_REPORT_BUCKET}",
-                    path:"${VENDOR_PRODUCT}/${REPO_NAME}/")
+            //read file and look for header
+            map = readFile(file: 'repo_map.html')
+
+            def headerMatch = map =~ /(?s)(-------------------------------------------------------)(.*)/
+            def signature = ""
+            if (headerMatch) {
+               header = signatureMatch[0]
+            }
+            //must set regexp variables to null to prevent java.io.NotSerializableException
+            headerMatch = null
+
+            echo header
+
+
+
+
+            s3Upload(file: "repo_map.html",
+                  bucket: "${S3_REPORT_BUCKET}",
+                  path:"${VENDOR_PRODUCT}/${REPO_NAME}/")
 
 
           } //withAWS
