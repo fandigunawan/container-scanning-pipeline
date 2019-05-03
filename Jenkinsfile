@@ -398,7 +398,7 @@ pipeline {
                       bucket:"${S3_REPORT_BUCKET}",
                       path: "${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
                       force:true)
-            } catch {
+            } catch(AmazonS3Exception) {
               sh "echo 'Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts' > repo_map.html"
             }
 
