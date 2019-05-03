@@ -428,8 +428,8 @@ pipeline {
             // add this run
             newFile = headerSlug +
                 "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}\n" +
-                "Image scanned - <h ref=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </h>"
-                + previousRuns
+                "Image scanned - <h ref=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </h>" +
+                previousRuns
 
             echo newFile
 
