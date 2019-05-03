@@ -322,6 +322,8 @@ pipeline {
           remote.name = "node"
           remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
+          repoNoSlash = REPO_NAME.replaceAll("/", "-")
+
           //siging the image
           node {
 
@@ -330,7 +332,7 @@ pipeline {
               remote.identityFile = identity
 
               sshPut remote: remote, from: "${SIGNING_KEY}", into: './signingkey'
-              signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;/usr/sbin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${REPO_NAME}-${IMAGE_TAG};rm ./signingkey;cat \$f;"
+              signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;/usr/sbin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${repoNoSlash}-${IMAGE_TAG};rm ./signingkey;cat \$f;"
 
               def signatureMatch = signature =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
               def signature = ""
@@ -353,9 +355,6 @@ pipeline {
 
 
               } //withAWS
-
-
-
             } // withCredentials
           } // node
         }//script
@@ -367,18 +366,20 @@ pipeline {
         script {
           withAWS(credentials:'s3BucketCredentials') {
 
+            repoNoSlash = REPO_NAME.replaceAll("/", "-")
+
             s3Download(file:'output',
                     bucket:"${S3_REPORT_BUCKET}",
                     path: "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/",
                     force:true)
 
-              sh "tar cvfz ${REPO_NAME}-${IMAGE_TAG}-reports.tar.gz output/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
+              sh "tar cvfz ${repoNoSlash}-${IMAGE_TAG}-full.tar.gz output/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
 
-              s3Upload(file: "${REPO_NAME}-${IMAGE_TAG}-reports.tar.gz",
+              s3Upload(file: "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz",
                     bucket: "${S3_REPORT_BUCKET}",
                     path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/")
 
-              sh "rm -fr output;rm ${REPO_NAME}-${IMAGE_TAG}-reports.tar.gz"
+              sh "rm -fr output;rm ${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
 
           } //withAWS
         } //script
