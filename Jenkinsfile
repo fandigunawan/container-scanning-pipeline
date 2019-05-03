@@ -393,12 +393,15 @@ pipeline {
 
             repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
-            s3Download(file:'repo_map.html',
-                    bucket:"${S3_REPORT_BUCKET}",
-                    path: "${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
-                    force:true)
+            try {
+              s3Download(file:'repo_map.html',
+                      bucket:"${S3_REPORT_BUCKET}",
+                      path: "${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
+                      force:true)
+            } catch {
+              sh "echo 'Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts' > repo_map.html"
+            }
 
-              echo "updating directory"
 
               s3Upload(file: "repo_map.html",
                     bucket: "${S3_REPORT_BUCKET}",
