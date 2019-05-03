@@ -410,7 +410,7 @@ pipeline {
             def headerMatch = map =~ /(?s)(-------------------------------------------------------)(.*)/
             def header = ""
             if (headerMatch) {
-               header = headerMatch[0]
+               header = headerMatch[0][0]
             }
             //must set regexp variables to null to prevent java.io.NotSerializableException
             headerMatch = null
