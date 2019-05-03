@@ -408,9 +408,9 @@ pipeline {
             map = readFile(file: 'repo_map.html')
 
             def headerMatch = map =~ /(?s)(-------------------------------------------------------)(.*)/
-            def signature = ""
+            def header = ""
             if (headerMatch) {
-               header = signatureMatch[0]
+               header = headerMatch[0]
             }
             //must set regexp variables to null to prevent java.io.NotSerializableException
             headerMatch = null
