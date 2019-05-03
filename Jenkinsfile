@@ -393,18 +393,17 @@ pipeline {
 
             repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
-            s3Download(file:'output',
+            s3Download(file:'repo_map.html',
                     bucket:"${S3_REPORT_BUCKET}",
-                    path: "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/",
+                    path: "${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
                     force:true)
 
-              sh "tar cvfz ${repoNoSlash}-${IMAGE_TAG}-full.tar.gz output/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
+              echo "updating directory"
 
-              s3Upload(file: "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz",
+              s3Upload(file: "repo_map.html",
                     bucket: "${S3_REPORT_BUCKET}",
-                    path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/")
+                    path:"${VENDOR_PRODUCT}/${REPO_NAME}/")
 
-              sh "rm -fr output;rm ${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
 
           } //withAWS
         } //script
