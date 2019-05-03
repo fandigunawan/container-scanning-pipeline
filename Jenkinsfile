@@ -363,7 +363,6 @@ pipeline {
     } // stage
 
     stage('Create tar of all output') {
-
       steps {
         script {
           withAWS(credentials:'s3BucketCredentials') {
@@ -382,7 +381,8 @@ pipeline {
 
           } //withAWS
         } //script
-      }
+      } // steps
+    } // stage Create tar of all output
 
 
 
