@@ -40,9 +40,12 @@ pipeline {
     S3_OSCAP_REPORT = "report.html"
     S3_OSCAP_LOCATION = " "
 
-    S3_TWISTLOCK_REPORT = ""
-    S3_TWISTLOCK_LOCATION = ""
+    S3_TWISTLOCK_REPORT = " "
+    S3_TWISTLOCK_LOCATION = " "
 
+    S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
+    S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
+    S3_ANCHORE_LOCATION = " "
 
   }  // environment
 
@@ -241,38 +244,38 @@ pipeline {
             anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
             script {
+              S3_ANCHORE_LOCATION = ""${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/""
 
-              anchore_artifact_path = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               //copying anchor reports  from jenkins artifacts
               step([$class: 'CopyArtifact',
-                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/anchore_gates.json",
+                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/${S3_ANCHORE_GATES_REPORT}",
                   fingerprintArtifacts: true,
                   flatten: true,
                   projectName: "${JOB_NAME}",
                   selector: [$class: 'SpecificBuildSelector',
                   buildNumber: "${BUILD_NUMBER}"],
-                  target: '/tmp/anchore_gates.json'])
+                  target: "/tmp/${S3_ANCHORE_GATES_REPORT}"])
 
               step([$class: 'CopyArtifact',
-                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/anchore_security.json",
+                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/${S3_ANCHORE_SECURITY_REPORT}",
                   fingerprintArtifacts: true,
                   flatten: true,
                   projectName: "${JOB_NAME}",
                   selector: [$class: 'SpecificBuildSelector',
                   buildNumber: "${BUILD_NUMBER}"],
-                  target: '/tmp/anchore_security.json'])
+                  target: "/tmp/${S3_ANCHORE_SECURITY_REPORT}"])
 
                 // copying anchore reports to S3
                 withAWS(credentials:'s3BucketCredentials') {
 
-                    s3Upload(file: "/tmp/anchore_gates.json",
+                    s3Upload(file: "/tmp/${S3_ANCHORE_GATES_REPORT}",
                           bucket: "${S3_REPORT_BUCKET}",
-                          path:"${anchore_artifact_path}")
+                          path:"${S3_ANCHORE_LOCATION}")
 
-                    s3Upload(file: "/tmp/anchore_security.json",
+                    s3Upload(file: "/tmp/${S3_ANCHORE_SECURITY_REPORT}",
                           bucket: "${S3_REPORT_BUCKET}",
-                          path:"${anchore_artifact_path}")
+                          path:"${S3_ANCHORE_LOCATION}")
 
                 } //withAWS
 
@@ -468,6 +471,7 @@ pipeline {
                 "<h4>Tool reports:</h3>\n" +
                 "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
                 "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
+                "Anchore - <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}\"> ${S3_ANCHORE_GATES_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT}\"> ${S3_ANCHORE_SECURITY_REPORT}  </a><br>\n" +
                 "<p><p>" +
                 //previousRuns +
                 footerSlug
