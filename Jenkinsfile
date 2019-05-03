@@ -393,6 +393,7 @@ pipeline {
 
             repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
+            //first time this runs there is no file so need to create
             try {
               s3Download(file:'repo_map.html',
                       bucket:"${S3_REPORT_BUCKET}",
@@ -402,6 +403,7 @@ pipeline {
               sh "echo 'Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts' > repo_map.html"
             }
 
+            sh "echo 'Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts\n-------------------------------------------------------' > repo_map.html"
 
               s3Upload(file: "repo_map.html",
                     bucket: "${S3_REPORT_BUCKET}",
