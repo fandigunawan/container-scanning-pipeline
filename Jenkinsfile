@@ -371,13 +371,13 @@ pipeline {
                     bucket:"${S3_REPORT_BUCKET}",
                     path: "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/",
                     force:true)
-              sh "tar -cvf output.tar output"
+              sh "tar -cvfz output.tar.gz output"
 
-              s3Upload(file: "output.tar",
+              s3Upload(file: "output.tar.gz",
                     bucket: "${S3_REPORT_BUCKET}",
                     path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/signature.sha")
 
-              sh "rm -fr output;rm output.tar"
+              sh "rm -fr output;rm output.tar.gz"
 
           } //withAWS
         } //script
