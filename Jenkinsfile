@@ -25,6 +25,8 @@ pipeline {
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
     S3_IMAGE_LOCATION = ""
     S3_IMAGE_NAME = ""
+    S3_SIGNATURE_LOCATION = ""
+    S3_SIGNATURE_FILENAME = ""
   }  // environment
 
   parameters {
@@ -327,12 +329,15 @@ pipeline {
           remote.allowAnyHosts = true
           repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
+          S3_SIGNATURE_FILENAME = "signature.sha"
+          S3_SIGNATURE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_SIGNATURE_FILENAME}"
+
+          S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
+          S3_IMAGE_LOCATION = "/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}"
           //siging the image
           node {
 
             //store path and name of image on s3
-            S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
-            S3_IMAGE_LOCATION = "/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}"
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
@@ -357,7 +362,7 @@ pipeline {
 
                   s3Upload(file: "signature.sha",
                         bucket: "${S3_REPORT_BUCKET}",
-                        path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/signature.sha")
+                        path:"${S3_SIGNATURE_LOCATION}")
 
 
               } //withAWS
@@ -398,7 +403,7 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
 
 
-            headerSlug = "Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts\n-------------------------------------------------------\n\n\n\n"
+            headerSlug = "Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
             repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
             //first time this runs there is no file so need to create
@@ -427,8 +432,11 @@ pipeline {
 
             // add this run
             newFile = headerSlug +
-                "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}\n" +
-                "Image scanned - <h ref=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </h>" +
+                "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}\n<p>" +
+                "Image scanned - <h ref=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </h><p>" +
+                "PGP Signature - <h ref=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </h><p>" +
+
+                S3_SIGNATURE_LOCATION
                 previousRuns
 
             echo newFile
