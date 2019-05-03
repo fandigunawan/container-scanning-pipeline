@@ -35,6 +35,12 @@ pipeline {
 
     S3_TAR_FILENAME = ""
     S3_TAR_LOCATION = ""
+
+    S3_OSCAP_CVE_REPORT = "report-cve.html"
+    S3_OSCAP_REPORT = "report.html"
+    S3_OSCAP_LOCATION = ""
+
+
   }  // environment
 
   parameters {
@@ -116,7 +122,9 @@ pipeline {
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
-              openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+
+              S3_OSCAP_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+              openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_OSCAP_LOCATION}"
 
               node {
 
@@ -143,12 +151,12 @@ pipeline {
                   versionMatch = null
 
                   //run scans
-                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
-                  sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
+                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+                  sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/${S3_OSCAP_CVE_REPORT}"
 
                   //copy files to s3
-                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${openscap_artifact_path}report-cve.html"
-                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html ${openscap_artifact_path}report.html"
+                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/${S3_OSCAP_CVE_REPORT} ${openscap_artifact_path}${S3_OSCAP_CVE_REPORT}"
+                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/${S3_OSCAP_REPORT} ${openscap_artifact_path}${S3_OSCAP_REPORT}"
 
                 } // script
               } // withCredentials
@@ -451,11 +459,12 @@ pipeline {
                 "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
-                "Tar of all artifacts - <a href=\"${S3_HTML_LINK}${S3_TAR_LOCATION}${S3_TAR_FILENAME}\"> ${S3_TAR_FILENAME}  </a><br>\n" +
+                "Tool reports:\n<br>"
+                "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}\${S3_OSCAP_REPORT}"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}\${S3_OSCAP_CVE_REPORT}"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
                 "<p><p>" +
                 //previousRuns +
                 footerSlug
-
+  
             echo newFile
 
             writeFile(file: 'repo_map.html', text: newFile)
