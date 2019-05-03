@@ -460,7 +460,7 @@ pipeline {
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
                 "<h3>Tool reports:</h3>\n<br>" +
-                "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}/${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}/${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
+                "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
                 "<p><p>" +
                 //previousRuns +
                 footerSlug
