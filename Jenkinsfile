@@ -244,7 +244,7 @@ pipeline {
             anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
             script {
-              S3_ANCHORE_LOCATION = ""${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/""
+              S3_ANCHORE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
 
               //copying anchor reports  from jenkins artifacts
