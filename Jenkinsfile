@@ -422,6 +422,8 @@ pipeline {
             // add this run
             newFile = headerSlug + "Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}" + previousRuns
 
+            echo newFile
+            
             writeFile(file: 'repo_map.html', text: newFile)
 
 
