@@ -362,6 +362,30 @@ pipeline {
       } // steps
     } // stage
 
+    stage('Create tar of all output') {
+
+      steps {
+        script {
+          withAWS(credentials:'s3BucketCredentials') {
+
+            s3Download(file:'output',
+                    bucket:"${S3_REPORT_BUCKET}",
+                    path:'${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}',
+                    force:true)
+              sh "tar -cvf output.tar output"
+
+              s3Upload(file: "output.tar",
+                    bucket: "${S3_REPORT_BUCKET}",
+                    path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/signature.sha")
+
+              sh "rm -fr output;rm output.tar"
+
+          } //withAWS
+        } //script
+      }
+
+
+
     stage('Push to External Registry (TODO)') {
 
       steps {
