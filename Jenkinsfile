@@ -370,9 +370,11 @@ pipeline {
               remote.identityFile = identity
 
 
-              def now = new Date();
-              def unixTime = (now.getTime()/1000)
-
+              def unixTime = sh(
+                         script: 'date -uIseconds',
+                         returnStdout: true
+                       ).trim()
+                       
               def containerDocumentation = """{
                   \"critical\": {
                       \"type\": \"atomic container signature\",
