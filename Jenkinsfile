@@ -515,7 +515,7 @@ pipeline {
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1>" +
               "<p> These image manifests have signed with key:<br>" +
-              "${publicKey}<br>" +
+              "<pre>${publicKey}</pre><br>" +
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
             footerSlug = "-------------------------------------------------------</body></html>"
 
