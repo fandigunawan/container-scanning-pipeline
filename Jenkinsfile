@@ -501,15 +501,19 @@ pipeline {
     } // stage Create tar of all output
 
     stage('Update directory') {
+
+      environment {
+        PUBLIC_KEY = credentials('ContainerSigningPublicKey')
+      }  // environment
+
       steps {
         script {
           withAWS(credentials:'s3BucketCredentials') {
 
-            def publicKey = credentials('ContainerSigningPublicKey')
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1>" +
               "<p> These image manifests have signed with key:<br>" +
-              "${publicKey}<br>" +
+              "${PUBLIC_KEY}<br>" +
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
             footerSlug = "-------------------------------------------------------</body></html>"
 
