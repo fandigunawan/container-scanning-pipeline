@@ -375,8 +375,10 @@ pipeline {
                          returnStdout: true
                        ).trim().toString()
 
-              echo unixTime
-              
+              def pgpVersion = sh(script: "pgp --version", returnStdout: true).trim()
+
+              echo pgpVersion
+
               def containerDocumentation = """{
                   \"critical\": {
                       \"type\": \"atomic container signature\",
