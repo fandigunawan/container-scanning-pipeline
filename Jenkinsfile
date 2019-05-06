@@ -370,7 +370,8 @@ pipeline {
               remote.identityFile = identity
 
 
-              def unixTime = getTime()
+              def now = new Date();
+              def unixTime = (now.getTime()/1000)
 
               def containerDocumentation = """{
                   \"critical\": {
