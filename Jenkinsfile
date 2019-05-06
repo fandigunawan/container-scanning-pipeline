@@ -371,10 +371,12 @@ pipeline {
 
 
               def unixTime = sh(
-                         script: 'date -uIseconds',
+                         script: 'date +%s',
                          returnStdout: true
-                       ).trim()
+                       ).trim().toString()
 
+              echo unixTime
+              
               def containerDocumentation = """{
                   \"critical\": {
                       \"type\": \"atomic container signature\",
