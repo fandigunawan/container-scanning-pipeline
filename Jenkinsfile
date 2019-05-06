@@ -346,8 +346,6 @@ pipeline {
       }  // environment
 
       steps {
-        //input message: "Push image ${REPO_NAME}:${IMAGE_TAG} to registry?"
-        echo 'Pushing to Registry'
 
         script {
           def remote = [:]
@@ -364,6 +362,8 @@ pipeline {
           //siging the image
           node {
 
+            echo 'Signing container'
+
             //store path and name of image on s3
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
@@ -374,7 +374,7 @@ pipeline {
                          script: 'date -uIseconds',
                          returnStdout: true
                        ).trim()
-                       
+
               def containerDocumentation = """{
                   \"critical\": {
                       \"type\": \"atomic container signature\",
@@ -391,7 +391,8 @@ pipeline {
                   }
               }"""
 
-              echo 'Signing container'
+              echo containerDocumentation
+
               writeFile(file: 'container_documentation.json', text: containerDocumentation)
               signature = sh "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} container_documentation.json;cat \$f;"
 
