@@ -26,8 +26,8 @@ pipeline {
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
 
-    S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
-    S3_IMAGE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}"
+    S3_IMAGE_NAME = " "
+    S3_IMAGE_LOCATION = " "
 
     S3_SIGNATURE_FILENAME = "signature.sig"
     S3_SIGNATURE_LOCATION =  "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_SIGNATURE_FILENAME}"
@@ -37,7 +37,7 @@ pipeline {
     S3_DOCUMENTATION_FILENAME = "documentation.json"
     S3_DOCUMENTATION_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_DOCUMENTATION_FILENAME}"
 
-    S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+    S3_TAR_FILENAME = " "
     S3_TAR_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
@@ -76,6 +76,20 @@ pipeline {
     } // parameters
 
   stages {
+
+    stage('Finish initializing environment') {
+      steps {
+        script {
+
+          def repoNoSlash = REPO_NAME.replaceAll("/", "-")
+          S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
+          S3_IMAGE_LOCATION = ${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}
+          S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+
+        } //script
+      } // steps
+    } // stage Finish initializing environment
+
 
     stage('Pull docker image') {
 
@@ -374,7 +388,6 @@ pipeline {
           remote.name = "node"
           remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
-          repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
           //siging the image
           node {
@@ -468,7 +481,6 @@ pipeline {
 
           withAWS(credentials:'s3BucketCredentials') {
 
-            repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
             s3Download(file:'output',
                     bucket:"${S3_REPORT_BUCKET}",
@@ -496,7 +508,6 @@ pipeline {
 
             headerSlug = "<!DOCTYPE html><html><body><h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1><p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
             footerSlug = "-------------------------------------------------------</body></html>"
-            repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
             //first time this runs there is no file so need to create
             try {
@@ -526,7 +537,7 @@ pipeline {
             newFile = headerSlug +
                 "<h2>Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}</h2>\n" +
                 "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><br>\n" +
-                "Image Snapshot that is signed - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_JSON}  </a><br>\n" +
+                "Image Snapshot that is signed - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_JSON_LOCATION}\"> ${S3_SIGNATURE_JSON}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
                 "<h4>Tool reports:</h3>\n" +
