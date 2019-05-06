@@ -372,7 +372,7 @@ pipeline {
 
               def unixTime = getTime()
 
-              def containerDocumentation = "{
+              def containerDocumentation = """{
                   \"critical\": {
                       \"type\": \"atomic container signature\",
                       \"image\": {
@@ -386,7 +386,7 @@ pipeline {
                       \"creator\": \"pgp vVERSION\",
                       \"timestamp\": ${unixTime},
                   }
-              }"
+              }"""
 
               echo 'Signing container'
               writeFile(file: 'container_documentation.json', text: containerDocumentation)
