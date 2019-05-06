@@ -422,7 +422,7 @@ pipeline {
 
               echo containerDocumentation
 
-              writeFile(file: ${S3_SIGNATURE_JSON}, text: containerDocumentation)
+              writeFile(file: "${S3_SIGNATURE_JSON}", text: containerDocumentation)
               signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${S3_SIGNATURE_JSON};cat \$f;",
                             returnStdout: true)
 
