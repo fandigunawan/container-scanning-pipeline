@@ -375,7 +375,7 @@ pipeline {
                          returnStdout: true
                        ).trim().toString()
 
-              def pgpVersion = sh(script: "pgp --version", returnStdout: true).trim()
+              def pgpVersion = sh(script: "gpg --version", returnStdout: true).trim()
 
               echo pgpVersion
 
