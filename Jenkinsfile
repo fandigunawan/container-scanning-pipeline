@@ -369,26 +369,34 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
 
-              def containerSignature = JsonOutput.toJson(
+
+              def unixTime = getTime()
+
+              def containerDocumentation = "
               {
-                  critical: {
-                      type: "atomic container signature",
-                      image: {
-                          docker-manifest-digest: "sha256:817a12c32a39bbe394944ba49de563e085f1d3c5266eb8e9723256bc4448680e"
+                  \"critical\": {
+                      \"type\": \"atomic container signature\",
+                      \"image\": {
+                          \"docker-manifest-digest\": \"sha256:817a12c32a39bbe394944ba49de563e085f1d3c5266eb8e9723256bc4448680e\"
                       },
-                      identity: {
-                          docker-reference: "docker.io/library/busybox:latest"
+                      \"identity\": {
+                          \"docker-reference\": \"docker.io/library/busybox:latest\"
                       }
                   },
-                  optional: {
-                      creator: "some software package v1.0.1-35",
-                      timestamp: getTime(),
+                  \"optional\": {
+                      \"creator\": \"pgp vVERSION\",
+                      \"timestamp\": ${unixTime},
                   }
-              })
+              }"
 
+              echo 'Signing container'
+              writeFile(file: 'container_documentation.json', text: containerDocumentation)
+              signature = sh "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} container_documentation.json;cat \$f;"
 
-              sshPut remote: remote, from: "${SIGNING_KEY}", into: './signingkey'
-              signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;/usr/sbin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};rm ./signingkey;cat \$f;"
+              echo signature
+
+              //sshPut remote: remote, from: "${SIGNING_KEY}", into: './signingkey'
+              //signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;/usr/sbin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};rm ./signingkey;cat \$f;"
 
               def signatureMatch = signature =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
               def signature = ""
