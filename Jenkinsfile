@@ -510,10 +510,12 @@ pipeline {
         script {
           withAWS(credentials:'s3BucketCredentials') {
 
+            def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
+
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1>" +
               "<p> These image manifests have signed with key:<br>" +
-              "${PUBLIC_KEY}<br>" +
+              "${publicKey}<br>" +
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
             footerSlug = "-------------------------------------------------------</body></html>"
 
