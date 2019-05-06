@@ -337,6 +337,18 @@ pipeline {
       } // steps
     } // stage
 
+
+    stage('Push to External Registry (TODO)') {
+
+      steps {
+        echo "Push to external registry"
+      }
+
+
+    } // stage Push to External Registry
+
+
+
     stage('Signing image') {
       environment {
         //this is file reference
@@ -394,7 +406,7 @@ pipeline {
                           \"docker-manifest-digest\": \"sha256:817a12c32a39bbe394944ba49de563e085f1d3c5266eb8e9723256bc4448680e\"
                       },
                       \"identity\": {
-                          \"docker-reference\": \"docker.io/library/busybox:latest\"
+                          \"docker-reference\": \"${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}\"
                       }
                   },
                   \"optional\": {
@@ -533,14 +545,6 @@ pipeline {
     } // stage Update directory
 
 
-    stage('Push to External Registry (TODO)') {
-
-      steps {
-        echo "Push to external registry"
-      }
-
-
-    } // stage Push to External Registry
 
     stage('Clean up Docker artifacts') {
       steps {
