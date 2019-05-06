@@ -23,6 +23,9 @@ pipeline {
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
 
+    PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
+    PUBLIC_IMAGE_SHA = ""
+
     S3_IMAGE_NAME = ""
     S3_IMAGE_LOCATION = ""
 
@@ -45,6 +48,8 @@ pipeline {
     S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
     S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
     S3_ANCHORE_LOCATION = " "
+
+
 
   }  // environment
 
@@ -97,7 +102,8 @@ pipeline {
                 sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
               } // withCredentials
 
-              sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+              def imageInfo = sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+              echo imageInfo
 
             } //withCredentials
           } //node
@@ -406,7 +412,7 @@ pipeline {
                           \"docker-manifest-digest\": \"sha256:817a12c32a39bbe394944ba49de563e085f1d3c5266eb8e9723256bc4448680e\"
                       },
                       \"identity\": {
-                          \"docker-reference\": \"${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}\"
+                          \"docker-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
                       }
                   },
                   \"optional\": {
