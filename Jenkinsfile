@@ -418,20 +418,20 @@ pipeline {
               echo gpgVersion
 
               def containerDocumentation = """{
-                  \"critical\": {
-                      \"type\": \"atomic container signature\",
-                      \"image\": {
-                          \"docker-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\"
-                      },
-                      \"identity\": {
-                          \"docker-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
-                      }
-                  },
-                  \"optional\": {
-                      \"creator\": \"${gpgVersion}\",
-                      \"timestamp\": ${unixTime},
-                  }
-              }"""
+    \"critical\": {
+        \"type\": \"atomic container signature\",
+        \"image\": {
+            \"docker-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\"
+        },
+        \"identity\": {
+            \"docker-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
+        }
+    },
+    \"optional\": {
+        \"creator\": \"${gpgVersion}\",
+        \"timestamp\": ${unixTime},
+    }
+}"""
 
               echo containerDocumentation
 
