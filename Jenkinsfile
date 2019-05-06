@@ -527,8 +527,6 @@ pipeline {
               "<li>Retrieve the image using: docker pull ${PUBLIC_DOCKER_HOST}${REPO_NAME}@${PUBLIC_IMAGE_SHA} </li>" +
               "<li>Find the tag for run below: example ${IMAGE_TAG}" +
               "<li>Run the image with: docker run ${REPO_NAME}:${IMAGE_TAG}" +
-              "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
-              "<li>Verify with: gpg --verify signature.sig manifest.json</li>" +
               "</ol>" +
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
