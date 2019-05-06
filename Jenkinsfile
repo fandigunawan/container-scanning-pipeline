@@ -83,7 +83,7 @@ pipeline {
 
           def repoNoSlash = REPO_NAME.replaceAll("/", "-")
           S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
-          S3_IMAGE_LOCATION = ${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}
+          S3_IMAGE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}"
           S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
 
         } //script
