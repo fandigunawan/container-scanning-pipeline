@@ -26,30 +26,30 @@ pipeline {
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
 
-    S3_IMAGE_NAME = ""
-    S3_IMAGE_LOCATION = ""
+    S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
+    S3_IMAGE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}"
 
     S3_SIGNATURE_FILENAME = "signature.sig"
     S3_SIGNATURE_LOCATION =  "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_SIGNATURE_FILENAME}"
     S3_SIGNATURE_JSON = "snapshot.json"
-    S3_SIGNATURE_JSON_LOCATION = " "
+    S3_SIGNATURE_JSON_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_SIGNATURE_JSON}"
 
-    S3_DOCUMENTATION_FILENAME = ""
-    S3_DOCUMENTATION_LOCATION = ""
+    S3_DOCUMENTATION_FILENAME = "documentation.json"
+    S3_DOCUMENTATION_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_DOCUMENTATION_FILENAME}"
 
-    S3_TAR_FILENAME = ""
-    S3_TAR_LOCATION = ""
+    S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+    S3_TAR_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
     S3_OSCAP_REPORT = "report.html"
-    S3_OSCAP_LOCATION = " "
+    S3_OSCAP_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
 
-    S3_TWISTLOCK_REPORT = " "
-    S3_TWISTLOCK_LOCATION = " "
+    S3_TWISTLOCK_REPORT = "${IMAGE_TAG}.json"
+    S3_TWISTLOCK_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
 
     S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
     S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
-    S3_ANCHORE_LOCATION = " "
+    S3_ANCHORE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
 
 
@@ -144,7 +144,6 @@ pipeline {
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
 
-              S3_OSCAP_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
               openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_OSCAP_LOCATION}"
 
               node {
@@ -210,8 +209,6 @@ pipeline {
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
 
-              S3_TWISTLOCK_REPORT = "${IMAGE_TAG}.json"
-              S3_TWISTLOCK_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
               twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_TWISTLOCK_LOCATION}"
 
               node {
@@ -259,7 +256,6 @@ pipeline {
             anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
 
             script {
-              S3_ANCHORE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
 
               //copying anchor reports  from jenkins artifacts
@@ -315,8 +311,6 @@ pipeline {
           def twistLockJSON = new JsonSlurper().parseText(twistLockVersion)
           def openScapJSON = new JsonSlurper().parseText(openScapVersion)
 
-          S3_DOCUMENTATION_FILENAME = "documentation.json"
-          S3_DOCUMENTATION_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_DOCUMENTATION_FILENAME}"
 
           def json_documentation = JsonOutput.toJson(timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}",
@@ -382,11 +376,6 @@ pipeline {
           remote.allowAnyHosts = true
           repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
-          echo "${S3_SIGNATURE_LOCATION}"
-          S3_SIGNATURE_JSON_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_SIGNATURE_JSON}"
-
-          S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
-          S3_IMAGE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}"
           //siging the image
           node {
 
@@ -477,8 +466,6 @@ pipeline {
       steps {
         script {
 
-          S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
-          S3_TAR_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
           withAWS(credentials:'s3BucketCredentials') {
 
             repoNoSlash = REPO_NAME.replaceAll("/", "-")
