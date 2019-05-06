@@ -375,9 +375,17 @@ pipeline {
                          returnStdout: true
                        ).trim().toString()
 
-              def pgpVersion = sh(script: "gpg --version", returnStdout: true).trim()
+              def gpgVersionOutput = sh(script: "gpg --version", returnStdout: true).trim()
+              def gpgMatch = gpgVersionOutput =~ /gpg.*[0-9]+[.][0-9]+[.][0-9]+/
+              def gpgVersion = ""
+              if (gpgMatch) {
+                 gpgVersion = gpgMatch[0]
+              }
+              //must set regexp variables to null to prevent java.io.NotSerializableException
+              gpgMatch = null
 
-              echo pgpVersion
+
+              echo gpgVersion
 
               def containerDocumentation = """{
                   \"critical\": {
@@ -390,7 +398,7 @@ pipeline {
                       }
                   },
                   \"optional\": {
-                      \"creator\": \"pgp vVERSION\",
+                      \"creator\": \"${gpgVersion}\",
                       \"timestamp\": ${unixTime},
                   }
               }"""
