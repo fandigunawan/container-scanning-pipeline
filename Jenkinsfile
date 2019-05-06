@@ -106,14 +106,12 @@ pipeline {
 
               //need to extract the sha256 value for signature
               def shaMatch = imageInfo =~ /sha256[:].+/
-              def sha256 = ""
               if (shaMatch) {
-                 sha256 = shaMatch[0]
+                 PUBLIC_IMAGE_SHA = shaMatch[0]
               }
               //must set regexp variables to null to prevent java.io.NotSerializableException
               shaMatch = null
 
-              echo sha256
 
             } //withCredentials
           } //node
@@ -419,7 +417,7 @@ pipeline {
                   \"critical\": {
                       \"type\": \"atomic container signature\",
                       \"image\": {
-                          \"docker-manifest-digest\": \"sha256:817a12c32a39bbe394944ba49de563e085f1d3c5266eb8e9723256bc4448680e\"
+                          \"docker-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\"
                       },
                       \"identity\": {
                           \"docker-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
