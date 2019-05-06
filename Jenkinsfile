@@ -516,9 +516,17 @@ pipeline {
               "<h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1>" +
               "<p> These image manifests have signed with key:<br>" +
               "<pre>${publicKey}</pre>" +
-              "<p>Instructions:<ol>" +
+              "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
               "<li>Import key with: gpg --import key.asc</li>" +
+              "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
+              "<li>Verify with: gpg --verify signature.sig manifest.json</li>" +
+              "</ol>" +
+              "<p>Running Image Instructions:<ol>" +
+              "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
+              "<li>Retrieve the image using: docker pull ${PUBLIC_DOCKER_HOST}${REPO_NAME}@${PUBLIC_IMAGE_SHA} </li>" +
+              "<li>Find the tag for run below: example ${IMAGE_TAG}" +
+              "<li>Run the image with: docker run ${REPO_NAME}:${IMAGE_TAG}" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with: gpg --verify signature.sig manifest.json</li>" +
               "</ol>" +
@@ -553,6 +561,7 @@ pipeline {
             // add this run
             newFile = headerSlug +
                 "<h2>Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}</h2>\n" +
+                "SHA tag - ${PUBLIC_IMAGE_SHA}<br>\n" +
                 "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><br>\n" +
                 "Image manifest  - <a href=\"${S3_HTML_LINK}${S3_MANIFEST_LOCATION}\"> ${S3_MANIFEST_NAME}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
