@@ -31,8 +31,8 @@ pipeline {
 
     S3_SIGNATURE_FILENAME = "signature.sig"
     S3_SIGNATURE_LOCATION =  "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_SIGNATURE_FILENAME}"
-    S3_SIGNATURE_JSON = "snapshot.json"
-    S3_SIGNATURE_JSON_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_SIGNATURE_JSON}"
+    S3_MANIFEST_NAME = "manifest.json"
+    S3_MANIFEST_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_MANIFEST_NAME}"
 
     S3_DOCUMENTATION_FILENAME = "documentation.json"
     S3_DOCUMENTATION_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_DOCUMENTATION_FILENAME}"
@@ -435,8 +435,8 @@ pipeline {
 
               echo containerDocumentation
 
-              writeFile(file: "${S3_SIGNATURE_JSON}", text: containerDocumentation)
-              signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${S3_SIGNATURE_JSON};cat \$f;",
+              writeFile(file: "${S3_MANIFEST_NAME}", text: containerDocumentation)
+              signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${S3_MANIFEST_NAME};cat \$f;",
                             returnStdout: true)
 
               echo signature
@@ -459,9 +459,9 @@ pipeline {
                   def currentIdent = awsIdentity()
                   writeFile(file: "${S3_SIGNATURE_FILENAME}", text: signature)
 
-                  s3Upload(file: "${S3_SIGNATURE_JSON}",
+                  s3Upload(file: "${S3_MANIFEST_NAME}",
                         bucket: "${S3_REPORT_BUCKET}",
-                        path:"${S3_SIGNATURE_JSON_LOCATION}")
+                        path:"${S3_MANIFEST_LOCATION}")
 
                   s3Upload(file: "${S3_SIGNATURE_FILENAME}",
                         bucket: "${S3_REPORT_BUCKET}",
@@ -537,7 +537,7 @@ pipeline {
             newFile = headerSlug +
                 "<h2>Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}</h2>\n" +
                 "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><br>\n" +
-                "Image Snapshot that is signed - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_JSON_LOCATION}\"> ${S3_SIGNATURE_JSON}  </a><br>\n" +
+                "Image manifest  - <a href=\"${S3_HTML_LINK}${S3_MANIFEST_LOCATION}\"> ${S3_MANIFEST_NAME}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
                 "<h4>Tool reports:</h3>\n" +
