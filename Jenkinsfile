@@ -103,7 +103,17 @@ pipeline {
               } // withCredentials
 
               def imageInfo = sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
-              echo imageInfo
+
+              //need to extract the sha256 value for signature
+              def shaMatch = imageInfo =~ /sha256[:].+/
+              def sha256 = ""
+              if (shaMatch) {
+                 sha256 = shaMatch[0]
+              }
+              //must set regexp variables to null to prevent java.io.NotSerializableException
+              shaMatch = null
+
+              echo sha256
 
             } //withCredentials
           } //node
