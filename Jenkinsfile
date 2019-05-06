@@ -506,7 +506,11 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
 
 
-            headerSlug = "<!DOCTYPE html><html><body><h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1><p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
+            headerSlug = "<!DOCTYPE html><html><body>" +
+              "<h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1>" +
+              "<p> These image manifests have signed with key:<br>" +
+               credentials('ContainerSigningKeyPassphrase') + "<br>" +
+              "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
             footerSlug = "-------------------------------------------------------</body></html>"
 
             //first time this runs there is no file so need to create
