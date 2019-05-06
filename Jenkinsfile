@@ -516,11 +516,12 @@ pipeline {
               "<h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1>" +
               "<p> These image manifests have signed with key:<br>" +
               "<pre>${publicKey}</pre>" +
-              "<p>Instructions:<ol><li>1.Save key to file (call it public.asc)</li>" +
+              "<p>Instructions:<ol>" +
+              "<li>Save key to file (call it public.asc)</li>" +
               "<li>Import key with: gpg --import key.asc</li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with: gpg --verify signature.sig manifest.json</li>" +
-              "</ol>" + 
+              "</ol>" +
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
             footerSlug = "-------------------------------------------------------</body></html>"
