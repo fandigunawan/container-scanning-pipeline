@@ -422,8 +422,8 @@ pipeline {
 
               echo containerDocumentation
 
-              writeFile(file: 'snapshot.json', text: containerDocumentation)
-              signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} snapshot.json;cat \$f;",
+              writeFile(file: ${S3_SIGNATURE_JSON}, text: containerDocumentation)
+              signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ${S3_SIGNATURE_JSON};cat \$f;",
                             returnStdout: true)
 
               echo signature
@@ -446,7 +446,7 @@ pipeline {
                   def currentIdent = awsIdentity()
                   writeFile(file: 'signature.sha', text: signature)
 
-                  s3Upload(file: "snapshot.json",
+                  s3Upload(file: "${S3_SIGNATURE_JSON}",
                         bucket: "${S3_REPORT_BUCKET}",
                         path:"${S3_SIGNATURE_LOCATION}")
 
@@ -526,7 +526,7 @@ pipeline {
             newFile = headerSlug +
                 "<h2>Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}</h2>\n" +
                 "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><br>\n" +
-                "Image Snapshot that is signed - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${snap}  </a><br>\n" +
+                "Image Snapshot that is signed - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_JSON}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
                 "<h4>Tool reports:</h3>\n" +
