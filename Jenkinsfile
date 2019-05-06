@@ -8,7 +8,6 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 //variables to store version information in
-json_documentation = ""
 anchoreVersion = '{}'
 openScapVersion = '{}'
 twistLockVersion = '{"version": "19.0.317"}'
