@@ -372,8 +372,7 @@ pipeline {
 
               def unixTime = getTime()
 
-              def containerDocumentation = "
-              {
+              def containerDocumentation = "{
                   \"critical\": {
                       \"type\": \"atomic container signature\",
                       \"image\": {
