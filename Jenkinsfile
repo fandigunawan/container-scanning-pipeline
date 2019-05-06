@@ -524,7 +524,7 @@ pipeline {
               "</ol>" +
               "<p>Running Image Instructions:<ol>" +
               "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
-              "<li>Retrieve the image using: docker pull ${PUBLIC_DOCKER_HOST}${REPO_NAME}@${PUBLIC_IMAGE_SHA} </li>" +
+              "<li>Retrieve the image using: docker pull ${PUBLIC_DOCKER_HOST}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} </li>" +
               "<li>Find the tag for run below: example ${IMAGE_TAG}" +
               "<li>Run the image with: docker run ${REPO_NAME}:${IMAGE_TAG}" +
               "</ol>" +
