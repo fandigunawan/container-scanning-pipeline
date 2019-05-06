@@ -369,7 +369,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
 
-              def containerSignature =
+              def containerSignature = JsonOutput.toJson(
               {
                   critical: {
                       type: "atomic container signature",
@@ -384,7 +384,7 @@ pipeline {
                       creator: "some software package v1.0.1-35",
                       timestamp: getTime(),
                   }
-              }
+              })
 
 
               sshPut remote: remote, from: "${SIGNING_KEY}", into: './signingkey'
