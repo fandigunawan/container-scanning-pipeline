@@ -582,7 +582,7 @@ pipeline {
 
             s3Upload(file: "repo_map.html",
                   bucket: "${S3_REPORT_BUCKET}",
-                  path:"${VENDOR_PRODUCT}/${REPO_NAME}/")
+                  path:"container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/")
 
 
           } //withAWS
