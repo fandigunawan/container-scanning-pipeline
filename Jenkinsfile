@@ -21,7 +21,7 @@ pipeline {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
-    REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
+    REMOTE_HOST = 'ec2-52-61-217-50.us-gov-west-1.compute.amazonaws.com'
 
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
