@@ -110,7 +110,7 @@ pipeline {
 
           node {
 
-            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
 
               image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
               remote.user = userName
@@ -164,7 +164,7 @@ pipeline {
 
               node {
 
-                withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
 
                   image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
                   remote.user = userName
@@ -203,7 +203,7 @@ pipeline {
         stage('Twistlock Scan') {
 
           environment {
-            TWISTLOCK_SERVER = 'https://twistlock-console-twistlock.us-gov-west-1.compute.internal'
+            TWISTLOCK_SERVER = 'https://twistlock.52.61.140.4.nip.io'
           }  // environment
 
           when {
@@ -230,7 +230,7 @@ pipeline {
               node {
 
                 // using the oscap user, this is temporary
-                withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+                withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
 
                   remote.user = userName
                   remote.identityFile = identity
@@ -608,7 +608,7 @@ pipeline {
           node {
 
             // using the oscap user, this is temporary
-            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
 
               remote.user = userName
               remote.identityFile = identity
