@@ -8,7 +8,6 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 //variables to store version information in
-json_documentation = ""
 anchoreVersion = '{}'
 openScapVersion = '{}'
 twistLockVersion = '{"version": "19.0.317"}'
@@ -21,7 +20,41 @@ pipeline {
   environment {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
+    S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     REMOTE_HOST = 'ec2-52-222-64-188.us-gov-west-1.compute.amazonaws.com'
+
+    PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
+    PUBLIC_IMAGE_SHA = ""
+
+    S3_IMAGE_NAME = " "
+    S3_IMAGE_LOCATION = " "
+
+    BASIC_PATH_FOR_DATA = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}" 
+
+    S3_SIGNATURE_FILENAME = "signature.sig"
+    S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
+    S3_MANIFEST_NAME = "manifest.json"
+    S3_MANIFEST_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_MANIFEST_NAME}"
+
+    S3_DOCUMENTATION_FILENAME = "documentation.json"
+    S3_DOCUMENTATION_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_DOCUMENTATION_FILENAME}"
+
+    S3_TAR_FILENAME = " "
+    S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/"
+
+    S3_OSCAP_CVE_REPORT = "report-cve.html"
+    S3_OSCAP_REPORT = "report.html"
+    S3_OSCAP_LOCATION = "${BASIC_PATH_FOR_DATA}/openscap/"
+
+    S3_TWISTLOCK_REPORT = "${IMAGE_TAG}.json"
+    S3_TWISTLOCK_LOCATION = "${BASIC_PATH_FOR_DATA}/twistlock/"
+
+    S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
+    S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
+    S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
+
+
+
   }  // environment
 
   parameters {
@@ -46,12 +79,26 @@ pipeline {
 
   stages {
 
+    stage('Finish initializing environment') {
+      steps {
+        script {
+
+          def repoNoSlash = REPO_NAME.replaceAll("/", "-")
+          S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
+          S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
+          S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+
+        } //script
+      } // steps
+    } // stage Finish initializing environment
+
+
     stage('Pull docker image') {
 
       steps {
 
         echo "Pushing ${REPO_NAME}:${IMAGE_TAG} to Nexus Staging"
-        echo "Artifact path is   s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}"
+        echo "Artifact path is   s3://${S3_REPORT_BUCKET}/${BASIC_PATH_FOR_DATA}/"
 
         script {
 
@@ -59,7 +106,7 @@ pipeline {
           remote.name = "node"
           remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
-          openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+          openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${BASIC_PATH_FOR_DATA}/openscap/"
 
           node {
 
@@ -73,7 +120,16 @@ pipeline {
                 sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
               } // withCredentials
 
-              sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+              def imageInfo = sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+
+              //need to extract the sha256 value for signature
+              def shaMatch = imageInfo =~ /sha256[:].+/
+              if (shaMatch) {
+                 PUBLIC_IMAGE_SHA = shaMatch[0]
+              }
+              //must set regexp variables to null to prevent java.io.NotSerializableException
+              shaMatch = null
+
 
             } //withCredentials
           } //node
@@ -103,7 +159,8 @@ pipeline {
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
-              openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+
+              openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_OSCAP_LOCATION}"
 
               node {
 
@@ -130,12 +187,12 @@ pipeline {
                   versionMatch = null
 
                   //run scans
-                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/report.html /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
-                  sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/report-cve.html"
+                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+                  sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/${S3_OSCAP_CVE_REPORT}"
 
                   //copy files to s3
-                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report-cve.html ${openscap_artifact_path}report-cve.html"
-                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/report.html ${openscap_artifact_path}report.html"
+                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/${S3_OSCAP_CVE_REPORT} ${openscap_artifact_path}${S3_OSCAP_CVE_REPORT}"
+                  sshCommand remote: remote, command: "/usr/sbin/aws s3 cp /tmp/${S3_OSCAP_REPORT} ${openscap_artifact_path}${S3_OSCAP_REPORT}"
 
                 } // script
               } // withCredentials
@@ -167,7 +224,8 @@ pipeline {
               remote.name = "node"
               remote.host = "${env.REMOTE_HOST}"
               remote.allowAnyHosts = true
-              twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
+
+              twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_TWISTLOCK_LOCATION}"
 
               node {
 
@@ -189,7 +247,7 @@ pipeline {
 
                       // Pull latest report from the twistlock console
                       // and save to s3
-  		                sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${twistlock_artifact_path}${IMAGE_TAG}.json"
+  		                sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/sbin/aws s3 cp - ${twistlock_artifact_path}${S3_TWISTLOCK_REPORT}"
 
                   } // withCredentials
                 } // withCredentials
@@ -215,37 +273,36 @@ pipeline {
 
             script {
 
-              anchore_artifact_path = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
 
               //copying anchor reports  from jenkins artifacts
               step([$class: 'CopyArtifact',
-                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/anchore_gates.json",
+                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/${S3_ANCHORE_GATES_REPORT}",
                   fingerprintArtifacts: true,
                   flatten: true,
                   projectName: "${JOB_NAME}",
                   selector: [$class: 'SpecificBuildSelector',
                   buildNumber: "${BUILD_NUMBER}"],
-                  target: '/tmp/anchore_gates.json'])
+                  target: "/tmp/${S3_ANCHORE_GATES_REPORT}"])
 
               step([$class: 'CopyArtifact',
-                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/anchore_security.json",
+                  filter: "AnchoreReport.${JOB_NAME}_${BUILD_NUMBER}/${S3_ANCHORE_SECURITY_REPORT}",
                   fingerprintArtifacts: true,
                   flatten: true,
                   projectName: "${JOB_NAME}",
                   selector: [$class: 'SpecificBuildSelector',
                   buildNumber: "${BUILD_NUMBER}"],
-                  target: '/tmp/anchore_security.json'])
+                  target: "/tmp/${S3_ANCHORE_SECURITY_REPORT}"])
 
                 // copying anchore reports to S3
                 withAWS(credentials:'s3BucketCredentials') {
 
-                    s3Upload(file: "/tmp/anchore_gates.json",
+                    s3Upload(file: "/tmp/${S3_ANCHORE_GATES_REPORT}",
                           bucket: "${S3_REPORT_BUCKET}",
-                          path:"${anchore_artifact_path}anchore_gates.json")
+                          path:"${S3_ANCHORE_LOCATION}")
 
-                    s3Upload(file: "/tmp/anchore_gates.json",
+                    s3Upload(file: "/tmp/${S3_ANCHORE_SECURITY_REPORT}",
                           bucket: "${S3_REPORT_BUCKET}",
-                          path:"${anchore_artifact_path}anchore_gates.json")
+                          path:"${S3_ANCHORE_LOCATION}")
 
                 } //withAWS
 
@@ -269,6 +326,7 @@ pipeline {
           def anchorJSON = new JsonSlurper().parseText(anchoreVersion)
           def twistLockJSON = new JsonSlurper().parseText(twistLockVersion)
           def openScapJSON = new JsonSlurper().parseText(openScapVersion)
+
 
           def json_documentation = JsonOutput.toJson(timestamp: "${DATETIME_TAG}",
                 git: [hash: "${GIT_COMMIT}",
@@ -297,13 +355,25 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
               s3Upload(file: "documentation.json",
                     bucket: "${S3_REPORT_BUCKET}",
-                    path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/documentation.json")
+                    path:"${S3_DOCUMENTATION_LOCATION}")
           } // withAWS
 
 
         } // script
       } // steps
     } // stage
+
+
+    stage('Push to External Registry (TODO)') {
+
+      steps {
+        echo "Push to external registry"
+      }
+
+
+    } // stage Push to External Registry
+
+
 
     stage('Signing image') {
       environment {
@@ -314,28 +384,72 @@ pipeline {
       }  // environment
 
       steps {
-        //input message: "Push image ${REPO_NAME}:${IMAGE_TAG} to registry?"
-        echo 'Pushing to Registry'
 
         script {
           def remote = [:]
           remote.name = "node"
           remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
+
           //siging the image
           node {
 
+            echo 'Signing container'
+
+            //store path and name of image on s3
             withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
 
-              sshPut remote: remote, from: "${SIGNING_KEY}", into: './signingkey'
-              signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;/usr/sbin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/docker_image;rm ./signingkey;cat \$f;"
+
+              def unixTime = sh(
+                         script: 'date +%s',
+                         returnStdout: true
+                       ).trim().toString()
+
+              def gpgVersionOutput = sh(script: "gpg --version", returnStdout: true).trim()
+              def gpgMatch = gpgVersionOutput =~ /gpg.*[0-9]+[.][0-9]+[.][0-9]+/
+              def gpgVersion = ""
+              if (gpgMatch) {
+                 gpgVersion = gpgMatch[0]
+              }
+              //must set regexp variables to null to prevent java.io.NotSerializableException
+              gpgMatch = null
+
+
+              echo gpgVersion
+
+              def containerDocumentation = """{
+    \"critical\": {
+        \"type\": \"atomic container signature\",
+        \"image\": {
+            \"docker-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\"
+        },
+        \"identity\": {
+            \"docker-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
+        }
+    },
+    \"optional\": {
+        \"creator\": \"${gpgVersion}\",
+        \"timestamp\": ${unixTime},
+    }
+}"""
+
+              echo containerDocumentation
+
+              writeFile(file: "${S3_MANIFEST_NAME}", text: containerDocumentation)
+              signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${S3_MANIFEST_NAME};cat \$f;",
+                            returnStdout: true)
+
+              echo signature
+
+
+              //sshPut remote: remote, from: "${SIGNING_KEY}", into: './signingkey'
+              //signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;/usr/sbin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};rm ./signingkey;cat \$f;"
 
               def signatureMatch = signature =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
               def signature = ""
               if (signatureMatch) {
-
                  signature = signatureMatch[0]
               }
               //must set regexp variables to null to prevent java.io.NotSerializableException
@@ -345,31 +459,138 @@ pipeline {
               withAWS(credentials:'s3BucketCredentials') {
 
                   def currentIdent = awsIdentity()
-                  writeFile(file: 'signature.sha', text: signature)
+                  writeFile(file: "${S3_SIGNATURE_FILENAME}", text: signature)
 
-                  s3Upload(file: "signature.sha",
+                  s3Upload(file: "${S3_MANIFEST_NAME}",
                         bucket: "${S3_REPORT_BUCKET}",
-                        path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/signature.sha")
+                        path:"${S3_MANIFEST_LOCATION}")
+
+                  s3Upload(file: "${S3_SIGNATURE_FILENAME}",
+                        bucket: "${S3_REPORT_BUCKET}",
+                        path:"${S3_SIGNATURE_LOCATION}")
 
 
               } //withAWS
-
-
-
             } // withCredentials
           } // node
         }//script
       } // steps
     } // stage
 
-    stage('Push to External Registry (TODO)') {
+    stage('Create tar of all output') {
+      steps {
+        script {
+
+          withAWS(credentials:'s3BucketCredentials') {
+
+
+            s3Download(file:'output',
+                    bucket:"${S3_REPORT_BUCKET}",
+                    path: "${BASIC_PATH_FOR_DATA}/",
+                    force:true)
+
+              sh "tar cvfz ${S3_TAR_FILENAME} output/${BASIC_PATH_FOR_DATA}/"
+
+              s3Upload(file: "${S3_TAR_FILENAME}",
+                    bucket: "${S3_REPORT_BUCKET}",
+                    path:"${BASIC_PATH_FOR_DATA}/")
+
+              sh "rm -fr output;rm ${S3_TAR_FILENAME}"
+
+          } //withAWS
+        } //script
+      } // steps
+    } // stage Create tar of all output
+
+    stage('Update directory') {
+
+      environment {
+        PUBLIC_KEY = credentials('ContainerSigningPublicKey')
+      }  // environment
 
       steps {
-        echo "Push to external registry"
-      }
+        script {
+          withAWS(credentials:'s3BucketCredentials') {
+
+            def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
+
+            headerSlug = "<!DOCTYPE html><html><body>" +
+              "<h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1>" +
+              "<p> These image manifests have signed with key:<br>" +
+              "<pre>${publicKey}</pre>" +
+              "<p>Verifying Image Instructions:<ol>" +
+              "<li>Save key to file (call it public.asc)</li>" +
+              "<li>Import key with: gpg --import key.asc</li>" +
+              "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
+              "<li>Verify with: gpg --verify signature.sig manifest.json</li>" +
+              "</ol>" +
+              "<p>Running Image Instructions:<ol>" +
+              "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
+              "<li>Retrieve the image using: docker pull ${PUBLIC_DOCKER_HOST}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} </li>" +
+              "<li>Find the tag for run below: example ${IMAGE_TAG}" +
+              "<li>Run the image with: docker run ${REPO_NAME}:${IMAGE_TAG}" +
+              "</ol>" +
+              "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
+
+            footerSlug = "-------------------------------------------------------</body></html>"
+
+            //first time this runs there is no file so need to create
+            try {
+              s3Download(file:'repo_map.html',
+                      bucket:"${S3_REPORT_BUCKET}",
+                      path: "${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
+                      force:true)
+            } catch(AmazonS3Exception) {
+              sh "echo '${headerSlug}' > repo_map.html"
+            }
 
 
-    } // stage Push to External Registry
+            //read file and look for header
+            map = readFile(file: 'repo_map.html')
+
+            def headerMatch = map =~ /(?s)(-------------------------------------------------------)(.*)/
+            def previousRuns = ""
+            if (headerMatch) {
+               previousRuns = headerMatch[0][2]
+            }
+            //must set regexp variables to null to prevent java.io.NotSerializableException
+            headerMatch = null
+
+            echo previousRuns
+
+            // add this run
+            newFile = headerSlug +
+                "<h2>Run for ${BUILD_NUMBER} using with tag:${IMAGE_TAG}</h2>\n" +
+                "SHA tag - ${PUBLIC_IMAGE_SHA}<br>\n" +
+                "Image scanned - <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a><br>\n" +
+                "Image manifest  - <a href=\"${S3_HTML_LINK}${S3_MANIFEST_LOCATION}\"> ${S3_MANIFEST_NAME}  </a><br>\n" +
+                "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
+                "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
+                "<h4>Tool reports:</h3>\n" +
+                "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
+                "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
+                "Anchore - <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}\"> ${S3_ANCHORE_GATES_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT}\"> ${S3_ANCHORE_SECURITY_REPORT}  </a><br>\n" +
+                "<p><p>" +
+                previousRuns +
+                footerSlug
+
+            echo newFile
+
+            writeFile(file: 'repo_map.html', text: newFile)
+
+
+
+            s3Upload(file: "repo_map.html",
+                  bucket: "${S3_REPORT_BUCKET}",
+                  path:"${VENDOR_PRODUCT}/${REPO_NAME}/")
+
+
+          } //withAWS
+        } //script
+      } // steps
+    } // stage Update directory
+
+
 
     stage('Clean up Docker artifacts') {
       steps {
