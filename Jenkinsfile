@@ -29,7 +29,7 @@ pipeline {
     S3_IMAGE_NAME = " "
     S3_IMAGE_LOCATION = " "
 
-    BASIC_PATH_FOR_DATA = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}" 
+    BASIC_PATH_FOR_DATA = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}"
 
     S3_SIGNATURE_FILENAME = "signature.sig"
     S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
@@ -538,7 +538,7 @@ pipeline {
             try {
               s3Download(file:'repo_map.html',
                       bucket:"${S3_REPORT_BUCKET}",
-                      path: "${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
+                      path: "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
                       force:true)
             } catch(AmazonS3Exception) {
               sh "echo '${headerSlug}' > repo_map.html"
