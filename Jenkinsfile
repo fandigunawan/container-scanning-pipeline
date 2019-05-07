@@ -29,27 +29,29 @@ pipeline {
     S3_IMAGE_NAME = " "
     S3_IMAGE_LOCATION = " "
 
+    BASIC_PATH_FOR_DATA = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}" 
+
     S3_SIGNATURE_FILENAME = "signature.sig"
-    S3_SIGNATURE_LOCATION =  "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_SIGNATURE_FILENAME}"
+    S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
     S3_MANIFEST_NAME = "manifest.json"
-    S3_MANIFEST_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_MANIFEST_NAME}"
+    S3_MANIFEST_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_MANIFEST_NAME}"
 
     S3_DOCUMENTATION_FILENAME = "documentation.json"
-    S3_DOCUMENTATION_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_DOCUMENTATION_FILENAME}"
+    S3_DOCUMENTATION_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_DOCUMENTATION_FILENAME}"
 
     S3_TAR_FILENAME = " "
-    S3_TAR_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
+    S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/"
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
     S3_OSCAP_REPORT = "report.html"
-    S3_OSCAP_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+    S3_OSCAP_LOCATION = "${BASIC_PATH_FOR_DATA}/openscap/"
 
     S3_TWISTLOCK_REPORT = "${IMAGE_TAG}.json"
-    S3_TWISTLOCK_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/twistlock/"
+    S3_TWISTLOCK_LOCATION = "${BASIC_PATH_FOR_DATA}/twistlock/"
 
     S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
     S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
-    S3_ANCHORE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/anchore/"
+    S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
 
 
 
@@ -83,7 +85,7 @@ pipeline {
 
           def repoNoSlash = REPO_NAME.replaceAll("/", "-")
           S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
-          S3_IMAGE_LOCATION = "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/${S3_IMAGE_NAME}"
+          S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
           S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
 
         } //script
@@ -96,7 +98,7 @@ pipeline {
       steps {
 
         echo "Pushing ${REPO_NAME}:${IMAGE_TAG} to Nexus Staging"
-        echo "Artifact path is   s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}"
+        echo "Artifact path is   s3://${S3_REPORT_BUCKET}/${BASIC_PATH_FOR_DATA}/"
 
         script {
 
@@ -104,7 +106,7 @@ pipeline {
           remote.name = "node"
           remote.host = "${env.REMOTE_HOST}"
           remote.allowAnyHosts = true
-          openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/openscap/"
+          openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${BASIC_PATH_FOR_DATA}/openscap/"
 
           node {
 
@@ -484,14 +486,14 @@ pipeline {
 
             s3Download(file:'output',
                     bucket:"${S3_REPORT_BUCKET}",
-                    path: "${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/",
+                    path: "${BASIC_PATH_FOR_DATA}/",
                     force:true)
 
-              sh "tar cvfz ${S3_TAR_FILENAME} output/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/"
+              sh "tar cvfz ${S3_TAR_FILENAME} output/${BASIC_PATH_FOR_DATA}/"
 
               s3Upload(file: "${S3_TAR_FILENAME}",
                     bucket: "${S3_REPORT_BUCKET}",
-                    path:"${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}/")
+                    path:"${BASIC_PATH_FOR_DATA}/")
 
               sh "rm -fr output;rm ${S3_TAR_FILENAME}"
 
