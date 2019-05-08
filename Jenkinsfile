@@ -204,7 +204,7 @@ pipeline {
 
           environment {
             TWISTLOCK_NODE = credentials('TwistLockServerAddress')
-            TWISTLOCK_SERVER = "https://${credentials('TwistLockServerAddress')}"
+            TWISTLOCK_SERVER = "https://${TWISTLOCK_NODE}"
           }  // environment
 
           when {
