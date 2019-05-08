@@ -18,7 +18,7 @@ pipeline {
   agent { label 'master' }
 
   environment {
-    NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
+    NEXUS_SERVER = credentials('NexusServerAddress')
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     OSCAP_NODE = credentials('OpenSCAPNode')
