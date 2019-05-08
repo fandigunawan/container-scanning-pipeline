@@ -203,7 +203,8 @@ pipeline {
         stage('Twistlock Scan') {
 
           environment {
-            TWISTLOCK_SERVER = 'https://twistlock.52.61.140.4.nip.io'
+            TWISTLOCK_NODE = credentials('TwistLockServerAddress')
+            TWISTLOCK_SERVER = "https://${credentials('TwistLockServerAddress')}"
           }  // environment
 
           when {
