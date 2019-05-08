@@ -21,7 +21,7 @@ pipeline {
     NEXUS_SERVER = 'nexus-docker.52.61.140.4.nip.io'
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
-    REMOTE_HOST = 'ec2-52-61-217-50.us-gov-west-1.compute.amazonaws.com'
+    OSCAP_NODE = credentials('OpenSCAPNode')
 
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
@@ -104,7 +104,7 @@ pipeline {
 
           def remote = [:]
           remote.name = "node"
-          remote.host = "${env.REMOTE_HOST}"
+          remote.host = "${env.OSCAP_NODE}"
           remote.allowAnyHosts = true
           openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${BASIC_PATH_FOR_DATA}/openscap/"
 
@@ -157,7 +157,7 @@ pipeline {
 
               def remote = [:]
               remote.name = "node"
-              remote.host = "${env.REMOTE_HOST}"
+              remote.host = "${env.OSCAP_NODE}"
               remote.allowAnyHosts = true
 
               openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_OSCAP_LOCATION}"
@@ -222,7 +222,7 @@ pipeline {
 
               def remote = [:]
               remote.name = "node"
-              remote.host = "${env.REMOTE_HOST}"
+              remote.host = "${env.OSCAP_NODE}"
               remote.allowAnyHosts = true
 
               twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_TWISTLOCK_LOCATION}"
@@ -388,7 +388,7 @@ pipeline {
         script {
           def remote = [:]
           remote.name = "node"
-          remote.host = "${env.REMOTE_HOST}"
+          remote.host = "${env.OSCAP_NODE}"
           remote.allowAnyHosts = true
 
           //siging the image
@@ -602,7 +602,7 @@ pipeline {
 
           def remote = [:]
           remote.name = "node"
-          remote.host = "${env.REMOTE_HOST}"
+          remote.host = "${env.OSCAP_NODE}"
           remote.allowAnyHosts = true
 
           node {
