@@ -265,6 +265,11 @@ pipeline {
               environment name: "toolsToRun", value: "Anchore"
             }  // anyOf
           } // when
+
+          environment {
+            ANCHORE_NODE = credentials('AnchoreServerAddress')
+          }  // environment
+
           steps {
             echo 'Anchore Scan'
 
@@ -308,7 +313,7 @@ pipeline {
                 } //withAWS
 
               // get version
-              sh(script:"curl -k https://anchore-api.52.61.140.4.nip.io/version > anchor_version.json")
+              sh(script:"curl -k https://${ANCHORE_NODE}/version > anchor_version.json")
               anchoreVersion = sh(script: "cat anchor_version.json", returnStdout: true)
 
               echo "${anchoreVersion}"
