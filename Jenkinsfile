@@ -63,7 +63,7 @@ pipeline {
           description: "Which tools to run?",
           name: 'toolsToRun')
 
-    string(defaultValue: "up/ubi7-hardened-dev",
+    string(defaultValue: "up/openjdk-v1.8-ubi7-stigd",
             name: 'REPO_NAME',
             description: "Name of repo to be used by Docker, Nexus and all Scanning tools")
 
