@@ -521,7 +521,7 @@ pipeline {
             def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
 
             headerSlug = "<!DOCTYPE html><html><body>" +
-              "<h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1>" +
+              "<h1>${REPO_NAME} Artifacts</h1>" +
               "<p> Image manifests have been signed with key:<br>" +
               "<pre>${publicKey}</pre>" +
               "<p>Verifying Image Instructions:<ol>" +
