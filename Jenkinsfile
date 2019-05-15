@@ -40,7 +40,7 @@ pipeline {
     S3_DOCUMENTATION_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_DOCUMENTATION_FILENAME}"
 
     S3_TAR_FILENAME = " "
-    S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/"
+    S3_TAR_LOCATION = " "
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
     S3_OSCAP_REPORT = "report.html"
@@ -63,7 +63,7 @@ pipeline {
           description: "Which tools to run?",
           name: 'toolsToRun')
 
-    string(defaultValue: "up/ubi7-hardened-dev",
+    string(defaultValue: "up/openjdk-v1.8-ubi7-stigd",
             name: 'REPO_NAME',
             description: "Name of repo to be used by Docker, Nexus and all Scanning tools")
 
@@ -87,6 +87,9 @@ pipeline {
           S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
           S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
           S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+
+          S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
+
 
         } //script
       } // steps
@@ -380,14 +383,7 @@ pipeline {
     } // stage Push to External Registry
 
 
-
-    stage('Signing image') {
-      environment {
-        //this is file reference
-        SIGNING_KEY = credentials('ContainerSigningKey')
-        //actual passphrase
-        SIGNING_KEY_PASSPHRASE = credentials('ContainerSigningKeyPassphrase')
-      }  // environment
+    stage('Copying image to S3') {
 
       steps {
 
@@ -400,13 +396,36 @@ pipeline {
           //siging the image
           node {
 
-            echo 'Signing container'
-
             //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
 
+              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};"
+
+
+            } // withCredentials
+          } // node
+        }//script
+      } // steps
+    } // stage
+
+    stage('Signing image') {
+      environment {
+        //this is file reference
+        SIGNING_KEY = credentials('ContainerSigningKey')
+        //actual passphrase
+        SIGNING_KEY_PASSPHRASE = credentials('ContainerSigningKeyPassphrase')
+      }  // environment
+
+      steps {
+
+        script {
+
+          //siging the image
+          node {
+
+            echo 'Signing container'
 
               def unixTime = sh(
                          script: 'date +%s',
@@ -447,11 +466,6 @@ pipeline {
               signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${SIGNING_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${S3_MANIFEST_NAME};cat \$f;",
                             returnStdout: true)
 
-              echo signature
-
-
-              //sshPut remote: remote, from: "${SIGNING_KEY}", into: './signingkey'
-              //signature = sshCommand remote: remote, command: "g=\$(mktemp -d) && f=\$(mktemp) && e=\$(mktemp) && trap \"sudo rm \$e;sudo rm \$f;sudo rm -rf \$g\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o=r \$e;gpg --homedir \$g --import --batch --passphrase ${SIGNING_KEY_PASSPHRASE} ./signingkey ;echo \$e;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase ${SIGNING_KEY_PASSPHRASE} \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};rm ./signingkey;cat \$f;"
 
               def signatureMatch = signature =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
               def signature = ""
@@ -477,7 +491,6 @@ pipeline {
 
 
               } //withAWS
-            } // withCredentials
           } // node
         }//script
       } // steps
@@ -572,6 +585,7 @@ pipeline {
                 "Image manifest  - <a href=\"${S3_HTML_LINK}${S3_MANIFEST_LOCATION}\"> ${S3_MANIFEST_NAME}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
+                "Tar of everything - <a href=\"${S3_HTML_LINK}${S3_TAR_LOCATION}\"> ${S3_TAR_FILENAME}  </a><br>\n" +
                 "<h4>Tool reports:</h3>\n" +
                 "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
                 "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
