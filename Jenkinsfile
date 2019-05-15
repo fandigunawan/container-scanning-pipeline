@@ -40,7 +40,7 @@ pipeline {
     S3_DOCUMENTATION_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_DOCUMENTATION_FILENAME}"
 
     S3_TAR_FILENAME = " "
-    S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/"
+    S3_TAR_LOCATION = " "
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
     S3_OSCAP_REPORT = "report.html"
@@ -87,6 +87,9 @@ pipeline {
           S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
           S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
           S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+
+          S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
+
 
         } //script
       } // steps
@@ -582,6 +585,7 @@ pipeline {
                 "Image manifest  - <a href=\"${S3_HTML_LINK}${S3_MANIFEST_LOCATION}\"> ${S3_MANIFEST_NAME}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
+                "Tar of everything - <a href=\"${S3_HTML_LINK}${S3_TAR_LOCATION}\"> ${S3_TAR_FILENAME}  </a><br>\n" +
                 "<h4>Tool reports:</h3>\n" +
                 "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
                 "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
