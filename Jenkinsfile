@@ -394,13 +394,13 @@ pipeline {
           node {
 
             //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
 
               sshCommand remote: remote, command: "echo 'hello'"
 
-              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};"
+              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};"  \\ /usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
 
 
             } // withCredentials
@@ -420,21 +420,11 @@ pipeline {
       steps {
 
         script {
-          def remote = [:]
-          remote.name = "node"
-          remote.host = "${env.OSCAP_NODE}"
-          remote.allowAnyHosts = true
 
           //siging the image
           node {
 
             echo 'Signing container'
-
-            //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'oscap', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-              remote.user = userName
-              remote.identityFile = identity
-
 
               def unixTime = sh(
                          script: 'date +%s',
@@ -500,7 +490,6 @@ pipeline {
 
 
               } //withAWS
-            } // withCredentials
           } // node
         }//script
       } // steps
