@@ -373,16 +373,6 @@ pipeline {
     } // stage
 
 
-    stage('Push to External Registry (TODO)') {
-
-      steps {
-        echo "Push to external registry"
-      }
-
-
-    } // stage Push to External Registry
-
-
     stage('Copying image to S3') {
 
       steps {
