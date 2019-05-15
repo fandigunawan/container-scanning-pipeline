@@ -633,7 +633,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
 
-              sshCommand remote: remote, command: "if [[ \$(sudo docker images -q) ]]; then sudo docker rmi \$(sudo docker images -q) --force; fi && if [[ \$(sudo docker ps -a -q) ]]; then sudo docker rm \$(sudo docker ps -a -q); fi"
+              sshCommand remote: remote, command: "if [[ \$(sudo docker images -q ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rmi ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --force; fi && if [[ \$(sudo docker ps -a -q | grep ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rm ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}; fi"
 
 	          } //withCredentials
 	        } // node
