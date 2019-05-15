@@ -522,15 +522,15 @@ pipeline {
 
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>Directory of ${VENDOR_PRODUCT} - ${REPO_NAME} Testing Artifacts</h1>" +
-              "<p> These image manifests have signed with key:<br>" +
+              "<p> Image manifests have been signed with key:<br>" +
               "<pre>${publicKey}</pre>" +
               "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
-              "<li>Import key with: gpg --import key.asc</li>" +
+              "<li>Import key with: gpg --import public.asc</li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with: gpg --verify signature.sig manifest.json</li>" +
               "</ol>" +
-              "<p>Running Image Instructions:<ol>" +
+              "<p>Downloading and Running the image:<ol>" +
               "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
               "<li>Retrieve the image using: docker pull ${PUBLIC_DOCKER_HOST}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} </li>" +
               "<li>Find the tag for run below: example ${IMAGE_TAG}" +
