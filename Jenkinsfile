@@ -393,7 +393,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
 
-              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};"
+              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;docker save -o \$e/${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};/usr/bin/aws s3 cp \$e/${NEXUS_SERVER}/${REPO_NAME}  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};"
 
 
             } // withCredentials
