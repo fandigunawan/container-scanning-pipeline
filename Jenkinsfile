@@ -88,7 +88,7 @@ pipeline {
           def repoNoSlash = REPO_NAME.replaceAll("/", "-")
           S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}.tar"
           S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
-          S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
+          S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-reports-signature.tar.gz"
 
           S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
 
@@ -375,32 +375,6 @@ pipeline {
     } // stage
 
 
-    stage('Copying image to S3') {
-
-      steps {
-
-        script {
-          def remote = [:]
-          remote.name = "node"
-          remote.host = "${env.OSCAP_NODE}"
-          remote.allowAnyHosts = true
-
-          //siging the image
-          node {
-
-            //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-              remote.user = userName
-              remote.identityFile = identity
-
-              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};"
-
-
-            } // withCredentials
-          } // node
-        }//script
-      } // steps
-    } // stage
 
     stage('Signing image') {
       environment {
@@ -514,6 +488,35 @@ pipeline {
       } // steps
     } // stage Create tar of all output
 
+
+    stage('Copying image to S3') {
+
+      steps {
+
+        script {
+          def remote = [:]
+          remote.name = "node"
+          remote.host = "${env.OSCAP_NODE}"
+          remote.allowAnyHosts = true
+
+          //siging the image
+          node {
+
+            //store path and name of image on s3
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+              remote.user = userName
+              remote.identityFile = identity
+
+              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};"
+
+
+            } // withCredentials
+          } // node
+        }//script
+      } // steps
+    } // stage
+
+
     stage('Update directory') {
 
       environment {
@@ -578,13 +581,13 @@ pipeline {
                 "Image manifest  - <a href=\"${S3_HTML_LINK}${S3_MANIFEST_LOCATION}\"> ${S3_MANIFEST_NAME}  </a><br>\n" +
                 "PGP Signature - <a href=\"${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}\"> ${S3_SIGNATURE_FILENAME}  </a><br>\n" +
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
-                "Tar of everything - <a href=\"${S3_HTML_LINK}${S3_TAR_LOCATION}\"> ${S3_TAR_FILENAME}  </a><br>\n" +
+                "Tar of reports and signature - <a href=\"${S3_HTML_LINK}${S3_TAR_LOCATION}\"> ${S3_TAR_FILENAME}  </a><br>\n" +
                 "<h4>Tool reports:</h3>\n" +
                 "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
                 "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
                 "Anchore - <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}\"> ${S3_ANCHORE_GATES_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT}\"> ${S3_ANCHORE_SECURITY_REPORT}  </a><br>\n" +
                 "<p><p>" +
-                previousRuns +
+                // previousRuns +
                 footerSlug
 
             echo newFile
