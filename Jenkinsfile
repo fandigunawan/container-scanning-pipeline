@@ -498,6 +498,7 @@ pipeline {
                     path: "${BASIC_PATH_FOR_DATA}/",
                     force:true)
 
+              echo "output/${BASIC_PATH_FOR_DATA}/"
               sh "tar cvfz ${S3_TAR_FILENAME} output/${BASIC_PATH_FOR_DATA}/"
 
               s3Upload(file: "${S3_TAR_FILENAME}",
