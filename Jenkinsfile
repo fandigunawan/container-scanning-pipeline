@@ -86,7 +86,7 @@ pipeline {
         script {
 
           def repoNoSlash = REPO_NAME.replaceAll("/", "-")
-          S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}"
+          S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}.tar"
           S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
           S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-full.tar.gz"
 
