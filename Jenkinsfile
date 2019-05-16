@@ -501,7 +501,7 @@ pipeline {
                     force:true)
 
               echo "output/${BASIC_PATH_FOR_DATA}/"
-              sh "tar -C 'output/${ROOT_FOR_REPO_IMAGE}' -cvfz ${S3_TAR_FILENAME} ${SPECIFIC_FOLDER_FOR_RUN}"
+              sh "tar -C output/${ROOT_FOR_REPO_IMAGE} -cvfz ${S3_TAR_FILENAME} ${SPECIFIC_FOLDER_FOR_RUN}"
 
               s3Upload(file: "${S3_TAR_FILENAME}",
                     bucket: "${S3_REPORT_BUCKET}",
@@ -584,7 +584,7 @@ pipeline {
                 "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
                 "Anchore - <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}\"> ${S3_ANCHORE_GATES_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT}\"> ${S3_ANCHORE_SECURITY_REPORT}  </a><br>\n" +
                 "<p><p>" +
-                previousRuns +
+                // previousRuns +
                 footerSlug
 
             echo newFile
