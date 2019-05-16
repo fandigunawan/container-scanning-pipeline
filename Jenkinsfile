@@ -501,7 +501,7 @@ pipeline {
                     force:true)
 
               echo "output/${BASIC_PATH_FOR_DATA}/"
-              sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}  ${SPECIFIC_FOLDER_FOR_RUN}/"
+              sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
 
               s3Upload(file: "${S3_TAR_FILENAME}",
                     bucket: "${S3_REPORT_BUCKET}",
