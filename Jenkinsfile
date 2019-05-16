@@ -29,7 +29,9 @@ pipeline {
     S3_IMAGE_NAME = " "
     S3_IMAGE_LOCATION = " "
 
-    BASIC_PATH_FOR_DATA = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}/${DATETIME_TAG}_${BUILD_NUMBER}"
+    ROOT_FOR_REPO_IMAGE = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}"
+    SPECIFIC_FOLDER_FOR_RUN = "${DATETIME_TAG}_${BUILD_NUMBER}"
+    BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
 
     S3_SIGNATURE_FILENAME = "signature.sig"
     S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
@@ -446,7 +448,7 @@ pipeline {
     },
     \"optional\": {
         \"creator\": \"${gpgVersion}\",
-        \"timestamp\": ${unixTime},
+        \"timestamp\": ${unixTime}
     }
 }"""
 
@@ -499,7 +501,7 @@ pipeline {
                     force:true)
 
               echo "output/${BASIC_PATH_FOR_DATA}/"
-              sh "tar cvfz ${S3_TAR_FILENAME} output/${BASIC_PATH_FOR_DATA}/"
+              sh "tar -C 'output/${ROOT_FOR_REPO_IMAGE}' -cvfz ${S3_TAR_FILENAME} ${SPECIFIC_FOLDER_FOR_RUN}"
 
               s3Upload(file: "${S3_TAR_FILENAME}",
                     bucket: "${S3_REPORT_BUCKET}",
