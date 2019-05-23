@@ -29,31 +29,32 @@ pipeline {
     S3_IMAGE_NAME = " "
     S3_IMAGE_LOCATION = " "
 
-    ROOT_FOR_REPO_IMAGE = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}"
+    ROOT = " "
+    ROOT_FOR_REPO_IMAGE = " "
     SPECIFIC_FOLDER_FOR_RUN = "${DATETIME_TAG}_${BUILD_NUMBER}"
-    BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
+    BASIC_PATH_FOR_DATA = " "
 
     S3_SIGNATURE_FILENAME = "signature.sig"
-    S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
+    S3_SIGNATURE_LOCATION =  " "
     S3_MANIFEST_NAME = "manifest.json"
-    S3_MANIFEST_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_MANIFEST_NAME}"
+    S3_MANIFEST_LOCATION = " "
 
     S3_DOCUMENTATION_FILENAME = "documentation.json"
-    S3_DOCUMENTATION_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_DOCUMENTATION_FILENAME}"
+    S3_DOCUMENTATION_LOCATION = " "
 
     S3_TAR_FILENAME = " "
     S3_TAR_LOCATION = " "
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
     S3_OSCAP_REPORT = "report.html"
-    S3_OSCAP_LOCATION = "${BASIC_PATH_FOR_DATA}/openscap/"
+    S3_OSCAP_LOCATION = " "
 
     S3_TWISTLOCK_REPORT = "${IMAGE_TAG}.json"
-    S3_TWISTLOCK_LOCATION = "${BASIC_PATH_FOR_DATA}/twistlock/"
+    S3_TWISTLOCK_LOCATION = " "
 
     S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
     S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
-    S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
+    S3_ANCHORE_LOCATION = " "
 
 
 
@@ -61,7 +62,7 @@ pipeline {
 
   parameters {
 
-    choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
+    choice(choices : ['All','OpenSCAP','Twistlock','Anchore'],
           description: "Which tools to run?",
           name: 'toolsToRun')
 
@@ -73,9 +74,12 @@ pipeline {
             name: 'IMAGE_TAG',
             description: "Image tag to be used by Docker, Nexus and all Scanning tools")
 
-     string(defaultValue: "RedHat",
-            name: 'VENDOR_PRODUCT',
-            description: "What vendor is being scanned")
+     choice(name: 'VENDOR_PRODUCT',
+           choices: ['anchore', 'cyberfactory', 'dsop',
+                     'gitlab', 'opensource', 'redhat',
+                     'twistlock'],
+           description: 'What vendor is being scanned')
+
 
     } // parameters
 
@@ -85,7 +89,26 @@ pipeline {
       steps {
         script {
 
+          def repo_image_only = REPO_NAME.split("/").last()
           def repoNoSlash = REPO_NAME.replaceAll("/", "-")
+
+          ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
+
+
+          ROOT_FOR_REPO_IMAGE = "${ROOT}/${IMAGE_TAG}"
+          BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
+
+          S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
+          S3_MANIFEST_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_MANIFEST_NAME}"
+
+          S3_DOCUMENTATION_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_DOCUMENTATION_FILENAME}"
+
+          S3_OSCAP_LOCATION = "${BASIC_PATH_FOR_DATA}/openscap/"
+
+          S3_TWISTLOCK_LOCATION = "${BASIC_PATH_FOR_DATA}/twistlock/"
+
+          S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
+
           S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}.tar"
           S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
           S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-reports-signature.tar.gz"
@@ -517,7 +540,7 @@ pipeline {
     } // stage
 
 
-    stage('Update directory') {
+    stage('create report.html') {
 
       environment {
         PUBLIC_KEY = credentials('ContainerSigningPublicKey')
@@ -553,7 +576,7 @@ pipeline {
             try {
               s3Download(file:'repo_map.html',
                       bucket:"${S3_REPORT_BUCKET}",
-                      path: "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
+                      path: "${ROOT}/repo_map.html",
                       force:true)
             } catch(AmazonS3Exception) {
               sh "echo '${headerSlug}' > repo_map.html"
@@ -598,7 +621,7 @@ pipeline {
 
             s3Upload(file: "repo_map.html",
                   bucket: "${S3_REPORT_BUCKET}",
-                  path:"container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/")
+                  path:"${ROOT}/")
 
 
           } //withAWS
