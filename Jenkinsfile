@@ -110,6 +110,8 @@ pipeline {
 
           S3_TWISTLOCK_LOCATION = "${BASIC_PATH_FOR_DATA}/twistlock/"
 
+          echo "S3_TWISTLOCK_LOCATION: ${S3_TWISTLOCK_LOCATION}"
+
           S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
 
           S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}.tar"
@@ -258,6 +260,7 @@ pipeline {
               remote.allowAnyHosts = true
 
               twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_TWISTLOCK_LOCATION}"
+              echo "twistlock_artifact_path: ${twistlock_artifact_path}"
 
               node {
 
