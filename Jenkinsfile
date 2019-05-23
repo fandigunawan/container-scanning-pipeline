@@ -540,7 +540,7 @@ pipeline {
     } // stage
 
 
-    stage('Update directory') {
+    stage('create report.html') {
 
       environment {
         PUBLIC_KEY = credentials('ContainerSigningPublicKey')
