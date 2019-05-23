@@ -29,32 +29,32 @@ pipeline {
     S3_IMAGE_NAME = " "
     S3_IMAGE_LOCATION = " "
 
-    ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}"
-    ROOT_FOR_REPO_IMAGE = "${ROOT}/${IMAGE_TAG}"
-    SPECIFIC_FOLDER_FOR_RUN = "${DATETIME_TAG}_${BUILD_NUMBER}"
-    BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
+    ROOT = " "
+    ROOT_FOR_REPO_IMAGE = " "
+    SPECIFIC_FOLDER_FOR_RUN = " "
+    BASIC_PATH_FOR_DATA = " "
 
     S3_SIGNATURE_FILENAME = "signature.sig"
-    S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
+    S3_SIGNATURE_LOCATION =  " "
     S3_MANIFEST_NAME = "manifest.json"
-    S3_MANIFEST_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_MANIFEST_NAME}"
+    S3_MANIFEST_LOCATION = " "
 
     S3_DOCUMENTATION_FILENAME = "documentation.json"
-    S3_DOCUMENTATION_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_DOCUMENTATION_FILENAME}"
+    S3_DOCUMENTATION_LOCATION = " "
 
     S3_TAR_FILENAME = " "
     S3_TAR_LOCATION = " "
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
     S3_OSCAP_REPORT = "report.html"
-    S3_OSCAP_LOCATION = "${BASIC_PATH_FOR_DATA}/openscap/"
+    S3_OSCAP_LOCATION = " "
 
     S3_TWISTLOCK_REPORT = "${IMAGE_TAG}.json"
-    S3_TWISTLOCK_LOCATION = "${BASIC_PATH_FOR_DATA}/twistlock/"
+    S3_TWISTLOCK_LOCATION = " "
 
     S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
     S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
-    S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
+    S3_ANCHORE_LOCATION = " "
 
 
 
@@ -92,7 +92,7 @@ pipeline {
           def repo_image_only = REPO_NAME.split("/").last()
           def repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
-          ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}"
+          ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
           ROOT_FOR_REPO_IMAGE = "${ROOT}/${IMAGE_TAG}"
           BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
 
