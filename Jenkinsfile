@@ -31,7 +31,7 @@ pipeline {
 
     ROOT = " "
     ROOT_FOR_REPO_IMAGE = " "
-    SPECIFIC_FOLDER_FOR_RUN = " "
+    SPECIFIC_FOLDER_FOR_RUN = "${DATETIME_TAG}_${BUILD_NUMBER}"
     BASIC_PATH_FOR_DATA = " "
 
     S3_SIGNATURE_FILENAME = "signature.sig"
