@@ -92,14 +92,11 @@ pipeline {
           def repo_image_only = REPO_NAME.split("/").last()
           def repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
-          echo "repo_image_only: '${repo_image_only}'"
           ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
-          echo "ROOT: '${ROOT}'"
 
 
           ROOT_FOR_REPO_IMAGE = "${ROOT}/${IMAGE_TAG}"
           BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
-          echo "BASIC_PATH_FOR_DATA: '${BASIC_PATH_FOR_DATA}'"
 
           S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
           S3_MANIFEST_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_MANIFEST_NAME}"
@@ -109,8 +106,6 @@ pipeline {
           S3_OSCAP_LOCATION = "${BASIC_PATH_FOR_DATA}/openscap/"
 
           S3_TWISTLOCK_LOCATION = "${BASIC_PATH_FOR_DATA}/twistlock/"
-
-          echo "S3_TWISTLOCK_LOCATION: ${S3_TWISTLOCK_LOCATION}"
 
           S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
 
@@ -260,7 +255,6 @@ pipeline {
               remote.allowAnyHosts = true
 
               twistlock_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_TWISTLOCK_LOCATION}"
-              echo "twistlock_artifact_path: ${twistlock_artifact_path}"
 
               node {
 
