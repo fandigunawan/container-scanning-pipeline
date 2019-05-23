@@ -29,7 +29,8 @@ pipeline {
     S3_IMAGE_NAME = " "
     S3_IMAGE_LOCATION = " "
 
-    ROOT_FOR_REPO_IMAGE = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/${IMAGE_TAG}"
+    ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}"
+    ROOT_FOR_REPO_IMAGE = "${ROOT}/${IMAGE_TAG}"
     SPECIFIC_FOLDER_FOR_RUN = "${DATETIME_TAG}_${BUILD_NUMBER}"
     BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
 
@@ -73,9 +74,12 @@ pipeline {
             name: 'IMAGE_TAG',
             description: "Image tag to be used by Docker, Nexus and all Scanning tools")
 
-     string(defaultValue: "RedHat",
-            name: 'VENDOR_PRODUCT',
-            description: "What vendor is being scanned")
+     choice(name: 'VENDOR_PRODUCT',
+           choices: ['anchore', 'cyberfactory', 'dsop',
+                     'gitlab', 'opensource', 'redhat',
+                     'twistlock'],
+           description: 'What vendor is being scanned')
+
 
     } // parameters
 
@@ -553,7 +557,7 @@ pipeline {
             try {
               s3Download(file:'repo_map.html',
                       bucket:"${S3_REPORT_BUCKET}",
-                      path: "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/repo_map.html",
+                      path: "${ROOT}/repo_map.html",
                       force:true)
             } catch(AmazonS3Exception) {
               sh "echo '${headerSlug}' > repo_map.html"
@@ -598,7 +602,7 @@ pipeline {
 
             s3Upload(file: "repo_map.html",
                   bucket: "${S3_REPORT_BUCKET}",
-                  path:"container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}/")
+                  path:"${ROOT}/")
 
 
           } //withAWS
