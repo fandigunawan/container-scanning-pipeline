@@ -62,7 +62,7 @@ pipeline {
 
   parameters {
 
-    choice(choices : 'All\nOpenSCAP\nTwistlock\nAnchore',
+    choice(choices : ['All','OpenSCAP','Twistlock','Anchore'],
           description: "Which tools to run?",
           name: 'toolsToRun')
 
@@ -89,7 +89,24 @@ pipeline {
       steps {
         script {
 
+          def repo_image_only = REPO_NAME.split("/").last()
           def repoNoSlash = REPO_NAME.replaceAll("/", "-")
+
+          ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${REPO_NAME}"
+          ROOT_FOR_REPO_IMAGE = "${ROOT}/${IMAGE_TAG}"
+          BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
+
+          S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
+          S3_MANIFEST_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_MANIFEST_NAME}"
+
+          S3_DOCUMENTATION_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_DOCUMENTATION_FILENAME}"
+
+          S3_OSCAP_LOCATION = "${BASIC_PATH_FOR_DATA}/openscap/"
+
+          S3_TWISTLOCK_LOCATION = "${BASIC_PATH_FOR_DATA}/twistlock/"
+
+          S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
+
           S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}.tar"
           S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
           S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-reports-signature.tar.gz"
