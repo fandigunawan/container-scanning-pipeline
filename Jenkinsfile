@@ -90,7 +90,6 @@ pipeline {
         script {
 
           def repo_image_only = REPO_NAME.split("/").last()
-          def repoNoSlash = REPO_NAME.replaceAll("/", "-")
 
           ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
 
@@ -109,9 +108,9 @@ pipeline {
 
           S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
 
-          S3_IMAGE_NAME = "${repoNoSlash}-${IMAGE_TAG}.tar"
+          S3_IMAGE_NAME = "${repo_image_only}-${IMAGE_TAG}.tar"
           S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
-          S3_TAR_FILENAME = "${repoNoSlash}-${IMAGE_TAG}-reports-signature.tar.gz"
+          S3_TAR_FILENAME = "${repo_image_only}-${IMAGE_TAG}-reports-signature.tar.gz"
 
           S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
 
