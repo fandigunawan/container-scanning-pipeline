@@ -630,34 +630,34 @@ pipeline {
 
 
 
-    stage('Clean up Docker artifacts') {
-      steps {
+//    stage('Clean up Docker artifacts') {
+//      steps {
 
-        echo 'Cleaning up docker artifacts'
+//        echo 'Cleaning up docker artifacts'
 
         // this may use a dedicated node eventually, or be refactored to follow best practice TBD
-        script {
+//        script {
 
-          def remote = [:]
-          remote.name = "node"
-          remote.host = "${env.OSCAP_NODE}"
-          remote.allowAnyHosts = true
+//          def remote = [:]
+//          remote.name = "node"
+//          remote.host = "${env.OSCAP_NODE}"
+//          remote.allowAnyHosts = true
 
-          node {
+//          node {
 
             // using the oscap user, this is temporary
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+//            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
 
-              remote.user = userName
-              remote.identityFile = identity
+//              remote.user = userName
+//              remote.identityFile = identity
 
-              sshCommand remote: remote, command: "if [[ \$(sudo docker images -q ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rmi ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --force; fi && if [[ \$(sudo docker ps -a -q | grep ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rm ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}; fi"
+//              sshCommand remote: remote, command: "if [[ \$(sudo docker images -q ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rmi ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --force; fi && if [[ \$(sudo docker ps -a -q | grep ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rm ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}; fi"
 
-	          } //withCredentials
-	        } // node
-        } // script
-      } // steps
-    } // stage Clean up Docker artifacts
+//	          } //withCredentials
+//	        } // node
+//        } // script
+//      } // steps
+//    } // stage Clean up Docker artifacts
 
   } // stages
 } // pipeline
