@@ -100,7 +100,7 @@ pipeline {
           } else {
             ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
           }
-
+          echo "ROOT=${ROOT}"
 
           ROOT_FOR_REPO_IMAGE = "${ROOT}/${IMAGE_TAG}"
           BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
