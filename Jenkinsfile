@@ -62,6 +62,10 @@ pipeline {
 
   parameters {
 
+    choice(choices : ['Test','Production'],
+          description: "Is this a test run or for actual production?",
+          name: 'testOrProduction')
+
     choice(choices : ['All','OpenSCAP','Twistlock','Anchore'],
           description: "Which tools to run?",
           name: 'toolsToRun')
@@ -91,8 +95,12 @@ pipeline {
 
           def repo_image_only = REPO_NAME.split("/").last()
 
-          ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
-
+          if (testOrProduction == "Test") {
+            ROOT = "testing/container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
+          } else {
+            ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
+          }
+          echo "ROOT=${ROOT}"
 
           ROOT_FOR_REPO_IMAGE = "${ROOT}/${IMAGE_TAG}"
           BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
@@ -624,6 +632,9 @@ pipeline {
             s3Upload(file: "repo_map.html",
                   bucket: "${S3_REPORT_BUCKET}",
                   path:"${ROOT}/")
+
+            //record this as the latest in DynamoDB
+
 
 
           } //withAWS
