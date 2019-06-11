@@ -95,10 +95,10 @@ pipeline {
 
           def repo_image_only = REPO_NAME.split("/").last()
 
-          if (testOrProduction == "Test") {
-            ROOT = "testing/container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
-          } else {
+          if (testOrProduction == "Production") {
             ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
+          } else {
+            ROOT = "testing/container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
           }
           echo "ROOT=${ROOT}"
 
