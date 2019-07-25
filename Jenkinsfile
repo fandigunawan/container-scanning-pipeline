@@ -568,7 +568,7 @@ pipeline {
               "<pre>${publicKey}</pre>" +
               "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
-              "<li>Import key with: gpg --import public.asc</li>" +
+              "<li>Import key with:<code> gpg --import public.asc </code></li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
               "</ol>" +
