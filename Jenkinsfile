@@ -570,13 +570,17 @@ pipeline {
               "<li>Save key to file (call it public.asc)</li>" +
               "<li>Import key with: gpg --import public.asc</li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
-              "<li>Verify with: gpg --verify signature.sig manifest.json</li>" +
+              "<li>Verify with:<code> gpg --verify signature.sig
+manifest.json</code></li>" +
               "</ol>" +
               "<p>Downloading and Running the image:<ol>" +
               "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
-              "<li>Retrieve the image using: docker pull ${PUBLIC_DOCKER_HOST}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} </li>" +
-              "<li>Find the tag for run below: example ${IMAGE_TAG}" +
-              "<li>Run the image with: docker run ${REPO_NAME}:${IMAGE_TAG}" +
+              //"<li>Retrieve the image using: docker pull ${PUBLIC_DOCKER_HOST}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} </li>" +
+              "<li>Retrieve the image by downloading it: <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a> 
+              "<li>Load the image into local docker registry: <code> docker
+load -i ./${S3_IMAGE_NAME} </code> +
+              "<li>Run the image with:<code> docker run
+${REPO_NAME}:${IMAGE_TAG} </code></li>" +
               "</ol>" +
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
