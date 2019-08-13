@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Vunerability Demo Stuff</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="scripts.js"></script>
+
+</head>
+<body>
+    <div class="content">
+        <div class="left-panel">
+            <h2>Whitelists in Gitlab</h2>
+            <ul id="btn-list">
+
+            </ul>
+        </div>
+
+        <div class="right-panel">
+            <div id="banner">
+                <table id="banner-info">
+                    <tr>
+                        <td><b>Image Name:</b></td><td id="image-name"></td>
+                        <td><b>Image Version:</b></td><td id="image-version"></td>
+                       <td><b>Image Branch:</b></td><td id="image-branch"></td>
+                    </tr>
+                    <tr>
+                        <td><b>Parent Image:</b></td><td id="parent-image"></td>
+                        <td><b>Parent Version:</b></td><td id="parent-version"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="right-panel-left-half">
+                <pre id="cve-table">
+                    <table id="cve-data">
+                        <th>Image Whitelist</th><th>Parent Whitelist</th><th>Full Whitelist</th>
+                        <tr valign="top">
+                            <td id="delta"></td><td id="parents"></td><td id="complete"></td>
+                        </tr>
+                    </table>
+                </pre>
+            </div>
+
+            <div class="right-panel-right-half">
+                <div id="jenkins-runs">
+                    <table id="jenkins-table">
+                        <th>Compare to Latest Jenkins Runs:</th>
+                        <tr>
+                            <td id="runs"></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div id="run-deets">
+                    <table id="deets-table">
+                        <th>Total</th><th>OSCAP</th><th>OVAL</th><th>Twistlock</th><th>Anchore</th>
+                        <tr valign="top">
+                            <td id="total"></td>
+                            <td id="oscap"></td>
+                            <td id="oval"></td>
+                            <td id="twistlock"></td>
+                            <td id="anchore"></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div id="whitelist-diff">
+                    <table id="diff">
+<!--                        <th>Difference</th>-->
+                        <tr align="top">
+                            <td><b> Difference Count:</b></td><td id="delta-count"></td>
+                        </tr>
+                        <tr>
+                            <td><b>Difference List:</b></td><td id="delta-list"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="loadingDiv">
+        <img src="./loading.gif" />
+    </div>
+
+</body>
+</html>
+
