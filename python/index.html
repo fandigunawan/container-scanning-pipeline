@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
     <title>Vunerability Demo Stuff</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css" media="screen">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <script src="scripts.js"></script>
 
 </head>
 <body>
-    <div class="content">
-        <div class="left-panel">
+    <div>
+        <div >
             <h2>Whitelists in Gitlab</h2>
-            <ul id="btn-list">
+            <div id="btn-list" class="btn-group-vertical" >
 
-            </ul>
+            </div>  
         </div>
 
-        <div class="right-panel">
+        <div >
             <div id="banner">
                 <table id="banner-info">
                     <tr>
@@ -37,7 +38,7 @@
                 </table>
             </div>
 
-            <div class="right-panel-left-half">
+            <div>
                 <pre id="cve-table">
                     <table id="cve-data">
                         <tr> 
@@ -54,7 +55,7 @@
                 </pre>
             </div>
 
-            <div class="right-panel-right-half">
+            <div >
                 <div id="jenkins-runs">
                     <table id="jenkins-table">
                         <tr>
@@ -67,7 +68,7 @@
                 </div>
 
                 <div id="run-deets">
-                    <table id="deets-table">
+                    <table id="deets-table" class="table table-hover">
                         <tr>
                           <th>Total</th>
                           <th>OSCAP</th>
@@ -86,7 +87,7 @@
                 </div>
 
                 <div id="whitelist-diff">
-                    <table id="diff">
+                    <table id="diff" class="table table-hover">
                     <!--               
                         <tr>         
                           <th>Difference</th>
@@ -103,11 +104,9 @@
             </div>
         </div>
     </div>
-
     <div id="loadingDiv">
         <img src="./loading.gif" />
     </div>
-
 </body>
 </html>
 

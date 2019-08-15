@@ -106,8 +106,9 @@ $(document).ready(function () {
                     });
                 }
             });
+            $('#btn-list').append($("<a class='btn btn-secondary'></a>" ).html(but))
 
-            $('#btn-list').append($("<li>").html(but))
+         //   $('#btn-list').append($("<li>").html(but))
         }
 //        btnList.append('</ul>');
 
