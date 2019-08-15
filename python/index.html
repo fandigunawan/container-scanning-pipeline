@@ -10,17 +10,19 @@
 
 </head>
 <body>
-    <div>
-        <div >
+  <div class="container">
+    <div class="row">
+        <div class="col-sm-">
             <h2>Whitelists in Gitlab</h2>
-            <div id="btn-list" class="btn-group-vertical" >
-
-            </div>  
+            <div class="panel panel-default">
+                <div class="panel-heading">Select Whitelist</div>
+                <div id="btn-list" class="btn-group-vertical" > </div>
+            </div>
         </div>
 
-        <div >
-            <div id="banner">
-                <table id="banner-info">
+        <div class="col-lg-" >
+            <div id="banner ">
+                <table id="banner-info" class="table table-stripped">
                     <tr>
                         <td><b>Image Name:</b></td>
                         <td id="image-name"></td>
@@ -34,7 +36,9 @@
                         <td id="parent-image"></td>
                         <td><b>Parent Version:</b></td>
                         <td id="parent-version"></td>
-                    </tr>
+                        <td></td>
+                        <td></td>
+                   </tr>
                 </table>
             </div>
 
@@ -85,11 +89,11 @@
                         </tr>
                     </table>
                 </div>
-
+       
                 <div id="whitelist-diff">
                     <table id="diff" class="table table-hover">
-                    <!--               
-                        <tr>         
+                    <!--
+                        <tr>    
                           <th>Difference</th>
                         </tr>
                     -->
@@ -104,9 +108,10 @@
             </div>
         </div>
     </div>
+
     <div id="loadingDiv">
         <img src="./loading.gif" />
     </div>
+  </div>
 </body>
 </html>
-
