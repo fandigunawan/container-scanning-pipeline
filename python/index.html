@@ -3,6 +3,7 @@
 <head>
     <title>Vunerability Demo Stuff</title>
     <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css" media="screen">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="scripts.js"></script>
 
@@ -20,13 +21,18 @@
             <div id="banner">
                 <table id="banner-info">
                     <tr>
-                        <td><b>Image Name:</b></td><td id="image-name"></td>
-                        <td><b>Image Version:</b></td><td id="image-version"></td>
-                       <td><b>Image Branch:</b></td><td id="image-branch"></td>
+                        <td><b>Image Name:</b></td>
+                        <td id="image-name"></td>
+                        <td><b>Image Version:</b></td>
+                        <td id="image-version"></td>
+                        <td><b>Image Branch:</b></td>
+                        <td id="image-branch"></td>
                     </tr>
                     <tr>
-                        <td><b>Parent Image:</b></td><td id="parent-image"></td>
-                        <td><b>Parent Version:</b></td><td id="parent-version"></td>
+                        <td><b>Parent Image:</b></td>
+                        <td id="parent-image"></td>
+                        <td><b>Parent Version:</b></td>
+                        <td id="parent-version"></td>
                     </tr>
                 </table>
             </div>
@@ -34,9 +40,15 @@
             <div class="right-panel-left-half">
                 <pre id="cve-table">
                     <table id="cve-data">
-                        <th>Image Whitelist</th><th>Parent Whitelist</th><th>Full Whitelist</th>
+                        <tr> 
+                            <th>Image Whitelist</th>
+                            <th>Parent Whitelist</th>
+                            <th>Full Whitelist</th>
+                        </tr>
                         <tr valign="top">
-                            <td id="delta"></td><td id="parents"></td><td id="complete"></td>
+                            <td id="delta"></td>
+                            <td id="parents"></td>
+                            <td id="complete"></td>
                         </tr>
                     </table>
                 </pre>
@@ -45,7 +57,9 @@
             <div class="right-panel-right-half">
                 <div id="jenkins-runs">
                     <table id="jenkins-table">
-                        <th>Compare to Latest Jenkins Runs:</th>
+                        <tr>
+                          <th>Compare to Latest Jenkins Runs:</th>
+                        </tr>
                         <tr>
                             <td id="runs"></td>
                         </tr>
@@ -54,7 +68,13 @@
 
                 <div id="run-deets">
                     <table id="deets-table">
-                        <th>Total</th><th>OSCAP</th><th>OVAL</th><th>Twistlock</th><th>Anchore</th>
+                        <tr>
+                          <th>Total</th>
+                          <th>OSCAP</th>
+                          <th>OVAL</th>
+                          <th>Twistlock</th>
+                          <th>Anchore</th>
+                        </tr>
                         <tr valign="top">
                             <td id="total"></td>
                             <td id="oscap"></td>
@@ -67,7 +87,11 @@
 
                 <div id="whitelist-diff">
                     <table id="diff">
-<!--                        <th>Difference</th>-->
+                    <!--               
+                        <tr>         
+                          <th>Difference</th>
+                        </tr>
+                    -->
                         <tr align="top">
                             <td><b> Difference Count:</b></td><td id="delta-count"></td>
                         </tr>
@@ -77,7 +101,6 @@
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 
