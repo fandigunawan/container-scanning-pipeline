@@ -1,24 +1,13 @@
-body {
-    margin: 0;
-    font-family: Tahoma, Geneva, sans-serif
-}
-
-pre {
-    margin: 0;
-    padding: 0;
-    font-family: Tahoma, Geneva, sans-serif;
-}
-
 html {
     height:100%;
 }
 
 .left-panel {
   float: left;
-  padding: 10px;
+  padding: 1em;
   box-sizing: border-box;
-  min-width: 15%;
-  max-width: 15%;
+  min-width: 25%;
+  max-width: 25%;
   min-height:100%;
   height:100%;
   background-color: #3D6999;
@@ -27,13 +16,12 @@ html {
 
 .right-panel {
   float: left;
-  min-width: 85%;
-  max-width: 85%;
-  padding: 10px 10px 10px 30px;
+  min-width: 75%;
+  max-width: 75%;
+  padding: 1em 1em 1em 2em;
   box-sizing: border-box;
   min-height:800px;
   height:100%;
-  background-color:#CCCCCC;
 }
 
 .right-panel-left-half {
@@ -54,67 +42,24 @@ html {
   clear: both;
 }
 
-table#cve-data {
-    padding: 10px;
-    border: 1px solid black;
-    border-collapse: collapse;
-    width: 100%
-}
-
-table#cve-data th {
-    border: 1px solid black;
-    min-width: 100px;
-}
-
-table#cve-data td {
-    border: 1px solid black;
-    min-width: 100px;
-}
-
-table#banner-info {
-    border: 1px solid black;
-    border-collapse: collapse;
-    max-width: 100%;
-}
-
-table#banner-info td {
-    border: 1px solid black;
-    min-width: 150px;
-}
-
-table#jenkins-table {
-    border: 1px solid black;
-    border-collapse: collapse;
-    min-width: 100%;
-    min-height: 45%;
-    padding: 0px 0px 20px 0px;
-}
-
-table#jenkins-table td {
-    border: 1px solid black;
-    min-width: 150px;
-}
 
 #run-deets{
-    height: 450px;
+    height: auto;
     overflow: auto;
     padding: 0px 0px 20px 0px;
 }
 
 #cve-table{
-    height: 900px;
+    height: auto;
     overflow: auto;
 }
 
 table#deets-table {
-    border: 1px solid black;
-    border-collapse: collapse;
     min-width: 100%;
     padding: 0px 0px 20px 0px;
 }
 
 table#deets-table td {
-    border: 1px solid black;
     min-width: 150px;
 }
 
@@ -123,18 +68,14 @@ table#deets-table td {
 }
 
 #whitelist-diff{
-    height: 350px;
+    height: auto;
     overflow: auto;
 }
-
 table#diff {
     margin-top: 20px;
-    border: 1px solid black;
-    border-collapse: collapse;
 }
 
 table#diff td{
-    border: 1px solid black;
 }
 
 #loadingDiv {
@@ -144,3 +85,4 @@ table#diff td{
     width: 120px;
     height: 120px;
 }
+

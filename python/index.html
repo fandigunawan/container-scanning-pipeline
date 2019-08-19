@@ -10,9 +10,10 @@
 
 </head>
 <body>
-  <div class="container">
-    <div class="row">
-        <div class="col-sm-">
+
+
+    <div class="container content">
+        <div class="left-panel col-sm-">
             <h2>Whitelists in Gitlab</h2>
             <div class="panel panel-default">
                 <div class="panel-heading">Select Whitelist</div>
@@ -20,7 +21,10 @@
             </div>
         </div>
 
-        <div class="col-lg-" >
+        <div class="right-panel col-lg-" >
+
+
+
             <div id="banner ">
                 <table id="banner-info" class="table table-stripped">
                     <tr>
@@ -59,8 +63,7 @@
                 </pre>
             </div>
 
-            <div >
-                <div id="jenkins-runs">
+            <div id="jenkins-runs">
                     <table id="jenkins-table">
                         <tr>
                           <th>Compare to Latest Jenkins Runs:</th>
@@ -69,9 +72,9 @@
                             <td id="runs"></td>
                         </tr>
                     </table>
-                </div>
+            </div>
 
-                <div id="run-deets">
+            <div id="run-deets">
                     <table id="deets-table" class="table table-hover">
                         <tr>
                           <th>Total</th>
@@ -88,10 +91,10 @@
                             <td id="anchore"></td>
                         </tr>
                     </table>
-                </div>
+            </div>
        
-                <div id="whitelist-diff">
-                    <table id="diff" class="table table-hover">
+            <div id="whitelist-diff">
+                <table id="diff" class="table table-hover">
                     <!--
                         <tr>    
                           <th>Difference</th>
@@ -103,8 +106,7 @@
                         <tr>
                             <td><b>Difference List:</b></td><td id="delta-list"></td>
                         </tr>
-                    </table>
-                </div>
+                </table>
             </div>
         </div>
     </div>
