@@ -93,3 +93,8 @@ table#diff td{
     height: 120px;
 }
 
+.hide {
+   display: none;
+}
+
+

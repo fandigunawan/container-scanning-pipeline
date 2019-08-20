@@ -150,10 +150,35 @@ function clearJenkinsDetailsTable(){
     $('#anchore').empty()
 }
 
+
+//show all the hidden DOm and hide the splash
+function showDivsHideSplash(){
+
+    var element = document.getElementById("splash");
+    element.className = element.className.replace(/\b\b/g, "hide");
+    var element = document.getElementById("banner-info");
+    element.className = element.className.replace(/\bhide\b/g, "");
+    var element = document.getElementById("cve");
+    element.className = element.className.replace(/\bhide\b/g, "");
+    var element = document.getElementById("jenkins-runs");
+    element.className = element.className.replace(/\bhide\b/g, "");
+
+}
+
+//show all the hidden DOm and hide the splash
+function showCompareDiv(){
+    var element = document.getElementById("whitelist-diff");
+    element.className = element.className.replace(/\bhide\b/g, "");
+
+}
+
+
 function convertVulnURLtoHTML(vuln) {
     var cve_base = "https://nvd.nist.gov/vuln/detail/"
     var cce_base = "http://www.scaprepo.com/view.jsp?id="
     var rhba_base = "https://access.redhat.com/errata/"
+
+    showDivsHideSplash();
 
     url = "http://www.google.com";
     if( vuln.includes("CVE") ){
@@ -170,6 +195,7 @@ function convertVulnURLtoHTML(vuln) {
 
 function getTotalDelta(set1, set2) {
 //    console.log("SET DUMP LOL", set1, set2)
+    showCompareDiv();
     var _difference = new Set(set1);
     for ( var elem of set2 ) {
         _difference.delete(elem);

@@ -26,8 +26,12 @@
 
 
 
-            <div id="banner ">
-                <table id="banner-info" class="table table-stripped">
+            <div id="banner">
+               <div id="splash" class="   ">
+                        CHT Whitelists
+                </div>
+
+                <table id="banner-info" class="hide table table-stripped">
                     <tr>
                         <td><b>Image Name:</b></td>
                         <td id="image-name"></td>
@@ -47,7 +51,7 @@
                 </table>
             </div>
 
-            <div>
+            <div id="cve" class="hide">
                 <pre id="cve-table">
                     <table id="cve-data"  class="table table-hover">
                         <tr> 
@@ -64,7 +68,7 @@
                 </pre>
             </div>
 
-            <div id="jenkins-runs">
+            <div id="jenkins-runs" class="hide">
                     <table id="jenkins-table">
                         <tr>
                           <th>Compare to Latest Jenkins Runs:</th>
@@ -94,7 +98,7 @@
                     </table>
             </div>
        
-            <div id="whitelist-diff">
+            <div id="whitelist-diff" class="hide">
                 <table id="diff" class="table table-hover">
                     <!--
                         <tr>    
