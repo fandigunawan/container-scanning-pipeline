@@ -150,25 +150,26 @@ function clearJenkinsDetailsTable(){
     $('#anchore').empty()
 }
 
-
 //show all the hidden DOm and hide the splash
 function showDivsHideSplash(){
 
     var element = document.getElementById("splash");
-    element.className = element.className.replace(/\b\b/g, "hide");
+    element.className = element.className.replace(/\breplaceme\b/g, "hide");
     var element = document.getElementById("banner-info");
-    element.className = element.className.replace(/\bhide\b/g, "");
+    element.className = element.className.replace(/\bhide\b/g, "replaceme");
     var element = document.getElementById("cve");
-    element.className = element.className.replace(/\bhide\b/g, "");
+    element.className = element.className.replace(/\bhide\b/g, "replaceme");
     var element = document.getElementById("jenkins-runs");
-    element.className = element.className.replace(/\bhide\b/g, "");
+    element.className = element.className.replace(/\bhide\b/g, "replaceme");
 
 }
 
 //show all the hidden DOm and hide the splash
 function showCompareDiv(){
     var element = document.getElementById("whitelist-diff");
-    element.className = element.className.replace(/\bhide\b/g, "");
+    element.className = element.className.replace(/\bhide\b/g, "replaceme");
+    var element = document.getElementById("cve");
+    element.className = element.className.replace(/\breplaceme\b/g, "hide");
 
 }
 
