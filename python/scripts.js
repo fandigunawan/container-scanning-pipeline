@@ -163,21 +163,10 @@ function hideDOM(element_id){
 
 //show all the hidden DOm and hide the splash
 function showDivsHideSplash(){
-
-    var hide_elements, show_elements;
-    hide_elements = ["splash"];
-    hide_elements.forEach(hideDOM);
+    var show_elements;
     show_elements = ["banner-info", "cve", "jenkins-runs"];
     show_elements.forEach(showDOM);
-   // var element = document.getElementById("banner-info");
-   // element.className = element.className.replace(/\bhide\b/g, "replaceme");
-   // var element = document.getElementById("cve");
-   // element.className = element.className.replace(/\bhide\b/g, "replaceme");
-   // var element = document.getElementById("jenkins-runs");
-   // element.className = element.className.replace(/\bhide\b/g, "replaceme");
-   // var element = document.getElementById("run-deets");
-   // element.className = element.className.replace(/\bhide\b/g, "replaceme");
-
+    hideDOM("splash");
 }
 
 
@@ -187,7 +176,6 @@ function showCompareDiv(){
     show_elements = ["whitelist-diff", "displayCVE", "run-deets"];
     show_elements.forEach(showDOM);
     hideDOM("cve");
-    
 }
 
 //show hidden cve list direct call by button link
