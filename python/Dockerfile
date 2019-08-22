@@ -9,7 +9,7 @@ EXPOSE 8000
 EXPOSE 80
 
 ADD app.py helpers.py report_helpers.py s3_helpers.py requirements.txt start.sh /
-ADD index.html style.css scripts.js loading.gif  /var/www/html/
+ADD index.html style.css scripts.js loading.gif img-safe.svg /var/www/html/
 ADD bootstrap /var/www/html/bootstrap
 
 # RUN yum install -y python3-tkinter
