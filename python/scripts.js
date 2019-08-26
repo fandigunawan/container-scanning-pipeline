@@ -106,9 +106,11 @@ $(document).ready(function () {
                     });
                 }
             });
-            $('#btn-list').append($("<a class='btn btn-secondary'></a>" ).html(but))
 
-         //   $('#btn-list').append($("<li>").html(but))
+          //  $('#btn-list').append($("<a class='btn btn-secondary'></a>" ).html(but))
+          //  $('#btn-list').append($("<button class='btn btn-secondary'></button>").html(but))
+
+            $('#btn-list').append($("<li>").html(but))
         }
 //        btnList.append('</ul>');
 
@@ -164,25 +166,19 @@ function hideDOM(element_id){
 //show all the hidden DOm and hide the splash
 function showDivsHideSplash(){
     var show_elements;
-    show_elements = ["banner-info", "cve", "jenkins-runs"];
+    show_elements = ["banner-info", "cve", "jenkins-runs", "collapse-control"];
     show_elements.forEach(showDOM);
     hideDOM("splash");
 }
 
 
 
-//show all the hidden DOm and hide the splash
+//show all the hidden DOm for the differences since run has not been selected
 function showCompareDiv(){
-    show_elements = ["whitelist-diff", "displayCVE", "run-deets"];
+    show_elements = ["whitelist-diff", "run-deets", "but-diff", "but-scans"];
     show_elements.forEach(showDOM);
-    hideDOM("cve");
 }
 
-//show hidden cve list direct call by button link
-function showCVEList(){
-    showDOM("cve");
-    showDOM("run-deets");
-}
 
 
 function convertVulnURLtoHTML(vuln) {
@@ -214,3 +210,4 @@ function getTotalDelta(set1, set2) {
     }
     return _difference;
 }
+

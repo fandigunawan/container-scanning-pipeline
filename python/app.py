@@ -10,6 +10,16 @@ app = Flask(__name__)
 api = Api(app)
 CORS(app)
 
+@app.route('/gen_cve_csv') 
+def gen_cve_csv(): 
+    f=open("/var/www/html/csvtest.txt", "w+")
+    f.write("This is a test... This is only a test ... if you get this let me know so I can write the rest of the script");
+    f.close()
+    try:
+        return send_file('/var/www/html/csvtest.txt', attachment_filename='csvtest.txt')
+    except Exception as e:
+        return str(e)
+
 
 @app.route('/get', methods=['GET', 'POST'])
 def get_all_the_things():

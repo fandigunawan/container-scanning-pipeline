@@ -51,13 +51,13 @@ button{
 
 
 #run-deets{
-    height: auto;
+    height: 20em;
     overflow: auto;
     padding: 0px 0px 20px 0px;
 }
 
 #cve-table{
-    height: auto;
+    height: 20em;
     overflow: auto;
 }
 
@@ -97,4 +97,7 @@ table#diff td{
    display: none;
 }
 
+#btn-list{
+  list-style: none;
+}
 

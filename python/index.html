@@ -13,14 +13,27 @@
 <body>
 
 
-    <div class="container content">
+    <div class=" content">
         <div class="left-panel col-sm- text-center">
-            
-            <h3>Available Gitlab Whitelist</h3>
-            <div class="panel panel-default">
+
+            <div id="whitelist-avail" class="panel panel-default">
+                <h3>Available Gitlab Whitelist</h3>
+
                 <div class="panel-heading text-center">Select Whitelist</div>
-                <div id="btn-list" class="btn-group-vertical" > </div>
+                <div id="btn-list" class="btn-group-vertical panel panel-default" > </div>
             </div>
+        
+          
+            <div id="collapse-control" class="panel panel-default btn-group-vertical hide">
+              <h3>Collapse Panel</h3>
+
+              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#whitelist-avail">Available Whitelists</button>
+              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#cve-table">Current Whitelist</button>
+              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#run-deets" id="but-scans">Scan Results</button>
+              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#whitelist-diff" id="but-diff">Differences</button>
+              
+            </div>  
+
         </div>
 
         <div class="right-panel col-lg-" >
@@ -55,7 +68,7 @@
             </div>
 
             <div id="cve" class="hide">
-                <pre id="cve-table">
+                <pre id="cve-table" class="collapse"><b>Current Whitelist</b>
                     <table id="cve-data"  class="table table-hover">
                         <tr> 
                             <th>Image Whitelist</th>
@@ -82,7 +95,8 @@
                     </table>
             </div>
 
-            <div id="run-deets" class="hide">
+            <div id="run-deets" class="collapse hide">
+                    <b> Jenkins Scan Results </b>
                     <table id="deets-table" class="table table-hover">
                         <tr>
                           <th>Total</th>
@@ -101,13 +115,14 @@
                     </table>
             </div>
        
-            <div id="whitelist-diff" class="hide">
+            <div id="whitelist-diff" class="collapse hide">
                 <table id="diff" class="table table-hover">
-                    <!--
+                    
                         <tr>    
-                          <th>Difference</th>
+                          <th colspan="2"><b>Differences in current Whitelist
+                              and Jenkins Run Scan</b></th>
                         </tr>
-                    -->
+                    
                         <tr align="top">
                             <td><b> Difference Count:</b></td><td id="delta-count"></td>
                         </tr>
@@ -116,10 +131,6 @@
                         </tr>
                 </table>
             </div>
-        <div id="displayCVE" class="text-center hide">
-          <a class="btn btn-lg btn-light" href="javascript:showCVEList()"  > Display CVE </a>
-        </div>
-
         </div>
     </div>
 
