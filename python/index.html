@@ -25,10 +25,10 @@
         
           
             <div id="collapse-control" class="panel panel-default btn-group-vertical hide">
-              <h3>Collapse Panel</h3>
+              <h3>Panel Control</h3>
 
               <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#whitelist-avail">Available Whitelists</button>
-              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#cve-table">Current Whitelist</button>
+              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#cve">Current Whitelist</button>
               <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#run-deets" id="but-scans">Scan Results</button>
               <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#whitelist-diff" id="but-diff">Differences</button>
               
@@ -67,8 +67,10 @@
                 </table>
             </div>
 
+            <b id="cve-label" class="hide labelz" data-toggle="collapse" data-target="#cve">Current Whitelist</b>
+
             <div id="cve" class="hide">
-                <pre id="cve-table" class="collapse"><b>Current Whitelist</b>
+                <pre id="cve-table" >
                     <table id="cve-data"  class="table table-hover">
                         <tr> 
                             <th>Image Whitelist</th>
@@ -94,9 +96,12 @@
                         </tr>
                     </table>
             </div>
+          
 
-            <div id="run-deets" class="collapse hide">
-                    <b> Jenkins Scan Results </b>
+
+           <b id="deets-label" class="hide labelz" data-toggle="collapse" data-target="#run-deets"> Jenkins Scan Results </b>
+            <div id="run-deets" class="collapse hide"> 
+
                     <table id="deets-table" class="table table-hover">
                         <tr>
                           <th>Total</th>
@@ -114,14 +119,10 @@
                         </tr>
                     </table>
             </div>
-       
+      
+	    <b id="diff-label" class="hide labelz" data-toggle="collapse" data-target="#whitelist-diff">Differences in Current Whitelist and Jenkins Run Scan</b> 
             <div id="whitelist-diff" class="collapse hide">
                 <table id="diff" class="table table-hover">
-                    
-                        <tr>    
-                          <th colspan="2"><b>Differences in current Whitelist
-                              and Jenkins Run Scan</b></th>
-                        </tr>
                     
                         <tr align="top">
                             <td><b> Difference Count:</b></td><td id="delta-count"></td>
@@ -140,3 +141,4 @@
   </div>
 </body>
 </html>
+

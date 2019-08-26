@@ -166,7 +166,7 @@ function hideDOM(element_id){
 //show all the hidden DOm and hide the splash
 function showDivsHideSplash(){
     var show_elements;
-    show_elements = ["banner-info", "cve", "jenkins-runs", "collapse-control"];
+    show_elements = ["banner-info", "cve", "jenkins-runs", "collapse-control","cve-label"];
     show_elements.forEach(showDOM);
     hideDOM("splash");
 }
@@ -175,7 +175,7 @@ function showDivsHideSplash(){
 
 //show all the hidden DOm for the differences since run has not been selected
 function showCompareDiv(){
-    show_elements = ["whitelist-diff", "run-deets", "but-diff", "but-scans"];
+    show_elements = ["whitelist-diff", "run-deets", "but-diff", "but-scans", "deets-label", "diff-label"];
     show_elements.forEach(showDOM);
 }
 

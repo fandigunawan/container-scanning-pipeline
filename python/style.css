@@ -49,6 +49,13 @@ button{
   clear: both;
 }
 
+.labelz{
+ padding:.1em;
+ margin:.1em;
+ background-color: #A30;
+ color:#FFF;
+
+}
 
 #run-deets{
     height: 20em;
