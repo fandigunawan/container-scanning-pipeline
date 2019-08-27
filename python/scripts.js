@@ -168,7 +168,8 @@ function showDivsHideSplash(){
     var show_elements;
     show_elements = ["banner-info", "cve", "jenkins-runs", "collapse-control","cve-label"];
     show_elements.forEach(showDOM);
-    hideDOM("splash");
+    var hide_elements =  ["splash", "whitelist-diff", "run-deets", "but-diff", "but-scans", "deets-label", "diff-label"];
+    hide_elements.forEach(hideDOM);
 }
 
 
