@@ -81,7 +81,7 @@ pipeline {
      choice(name: 'VENDOR_PRODUCT',
            choices: ['anchore', 'cyberfactory', 'dsop',
                      'gitlab', 'opensource', 'redhat',
-                     'twistlock'],
+                     'twistlock', cloudbees/jenkins],
            description: 'What vendor is being scanned')
 
 
