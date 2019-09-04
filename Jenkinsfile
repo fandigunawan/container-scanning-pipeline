@@ -70,20 +70,13 @@ pipeline {
           description: "Which tools to run?",
           name: 'toolsToRun')
 
-    string(defaultValue: "up/openjdk-v1.8-ubi7-stigd",
+    string(defaultValue: "",
             name: 'REPO_NAME',
             description: "Name of repo to be used by Docker, Nexus and all Scanning tools")
 
      string(defaultValue: "latest",
             name: 'IMAGE_TAG',
             description: "Image tag to be used by Docker, Nexus and all Scanning tools")
-
-     choice(name: 'VENDOR_PRODUCT',
-           choices: ['anchore', 'cyberfactory', 'dsop',
-                     'gitlab', 'opensource', 'redhat',
-                     'twistlock','cloudbees'],
-           description: 'What vendor is being scanned')
-
 
     } // parameters
 
@@ -96,9 +89,11 @@ pipeline {
           def repo_image_only = REPO_NAME.split("/").last()
 
           if (testOrProduction == "Production") {
-            ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
+            //ROOT = "container-scan-reports/${repo_image_only}"
+            ROOT = "container-scan-reports/${REPO_NAME}"
           } else {
-            ROOT = "testing/container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
+            //ROOT = "testing/container-scan-reports/${repo_image_only}"
+            ROOT = "testing/container-scan-reports/${REPO_NAME}"
           }
           echo "ROOT=${ROOT}"
 
