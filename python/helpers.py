@@ -2,7 +2,7 @@ import gitlab
 import json
 import os
 
-gitlab_url = "http://dccscr.dsop.io"
+gitlab_url = "https://dccscr.dsop.io"
 gitlab_key = os.environ['GITLAB_KEY']
 
 
