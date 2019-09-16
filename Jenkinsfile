@@ -668,8 +668,6 @@ pipeline {
 //      } // steps
 //    } // stage Clean up Docker artifacts
 
-  } // stages
-} // pipeline
 
     stage('Create Status') {
         when {
@@ -684,3 +682,6 @@ pipeline {
             } script
           } // steps
         } //stage
+
+  } // stages
+} // pipeline
