@@ -670,18 +670,21 @@ pipeline {
 
 
     stage('Create Status') {
-        when {
-          currentBuild.result == 'FAILED' 
-        }
       steps {
         echo "Updating container scanning pipeline status for build" 
-
             script {
+                if (currentBuild.result == 'FAILED') {
                // curl --request PUT --header 'PRIVATE-TOKEN: _____' --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "_______", "author_name": "______","content": "status: testing", "commit_message": "update status"}' 'ROOT_REPO_IMAGE_README'
-               echo "this is the script"
-            } script
-          } // steps
-        } //stage
+               echo "this is failed message status sent to README"
+               
+                } else {
+                    echo "this is success status sent to README"
+                }
+          } // script
+        } //steps
+    
+
+    } //stage
 
   } // stages
 } // pipeline
