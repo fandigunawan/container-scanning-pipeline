@@ -670,3 +670,17 @@ pipeline {
 
   } // stages
 } // pipeline
+
+    stage('Create Status') {
+        when {
+          currentBuild.result == 'FAILED' 
+        }
+      steps {
+        echo "Updating container scanning pipeline status for build" 
+
+            script {
+               // curl --request PUT --header 'PRIVATE-TOKEN: _____' --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "_______", "author_name": "______","content": "status: testing", "commit_message": "update status"}' 'ROOT_REPO_IMAGE_README'
+               echo "this is the script"
+            } script
+          } // steps
+        } //stage
