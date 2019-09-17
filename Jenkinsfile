@@ -23,7 +23,7 @@ pipeline {
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     OSCAP_NODE = credentials('OpenSCAPNode')
 
-    GIT_REPO_PATH = https://gitlab.com/krafaels/up-tool-configs
+    GIT_REPO_PATH = "https://gitlab.com/krafaels/up-tool-configs"
     GIT_API_TOKEN = "n2PxiyTSuArsZkRh6KsE"
 
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
