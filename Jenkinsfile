@@ -676,26 +676,21 @@ pipeline {
 //    } // stage Clean up Docker artifacts
 
 
-    stage('Create Status') {
-      steps {
-        echo "Updating container scanning pipeline status for build" 
-            script {
-                if (currentBuild.result == 'FAILED') {
-                    echo "Failed status sent to README"
-                    // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: FAILED TO BUILD on ${DATETIME_TAG}")
-                    sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
+    post {
+        failure {
+        // echo "Updating container scanning pipeline status for build" 
+            echo "Failed status sent to README"
+            // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: FAILED TO BUILD on ${DATETIME_TAG}")
+            sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
+        } //failure
 
-                } else {
-                    echo "Success status sent to README"
-                    // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: SUCCESSFUL BUILD on ${DATETIME_TAG}")
-                    sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
-            }
-
-          } // script
-        } //steps
-    
-
-    } //stage
+        success {
+            echo "Success status sent to README"
+            // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: SUCCESSFUL BUILD on ${DATETIME_TAG}")
+            sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
+            
+          } // success
+        } //post
 
   } // stages
 } // pipeline
