@@ -681,13 +681,13 @@ pipeline {
         // echo "Updating container scanning pipeline status for build" 
             echo "Failed status sent to README"
             // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: FAILED TO BUILD on ${DATETIME_TAG}")
-            sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
+            sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md")
         } //failure
 
         success {
             echo "Success status sent to README"
             // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: SUCCESSFUL BUILD on ${DATETIME_TAG}")
-            sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
+            sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md")
             
           } // success
         } //post
