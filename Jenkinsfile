@@ -23,6 +23,9 @@ pipeline {
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     OSCAP_NODE = credentials('OpenSCAPNode')
 
+    GIT_REPO_PATH = https://gitlab.com/krafaels/up-tool-configs
+    GIT_API_TOKEN = "n2PxiyTSuArsZkRh6KsE"
+
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
 
@@ -74,12 +77,16 @@ pipeline {
             name: 'REPO_NAME',
             description: "Name of repo to be used by Docker, Nexus and all Scanning tools")
 
-     string(defaultValue: "latest",
+    string(defaultValue: "latest",
             name: 'IMAGE_TAG',
             description: "Image tag to be used by Docker, Nexus and all Scanning tools")
 
-    } // parameters
+    string(defaultValue: "${GIT_REPO_PATH}/")
+            name: 'GIT_IMAGE_PATH'
+            description: "Location of container artifacts and README in DCCSCR"
 
+    } // parameters
+  
   stages {
 
     stage('Finish initializing environment') {
@@ -674,12 +681,16 @@ pipeline {
         echo "Updating container scanning pipeline status for build" 
             script {
                 if (currentBuild.result == 'FAILED') {
-               // curl --request PUT --header 'PRIVATE-TOKEN: _____' --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "_______", "author_name": "______","content": "status: testing", "commit_message": "update status"}' 'ROOT_REPO_IMAGE_README'
-               echo "this is failed message status sent to README"
-               
+                    echo "Failed status sent to README"
+                    // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: FAILED TO BUILD on ${DATETIME_TAG}")
+                    sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
+
                 } else {
-                    echo "this is success status sent to README"
-                }
+                    echo "Success status sent to README"
+                    // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: SUCCESSFUL BUILD on ${DATETIME_TAG}")
+                    sh(returnStdout: true, script: "curl --request PUT --header "PRIVATE-TOKEN: ${GIT_API_TOKEN}" --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
+            }
+
           } // script
         } //steps
     
