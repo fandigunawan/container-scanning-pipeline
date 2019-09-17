@@ -24,7 +24,8 @@ pipeline {
     OSCAP_NODE = credentials('OpenSCAPNode')
 
     GIT_REPO_PATH = "https://gitlab.com/krafaels/up-tool-configs"
-    GIT_API_TOKEN = "n2PxiyTSuArsZkRh6KsE"
+    GIT_USERNAME = "krafaels324@gmail.com"
+    GIT_PASSWORD = "Romans1212!"
 
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
@@ -678,16 +679,27 @@ pipeline {
 
     post {
         failure {
-        // echo "Updating container scanning pipeline status for build" 
+        
             echo "Failed status sent to README"
-            // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: FAILED TO BUILD on ${DATETIME_TAG}")
-            sh(script: 'curl --request PUT --header 'PRIVATE-TOKEN: n2PxiyTSuArsZkRh6KsE' --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md')
+
+            ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: FAILED TO BUILD on ${DATETIME_TAG}")
+
+            withCredentials([usernamePassword(credentialsId: 'krafaels-git', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')])
+                sh('git push https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_PATH}')
+            
+            // sh "curl --request PUT --header 'PRIVATE-TOKEN: n2PxiyTSuArsZkRh6KsE' --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
         } //failure
 
         success {
+            
             echo "Success status sent to README"
+            
             // ant.replaceregexp(file: 'README.md', match: "^Status Update:", replace: "Status Update: SUCCESSFUL BUILD on ${DATETIME_TAG}")
-            sh(script: 'curl --request PUT --header 'PRIVATE-TOKEN: n2PxiyTSuArsZkRh6KsE' --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md')
+            
+            withCredentials([usernamePassword(credentialsId: 'krafaels-git', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')])
+                sh('git push https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_PATH}')
+            
+            // sh "curl --request PUT --header 'PRIVATE-TOKEN: n2PxiyTSuArsZkRh6KsE' --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
             
           } // success
         } //post
