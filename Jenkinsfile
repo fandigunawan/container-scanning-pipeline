@@ -151,6 +151,7 @@ pipeline {
               } // withCredentials
 
               def imageInfo = sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+              dcarApproval = sshCommand remote: remote, command: "sudo docker inspect --format='{{.Config.Labels.dcar-status}}' ${image_full_path}"
 
               //need to extract the sha256 value for signature
               def shaMatch = imageInfo =~ /sha256[:].+/
@@ -559,6 +560,7 @@ pipeline {
 
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>${REPO_NAME} Artifacts</h1>" +
+              "<h3>Container Approval Status: ${dcarApproval}</h3>" +
               "<p> Image manifests have been signed with key:<br>" +
               "<pre>${publicKey}</pre>" +
               "<p>Verifying Image Instructions:<ol>" +
