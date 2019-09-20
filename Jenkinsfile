@@ -684,8 +684,11 @@ post {
     always {
         // send status report to build-status.log file on new branch and then merge
         // will this logfile be appended locally or remotely?
-        // what type of plugins are available on jenkins to do this?
-        sh('wget -q -O status-report.py https://dccscr.dsop.io/dsop/container-scanning-pipeline/blob/krafaels_test/status-update.py /usr/bin/python status-report.py ${state}')
+        // possibly run this script below using the bash shell when configuring the pipeline. 
+        if (state != 'FAILED' or 'SUCCESS') {
+            echo "state variable was not set to either FAILED or SUCCESS"
+        }
+        sh('wget -q -O status-report.py https://dccscr.dsop.io/dsop/container-scanning-pipeline/blob/krafaels_test/status-update.py /usr/bin/python status-report.py ${state} ${BUILD_ID} ${IMAGE_ID}') // IMAGE_ID needs to be properly defined
     }
 } 
 
