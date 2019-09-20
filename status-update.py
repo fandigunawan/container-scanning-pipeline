@@ -5,7 +5,7 @@ import os
 import wget
 import fileinput
 
-# USAGE: python status-update.py sys.argv[0]
+# USAGE: python status-update.py <state> <build_id> <image_path>
 
 dccscr = 'https://dccscr.dsop.io/'
 state = sys.argv[1]
