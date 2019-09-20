@@ -674,21 +674,30 @@ pipeline {
 //        } // script
 //      } // steps
 //    } // stage Clean up Docker artifacts
-post {
-    failure {
-        def state = 'FAILED'
-    }
-    success {
-        def state = 'SUCCESS'
-    }
-    always {
-        // send status report to build-status.log file on new branch and then merge
-        // will this logfile be appended locally or remotely?
-        // what type of plugins are available on jenkins to do this?
-        sh('wget -q -O status-report.py https://dccscr.dsop.io/dsop/container-scanning-pipeline/blob/krafaels_test/status-update.py /usr/bin/python status-report.py ${state}')
-    }
-} 
 
+
+    post {
+        failure {
+        
+            echo "Failed status sent to README"
+
+            withCredentials([sshUserPrivateKey(credentialsId: '', keyFileVariable: '', usernameVariable: 'userName')]) {
+                sh('git push https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_PATH}')
+            
+            // sh "curl --request PUT --header 'PRIVATE-TOKEN: n2PxiyTSuArsZkRh6KsE' --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
+        } //failure
+
+        success {
+            
+            echo "Success status sent to README"
+            
+            withCredentials([sshUserPrivateKey(credentialsId: '', keyFileVariable: '', usernameVariable: 'userName')]) {
+                sh('git push https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_PATH}')
+            
+            // sh "curl --request PUT --header 'PRIVATE-TOKEN: n2PxiyTSuArsZkRh6KsE' --header "Content-Type: application/json" --data '{"branch": "master", "author_email": "${GIT_AUTHOR_EMAIL}", "author_name": "${GIT_AUTHOR_NAME}","content": "${BUILD_ID} Status Update: FAILED TO BUILD on ${DATETIME_TAG}", "commit_message": "update status"}' ${GIT_IMAGE_PATH}/README.md"
+            
+          } // success
+        } //post
 
   } // stages
 } // pipeline
