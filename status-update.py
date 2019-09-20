@@ -1,23 +1,50 @@
 import gitlab
 import sys
 import datetime
+import os
+import wget
+import fileinput
 
 # USAGE: python status-update.py sys.argv[0]
 
 dccscr = 'https://dccscr.dsop.io/'
 state = sys.argv[1]
 build_id = sys.argv[2]
-
 #get image name from jenkins - will need this to determine which project the status report will be sent in gitlab
-imageName = 'from jenkins pipeline'
+image_path = sys.argv[3]
 
-if state == 'FAILED':
-    file = open("build-status.log", 'a')
-    print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), 'Status Update:', str(state), str(build_id), file=file)
+def status_update(state, build_id, image_path):
+    if state == 'FAILED':
+        # file = open("build-status.log", 'a')
+        update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
+        readme = wget.download(image_path)
+        with fileinput.FileInput(readme, inplace=True) as file:
+            for line in file:
+                print(line.replace('^Status Update', update).split())
 
-if state == 'SUCCESS':
-    file = open("build-status.log", 'a')
-    print('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), 'Status Update:', str(state), str(build_id), file=file)
+        return readme
+
+    elif state == 'SUCCESS':
+        # file = open("build-status.log", 'a')
+        update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
+        readme = wget.download(image_path)
+        with fileinput.FileInput(readme, inplace=True) as file:
+            for line in file:
+                print(line.replace('^Status Update', update).split())
+
+        return readme
+
+def commit_to_git():
+    readme = status_update(state, build_id, image_path)
+
+
+
+
+def cleanup():
+    my_dir = os.getcwd()
+    os.remove(my_dir + '/README.md')
+
+
 
 # def return_auth():
 #     g1 = gitlab.Gitlab(dccscr, private_token='XQ3yQ7RP9LXSLEAAA9jK')
