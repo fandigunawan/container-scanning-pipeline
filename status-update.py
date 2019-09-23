@@ -11,33 +11,31 @@ dccscr = 'https://dccscr.dsop.io/'
 state = sys.argv[1]
 build_id = sys.argv[2]
 #get image name from jenkins - will need this to determine which project the status report will be sent in gitlab
-image_path = sys.argv[3]
+image_tag = sys.argv[3]
 
-def status_update(state, build_id, image_path):
+def status_update(state, build_id, image_tag):
     if state == 'FAILED':
         # file = open("build-status.log", 'a')
-        update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
-        readme = wget.download(image_path)
-        with fileinput.FileInput(readme, inplace=True) as file:
-            for line in file:
-                print(line.replace('^Status Update', update).split())
+        # update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
+        # readme = wget.download(image_path)
+        # with fileinput.FileInput(readme, inplace=True) as file:
+        #     for line in file:
+        #         print(line.replace('^Status Update', update).split())
 
-        return readme
+        return state, build_id, image_tag
 
     elif state == 'SUCCESS':
-        # file = open("build-status.log", 'a')
-        update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
-        readme = wget.download(image_path)
-        with fileinput.FileInput(readme, inplace=True) as file:
-            for line in file:
-                print(line.replace('^Status Update', update).split())
+    #     # file = open("build-status.log", 'a')
+    #     update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
+    #     readme = wget.download(image_path)
+    #     with fileinput.FileInput(readme, inplace=True) as file:
+    #         for line in file:
+    #             print(line.replace('^Status Update', update).split())
 
-        return readme
+        return state, build_id, image_tag
 
 def commit_to_git():
     readme = status_update(state, build_id, image_path)
-
-
 
 
 def cleanup():
@@ -65,3 +63,4 @@ def cleanup():
 
 
 # get_projects()
+print(status_update(state, build_id, image_tag))

@@ -687,8 +687,11 @@ post {
         // possibly run this script below using the bash shell when configuring the pipeline. 
         if (state != 'FAILED' or 'SUCCESS') {
             echo "state variable was not set to either FAILED or SUCCESS"
+            echo "state >> build-status.log"
+            echo "${BUILD_ID} >> build-status.log"
+            echo "${IMAGE_ID} >> build-status.log"
         }
-        sh('wget -q -O status-report.py https://dccscr.dsop.io/dsop/container-scanning-pipeline/blob/krafaels_test/status-update.py /usr/bin/python status-report.py ${state} ${BUILD_ID} ${IMAGE_ID}') // IMAGE_ID = dccscr path to image README
+        sh('wget -q -O status-report.py https://dccscr.dsop.io/dsop/container-scanning-pipeline/blob/krafaels_test/status-update.py /usr/bin/python status-report.py ${state} ${BUILD_ID} ${IMAGE_TAG}') // IMAGE_TAG = dccscr path to image README
     }
 } 
 
