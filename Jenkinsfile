@@ -248,8 +248,6 @@ pipeline {
           steps {
             echo 'Twistlock Compliance Scan'
 
-// NOOP: Expired License
-/*
             // Using the OpenScap node to overcome docker inside docker limitations,
             // this may use a dedicated node eventually, or be refactored to follow best practice TBD
             script {
@@ -288,8 +286,7 @@ pipeline {
               } // node
             } // script
 
-*/ 
-// NOOP
+
           } // steps
         } // stage
 
