@@ -4,38 +4,53 @@ import datetime
 import os
 import wget
 import fileinput
+from git import Repo
 
-# USAGE: python status-update.py <state> <build_id> <image_path>
+# USAGE: python status-update.py <state> <build_id> <git_repo_path>
 
 dccscr = 'https://dccscr.dsop.io/'
 state = sys.argv[1]
 build_id = sys.argv[2]
 #get image name from jenkins - will need this to determine which project the status report will be sent in gitlab
-image_tag = sys.argv[3]
+git_repo_path = sys.argv[3]
+
 
 def status_update(state, build_id, image_tag):
     if state == 'FAILED':
         # file = open("build-status.log", 'a')
-        # update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
-        # readme = wget.download(image_path)
-        # with fileinput.FileInput(readme, inplace=True) as file:
-        #     for line in file:
-        #         print(line.replace('^Status Update', update).split())
+        update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
+        readme = wget.download(git_repo_path)
+        with fileinput.FileInput(readme, inplace=True) as file:
+            for line in file:
+                print(line.replace('^Status Update', update).split())
 
-        return state, build_id, image_tag
+        return state
 
     elif state == 'SUCCESS':
-    #     # file = open("build-status.log", 'a')
-    #     update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
-    #     readme = wget.download(image_path)
-    #     with fileinput.FileInput(readme, inplace=True) as file:
-    #         for line in file:
-    #             print(line.replace('^Status Update', update).split())
+        # file = open("build-status.log", 'a')
+        update = 'Status Update {:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(state), str(build_id)
+        readme = wget.download(git_repo_path)
+        with fileinput.FileInput(readme, inplace=True) as file:
+            for line in file:
+                print(line.replace('^Status Update', update).split())
 
-        return state, build_id, image_tag
+        return state
 
-def commit_to_git():
-    readme = status_update(state, build_id, image_path)
+#another conditional will follow the previous elif to evaluate var state for 'APPROVAL' and 'REJECTION'
+
+def clone_repo(git_repo_path):
+    cloned_repo = git.Git("/repodrop/")
+
+
+def commit_to_git(git_repo_path):
+    try:
+        # readme = status_update(state, build_id, git_repo_path)
+        repo.git.add("README.md")
+        repo.git.commit("Status Update modification")
+        origin = repo.remote(name='pipeline-build-status')
+        origin.push()
+    except:
+        print('invalid Git repo path')
 
 
 def cleanup():
@@ -43,24 +58,4 @@ def cleanup():
     os.remove(my_dir + '/README.md')
 
 
-
-# def return_auth():
-#     g1 = gitlab.Gitlab(dccscr, private_token='XQ3yQ7RP9LXSLEAAA9jK')
-#     return g1
-#
-#
-# def get_projects():
-#     g1 = return_auth()
-#     g1.auth()
-#     projects = g1.projects.list()
-#     for project in projects:
-#         print(project)
-
-
-# def get_current_proj(imageName):
-#     id = 'dccscr/dsop'
-# def get_pipeline_count():
-
-
-# get_projects()
-print(status_update(state, build_id, image_tag))
+print(status_update(state, build_id, git_repo_path))
