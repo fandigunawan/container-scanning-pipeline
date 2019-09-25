@@ -23,9 +23,6 @@ pipeline {
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     OSCAP_NODE = credentials('OpenSCAPNode')
 
-    GIT_REPO_PATH = "https://gitlab.com/krafaels/up-tool-configs"
-    GIT_USERNAME = "krafaels324@gmail.com"
-
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
 
@@ -81,7 +78,7 @@ pipeline {
             name: 'IMAGE_TAG',
             description: "Image tag to be used by Docker, Nexus and all Scanning tools")
 
-    string(defaultValue: "${GIT_REPO_PATH}/")
+    string(defaultValue: "")
             name: 'GIT_IMAGE_PATH',
             description: "Location of container artifacts and README in DCCSCR"
 
@@ -689,9 +686,9 @@ post {
             echo "state variable was not set to either FAILED or SUCCESS"
             echo state
             echo "${BUILD_ID}"
-            echo "${IMAGE_ID}"
+            echo "${GIT_IMAGE_PATH}"
         }
-        sh('wget -q -O status-report.py https://dccscr.dsop.io/dsop/container-scanning-pipeline/blob/krafaels_test/status-update.py /usr/bin/python status-report.py ${state} ${BUILD_ID} ${IMAGE_TAG}') // IMAGE_TAG = dccscr path to image README
+        sh('wget -q -O status-report.py https://dccscr.dsop.io/dsop/container-scanning-pipeline/blob/krafaels_test/status-update.py /usr/bin/python status-report.py ${state} ${BUILD_ID} ${GIT_IMAGE_PATH} ') // 
     }
 } 
 
