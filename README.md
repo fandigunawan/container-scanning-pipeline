@@ -25,3 +25,6 @@ Resulting artifacts (currently hosted on s3) include:
 *  A json file that will be used to facilitate programmatic and automated repo cloning of images and reports
 *  A tar file containing all scanning reports
 *  A tar file of the exported container
+
+# Latest Build Status 
+[![Build Status](https://jenkins-jenkins-demo.52.61.140.4.nip.io/buildStatus/icon?job=container-scanning-pipeline%2Fkrafaels_test)](https://jenkins-jenkins-demo.52.61.140.4.nip.io/job/container-scanning-pipeline/job/krafaels_test/)
