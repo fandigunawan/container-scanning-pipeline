@@ -549,7 +549,20 @@ pipeline {
         }//script
       } // steps
     } // stage
+    
+    
+    stage('do some stuff') {
+      environment {
+      }
+      
+      steps {
+        script {
+          /opt/rh/rh-python36/root/bin/python --version
 
+        }
+      }
+    }
+    
 
     stage('create report.html') {
 
