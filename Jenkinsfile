@@ -23,6 +23,41 @@ pipeline {
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     OSCAP_NODE = credentials('OpenSCAPNode')
 
+    PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
+    PUBLIC_IMAGE_SHA = ""
+
+    S3_IMAGE_NAME = " "
+    S3_IMAGE_LOCATION = " "
+
+    ROOT = " "
+    ROOT_FOR_REPO_IMAGE = " "
+    SPECIFIC_FOLDER_FOR_RUN = "${DATETIME_TAG}_${BUILD_NUMBER}"
+    BASIC_PATH_FOR_DATA = " "
+
+    S3_SIGNATURE_FILENAME = "signature.sig"
+    S3_SIGNATURE_LOCATION =  " "
+    S3_MANIFEST_NAME = "manifest.json"
+    S3_MANIFEST_LOCATION = " "
+
+    S3_DOCUMENTATION_FILENAME = "documentation.json"
+    S3_DOCUMENTATION_LOCATION = " "
+
+    S3_TAR_FILENAME = " "
+    S3_TAR_LOCATION = " "
+
+    S3_OSCAP_CVE_REPORT = "report-cve.html"
+    S3_OSCAP_REPORT = "report.html"
+    S3_OSCAP_LOCATION = " "
+
+    S3_TWISTLOCK_REPORT = "${IMAGE_TAG}.json"
+    S3_TWISTLOCK_LOCATION = " "
+
+    S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
+    S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
+    S3_ANCHORE_LOCATION = " "
+
+
+
   }  // environment
 
   parameters {
@@ -65,10 +100,25 @@ pipeline {
           ROOT_FOR_REPO_IMAGE = "${ROOT}/${IMAGE_TAG}"
           BASIC_PATH_FOR_DATA = "${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
 
+          S3_SIGNATURE_LOCATION =  "${BASIC_PATH_FOR_DATA}/${S3_SIGNATURE_FILENAME}"
+          S3_MANIFEST_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_MANIFEST_NAME}"
+
+          S3_DOCUMENTATION_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_DOCUMENTATION_FILENAME}"
+
+          S3_OSCAP_LOCATION = "${BASIC_PATH_FOR_DATA}/openscap/"
+
+          S3_TWISTLOCK_LOCATION = "${BASIC_PATH_FOR_DATA}/twistlock/"
+
+          S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
+
+          S3_IMAGE_NAME = "${repo_image_only}-${IMAGE_TAG}.tar"
+          S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
+          S3_TAR_FILENAME = "${repo_image_only}-${IMAGE_TAG}-reports-signature.tar.gz"
+
+          S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
+          
           echo "TESTING PYTHONS"
-          sh "rm /tmp/hello.py"
-          sh "rm /tmp/hello.py.1"
-          sh "rm /tmp/hello.py.2"
+          sh "rm /tmp/hello*"
           sh "wget https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/061f57604a8c4d9ef2fc70dac01105a3c1347037/hello.py /tmp/hello.py"
           sh "/opt/rh/rh-python36/root/bin/python /tmp/hello.py"
 
