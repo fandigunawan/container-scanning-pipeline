@@ -15,8 +15,7 @@ twistLockVersion = '{"version": "19.0.317"}'
 
 // Start of pipeline
 pipeline {
-  // agent { label 'master' }
-  agent { label '5-add-csv-generator-to-scanning-pipeline' }
+  agent { label 'master' }
 
   environment {
     NEXUS_SERVER = credentials('NexusServerAddress')
