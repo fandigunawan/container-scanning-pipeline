@@ -118,11 +118,8 @@ pipeline {
           S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
           
           echo "TESTING PYTHONS"
-          sh "rm /tmp/hello.py"
-          sh "rm /tmp/hello.py.1"
-          sh "rm /tmp/hello.py.2"
-          sh "wget https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/061f57604a8c4d9ef2fc70dac01105a3c1347037/hello.py /tmp/hello.py"
-          sh "/opt/rh/rh-python36/root/bin/python /tmp/hello.py"
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/061f57604a8c4d9ef2fc70dac01105a3c1347037/hello.py"
+          sh "/opt/rh/rh-python36/root/bin/python hello.py"
 
 
         } //script
