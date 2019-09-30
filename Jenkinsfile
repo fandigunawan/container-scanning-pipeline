@@ -118,7 +118,7 @@ pipeline {
           S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
           
           echo "TESTING PYTHONS"
-          /opt/rh/rh-python36/root/bin/python --version
+          sh /opt/rh/rh-python36/root/bin/python --version
 
 
         } //script
