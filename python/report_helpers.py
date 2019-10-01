@@ -6,15 +6,17 @@ from bs4 import BeautifulSoup
 import re
 import pprint
 import csv
+import helpers
 
 main_dir = "/downloads";
-test_report = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/testing/container-scan-reports/redhat/ubi7/latest/2019-08-06T224510.448_1007/ubi7-latest-reports-signature.tar.gz"
+test_report = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/container-scan-reports/redhat/ubi7-min/latest/2019-08-20T184227.465_1068/ubi7-min-latest-reports-signature.tar.gz"
 
 def main():
     # result = do_all_the_things(test_report)
     #pp = pprint.PrettyPrinter(indent=4)
     #pp.pprint(result)
     generate_csv_reports(test_report)
+
 
 
 def generate_csv_reports(url):
@@ -28,7 +30,8 @@ def generate_csv_reports(url):
     oscap = main_dir + "/" + folder_name + "/openscap/report.html"
     oval = main_dir + "/" + folder_name + "/openscap/report-cve.html"
     twistlock = main_dir + "/" + folder_name + "/twistlock/latest.json"
-    anchore = main_dir + "/" + folder_name + "/anchore/anchore_security.json"
+    anchore_sec = main_dir + "/" + folder_name + "/anchore/anchore_security.json"
+    anchore_gates = main_dir + "/" + folder_name + "/anchnore/anchore_gates.json"
 
     # OSCAP CSV
     oscap_cves = get_oscap_full(oscap)
@@ -70,12 +73,25 @@ def generate_csv_reports(url):
         csv_writer.writerow(line.values())
     tl_data.close()
 
-    # ANCHORE CSV
-    anchore_cves = get_anchore_full(anchore)
-    anchore_data = open(csv_dir + '/anchore.csv', 'w')
+    # ANCHORE SECURITY CSV
+    anchore_cves = get_anchore_full(anchore_sec)
+    anchore_data = open(csv_dir + '/anchore_security.csv', 'w')
     csv_writer = csv.writer(anchore_data)
     count = 0
     for line in anchore_cves:
+        if count == 0:
+            header = line.keys()
+            csv_writer.writerow(header)
+            count += 1
+        csv_writer.writerow(line.values())
+    anchore_data.close()
+
+    # ANCHORE GATES CSV
+    anchore_g = get_anchore_gates_full(anchore_gates)
+    anchore_data = open(csv_dir + '/anchore_gates.csv', 'w')
+    csv_writer = csv.writer(anchore_data)
+    count = 0
+    for line in anchore_g:
         if count == 0:
             header = line.keys()
             csv_writer.writerow(header)
@@ -241,6 +257,61 @@ def get_oscap_full(oscap_file):
         soup = BeautifulSoup(of, 'html.parser')
         divs = soup.find('div', id="result-details")
 
+
+        scan_date = soup.find("th", text='Finished at')
+        finished_at = scan_date.find_next_sibling("td").text
+        # print(finished_at.text)
+        regex = re.compile('.*rule-detail-fail.*')
+        id_regex = re.compile('.*rule-detail-.*')
+        fails = divs.find_all("div", {"class": regex})
+        all = divs.find_all("div", {"class": id_regex})
+
+        cces = []
+        for x in all:
+            title = x.find("h3", {"class": "panel-title"}).text
+            table = x.find("table", {"class": "table table-striped table-bordered"})
+
+            ruleid = table.find("td", text="Rule ID").find_next_sibling("td").text
+            result = table.find("td", text="Result").find_next_sibling("td").text
+            severity = table.find("td", text="Severity").find_next_sibling("td").text
+            ident = table.find("td", text="Identifiers and References").find_next_sibling("td")
+            if ident.find("abbr"):
+                identifiers = ident.find("abbr").text
+
+            references = ident.find_all("a", href=True)
+            refs = []
+            for j in references:
+                refs.append(j.text)
+
+            desc = table.find("td", text="Description").find_next_sibling("td").text
+            rationale = table.find("td", text="Rationale").find_next_sibling("td").text
+
+            ret = {
+                'title': title,
+                # 'table': table,
+                'ruleid': ruleid,
+                'result': result,
+                'severity': severity,
+                'identifiers': identifiers,
+                'refs': refs,
+                'desc': desc,
+                'rationale': rationale,
+                'scanned_date': finished_at
+            }
+            cces.append(ret)
+        return cces
+
+
+# done
+def get_oscap_fails(oscap_file):
+    with open(oscap_file) as of:
+        soup = BeautifulSoup(of, 'html.parser')
+        divs = soup.find('div', id="result-details")
+
+
+        scan_date = soup.find("th", text='Finished at')
+        finished_at = scan_date.find_next_sibling("td").text
+        # print(finished_at.text)
         regex = re.compile('.*rule-detail-fail.*')
         id_regex = re.compile('.*rule-detail-.*')
         fails = divs.find_all("div", {"class": regex})
@@ -275,12 +346,11 @@ def get_oscap_full(oscap_file):
                 'identifiers': identifiers,
                 'refs': refs,
                 'desc': desc,
-                'rationale': rationale
+                'rationale': rationale,
+                'scanned_date': finished_at
             }
             cces.append(ret)
-
         return cces
-
 
 # works
 def get_oval(oval_file):
@@ -381,6 +451,20 @@ def get_anchore_full(anchore_file):
             }
 
             cves.append(cve)
+        return cves
+
+def get_anchore_gates_full(anchore_file):
+    with open(anchore_file) as af:
+        json_data = json.load(af)
+
+        top_level = list(json_data)[0]
+        anchore_data = json_data[top_level]['result']['rows']
+        cves = []
+        for x in anchore_data:
+            a = helpers.AnchoreGate(x)
+            cves.append(a)
+
+        # print(json.dumps(anchore_data, indent=4))
         return cves
 
 
