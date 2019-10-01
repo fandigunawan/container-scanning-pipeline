@@ -4,34 +4,27 @@ from flask_restful import Api
 import helpers
 import s3_helpers
 import report_helpers
+import git_helpers
 from flask_cors import CORS
 
 app = Flask(__name__)
 api = Api(app)
 CORS(app)
 
-@app.route('/gen_cve_csv') 
-def gen_cve_csv(): 
-    f=open("/var/www/html/csvtest.txt", "w+")
-    f.write("This is a test... This is only a test ... if you get this let me know so I can write the rest of the script");
-    f.close()
-    try:
-        return send_file('/var/www/html/csvtest.txt', attachment_filename='csvtest.txt')
-    except Exception as e:
-        return str(e)
+DCCSCR_WHITELIST_PROJECT_ID = 143
 
 
 @app.route('/get', methods=['GET', 'POST'])
 def get_all_the_things():
     image_name = request.args.get('name')
     image_ver = request.args.get('ver')
-    proj = helpers.init(43)
+    proj = git_helpers.init(DCCSCR_WHITELIST_PROJECT_ID)
     return helpers.get_all_the_things_json(proj, image_name, image_ver)
 
 
 @app.route('/get_all_whitelists')
 def get_all_whitelists():
-    return str(helpers.get_all_filename_and_refs_json(helpers.init(43)))
+    return str(git_helpers.get_all_filename_and_refs_json(git_helpers.init(DCCSCR_WHITELIST_PROJECT_ID)))
 
 
 @app.route('/last_runs', methods=['GET', 'POST'])
