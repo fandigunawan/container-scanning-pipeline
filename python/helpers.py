@@ -1,141 +1,118 @@
 import gitlab
 import json
+import git_helpers
 import os
+from pprint import pprint
 
 gitlab_url = "https://dccscr.dsop.io"
 gitlab_key = os.environ['GITLAB_KEY']
 
-
-dccscr_project_id = 43
+dccscr_project_id = 143
 
 SAMPLE_IMAGE_NAME = "openjdk"
 SAMPLE_IMAGE_VERSION = "1.8"
 
-
 def main():
-    proj = init(dccscr_project_id)
-    get_all_the_things_json(proj, SAMPLE_IMAGE_NAME, SAMPLE_IMAGE_VERSION)
+    proj = git_helpers.init(dccscr_project_id)
+    # gl = git_helpers.get_all_filename_and_refs_json(proj)
+
+    # print(get_all_the_things_json(proj, SAMPLE_IMAGE_NAME, SAMPLE_IMAGE_VERSION))
+
+    print(git_helpers.get_all_filename_and_refs_json(proj))
+
+
+class Vuln:
+    vuln_id = ""
+    vuln_desc = ""
+    vuln_source = ""
+    whitelist_source = ""
+    status = ""
+    approved_date = ""
+    approved_by = ""
+    justification = ""
+
+    def __repr__(self):
+        return "Vuln: " + self.vulnerability + " - " + self.vuln_source + " - " + self.whitelist_source + " - "+ self.status + " - " + self.approved_by
+
+    def __str__(self):
+        return "Vuln: " + self.vulnerability + " - " + self.vuln_source + " - " + self.whitelist_source + " - "+ self.status + " - " + self.approved_by
+
+    def __init__(self, v):
+        self.vulnerability = v['vulnerability']
+        self.vuln_description = v['vuln_description']
+        self.vuln_source = v['vuln_source']
+        self.status = v['status']
+        self.approved_date = v['approved_date']
+        self.approved_by = v['approved_by']
+        self.justification = v['justification']
+
+    # def __init__(self, vid, desc, source, stat, date, by, just):
+    #     self.vulnerability = vid
+    #     self.vuln_description = desc
+    #     self.vuln_source = source
+    #     self.status = stat
+    #     self.approved_date = date
+    #     self.approved_by = by
+    #     self.justification = just
+
+    def set_whitelist_source(self, val):
+        self.whitelist_source = val
+
+
+class AnchoreGate:
+    image_id = ""
+    repo_tag = ""
+    trigger_id = ""
+    gate = ""
+    trigger = ""
+    check_output = ""
+    gate_action = ""
+    # whitelisted = ""
+    policy_id = ""
+
+    matched_rule_id = ""
+    whitelist_id = ""
+    whitelist_name = ""
+
+    def __init__(self, g):
+        self.image_id = g[0]
+        self.repo_tag = g[1]
+        self.trigger_id = g[2]
+        self.gate = g[3]
+        self.trigger = g[4]
+        self.check_output = g[5]
+        self.gate_action = g[6]
+        # self.whitelisted = g[7]
+        self.policy_id = g[8]
+
+        if g[7]:
+            self.matched_rule_id = g[7]['matched_rule_id']
+            self.whitelist_id = g[7]['whitelist_id']
+            self.whitelist_name = g[7]['whitelist_name']
+
 
 
 # working
 def get_all_the_things_json(proj, im_name, im_ver):
-    # ret = dict()
-
-    first_call = get_whitelist_path_ref(proj, im_name, im_ver)
+    first_call = git_helpers.get_whitelist_path_ref(proj, im_name, im_ver)
 
     if first_call:
         fn = first_call[0]
         ver = first_call[1]
 
-        c = get_whitelist_file_contents(proj, fn, ver)
-        f = []
-        if c[3]:
-            f = get_complete_whitelist_for_image(proj, im_name, im_ver)
-            ret = {
-                'image_name': im_name,
-                'image_version': im_ver,
-                'parent_name': c[3],
-                'parent_version': c[4],
-                'complete_whitelist': f[2],
-                'delta_whitelist': c[2],
-                'parents_whitelist': f[2]-set(c[2]),
-                'report_s3': c[5]
-            }
-        else:
-            ret = {
-                'image_name': im_name,
-                'image_version': im_ver,
-                'parent_name': c[3],
-                'parent_version': c[4],
-                'complete_whitelist': c[2],
-                'delta_whitelist': c[2],
-                'parents_whitelist': [],
-                'report_s3': c[5]
-            }
-        # print(json.dump(ret))
-        app_json = json.dumps(ret, default=set_default)
-        return str(app_json)
+        contents = git_helpers.get_whitelist_file_contents(proj, fn, ver)
+        contents['complete_whitelist'] = []
+        # contents['complete_whitelist'] = git_helpers.get_complete_whitelist_for_image(proj, im_name, im_ver)
+        complete_wl = git_helpers.get_complete_whitelist_for_image(proj, im_name, im_ver)
+
+        for x in complete_wl:
+            contents['complete_whitelist'].append(x.__dict__)
+
+        # contents['complete_whitelist'] = json.dumps(.__dict__)
+        # app_json = json.dumps(contents, default=git_helpers.set_default)
+        return json.dumps(contents)
     else:
         return im_name, im_ver, "not found."
-
-
-# working
-def get_whitelist_file_contents(proj, item_path, item_ref):
-    f = proj.files.get(file_path=item_path, ref=item_ref)
-    try:
-        j = json.loads(f.decode())
-    except ValueError as error:
-        print("JSON object issue: %s") % error
-    return j['image_name'], j['image_tag'], \
-           j['whitelisted_vulnerabilities'], \
-           j['image_parent_name'], j['image_parent_tag'], \
-           j['report_s3']
-
-
-# working
-def get_complete_whitelist_for_image(proj, im_name, im_tag):
-    all_wls = get_whitelist_filenames(proj)
-    total_wl = set()
-
-    for item in all_wls:
-        contents = get_whitelist_file_contents(proj, item['filename'], item['ref'])
-        wl = contents[2]
-        par_image = contents[3];
-        par_tag = contents[4]
-        report_s3 = contents[5]
-        if contents[0] == im_name and contents[1] == im_tag:
-            total_wl |= set(contents[2])
-            if len(par_image) > 0 and len(par_tag) > 0:
-                total_wl |= get_complete_whitelist_for_image(proj, par_image, par_tag)[2]
-    return wl[0], wl[1], total_wl, wl[2]
-
-
-
-def get_whitelist_path_ref(proj, im_name, im_tag):
-    all_wls = get_whitelist_filenames(proj)
-
-    for item in all_wls:
-        wl = get_whitelist_file_contents(proj, item['filename'], item['ref'])
-        if wl[0] == im_name and wl[1] == im_tag:
-            return item['filename'], item['ref']
-    return False
-
-
-# working
-def does_image_exist(proj, im_name, im_tag):
-    all_wls = get_whitelist_filenames(proj)
-
-    for item in all_wls:
-        wl = get_whitelist_file_contents(proj, item['filename'], item['ref'])
-        if wl[0] == im_name and wl[1] == im_tag:
-            return True
-    return False
-
-
-# working
-def get_whitelist_filenames(project):
-    wl_fns = project.search('blobs', 'whitelisted_vulnerabilities')
-    return wl_fns
-
-
-def get_all_filename_and_refs_json(project):
-    wl_fns = project.search('blobs', 'whitelisted_vulnerabilities')
-    filename_list = list()
-    for file in wl_fns:
-        filename_list.append((file['filename'], file['ref']))
-    return json.dumps(filename_list)
-
-
-def init(pid):
-    gl = gitlab.Gitlab(gitlab_url, private_token=gitlab_key)
-    gl.auth()
-    return gl.projects.get(pid)
-
-
-def set_default(obj):
-    if isinstance(obj, set):
-        return list(obj)
-    raise TypeError
 
 
 if __name__ == "__main__":
