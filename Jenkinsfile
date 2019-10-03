@@ -117,6 +117,7 @@ pipeline {
 
           S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
 
+          S3_CSV_LOCATION = "${BASIC_PATH_FOR_DATA}/csvs/
 
         } //script
       } // steps
@@ -491,36 +492,54 @@ pipeline {
       } // steps
     } // stage
 
-    stage('Create tar and CSV of all output') {
+    stage('Download from AWS') {
       steps {
         script {
-
           withAWS(credentials:'s3BucketCredentials') {
 
 
             s3Download(file:'output',
-                    bucket:"${S3_REPORT_BUCKET}",
-                    path: "${BASIC_PATH_FOR_DATA}/",
-                    force:true)
+                bucket:"${S3_REPORT_BUCKET}",
+                path: "${BASIC_PATH_FOR_DATA}/",
+                force:true)
 
-          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/python-app-container/python/pipeline_python/pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/pipeline_csv_gen.py"
-          // OSCAP, OVAL, TWISTLOCK, ANCHORE_SEC, ANCHORE_GATES
-          echo "sh /opt/rh/rh-python36/root/bin/python3 output/${ROOT_FOR_REPO_IMAGE}/pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_OSCAP_CVE_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_OSCAP_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/{S3_TWISTLOCK_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_ANCHORE_SECURITY_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_ANCHORE_GATES_REPORT}"
-          sh "/opt/rh/rh-python36/root/bin/python3 pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/${S3_OSCAP_CVE_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_OSCAP_REPORT} output/${ROOT_FOR_REPO_IMAGE}/{S3_TWISTLOCK_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_ANCHORE_SECURITY_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_ANCHORE_GATES_REPORT} output/${ROOT_FOR_REPO_IMAGE}/"
+            echo "output/${BASIC_PATH_FOR_DATA}/"
+          } //withAWS
+        } //script
+      } // steps
+    } // stage AWS Download
 
-          echo "output/${BASIC_PATH_FOR_DATA}/"
-          sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
+    stage('Python Things') {
+      steps {
+        script {
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/python-app-container/python/pipeline_python/pipeline_csv_gen.py -P ${BASIC_PATH_FOR_DATA}"
 
-          s3Upload(file: "${S3_TAR_FILENAME}",
+          echo "sh /opt/rh/rh-python36/root/bin/python3 pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/${S3_OSCAP_CVE_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_OSCAP_REPORT} output/${ROOT_FOR_REPO_IMAGE}/{S3_TWISTLOCK_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_ANCHORE_SECURITY_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_ANCHORE_GATES_REPORT} ${S3_CSV_LOCATION}"
+
+          sh "/opt/rh/rh-python36/root/bin/python3 pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/${S3_OSCAP_CVE_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_OSCAP_REPORT} output/${ROOT_FOR_REPO_IMAGE}/{S3_TWISTLOCK_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_ANCHORE_SECURITY_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_ANCHORE_GATES_REPORT} ${S3_CSV_LOCATION}"
+
+        } //script
+      } // steps
+    } // stage Python Things
+
+    stage('Tar and Upload to AWS, Delete Artifacts') {
+      steps {
+        script {
+          withAWS(credentials:'s3BucketCredentials') {
+
+            echo "output/${BASIC_PATH_FOR_DATA}/"
+            sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
+
+            s3Upload(file: "${S3_TAR_FILENAME}",
                 bucket: "${S3_REPORT_BUCKET}",
                 path:"${BASIC_PATH_FOR_DATA}/")
 
-          sh "rm -fr output;rm ${S3_TAR_FILENAME}"
+            sh "rm -fr output;rm ${S3_TAR_FILENAME}"
 
           } //withAWS
         } //script
       } // steps
-    } // stage Create tar of all output
+    } // stage Create tar of all output, delete Artifacts
 
 
     stage('Copying image to S3') {
