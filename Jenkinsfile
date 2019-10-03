@@ -517,7 +517,11 @@ pipeline {
           echo "sh /opt/rh/rh-python36/root/bin/python3 output/pipeline_csv_gen.py output/${BASIC_PATH_FOR_DATA}/${S3_OSCAP_CVE_REPORT} output/${BASIC_PATH_FOR_DATA}/${S3_OSCAP_REPORT} output/${BASIC_PATH_FOR_DATA}/${S3_TWISTLOCK_REPORT} output/${BASIC_PATH_FOR_DATA}/${S3_ANCHORE_SECURITY_REPORT} output/${BASIC_PATH_FOR_DATA}/${S3_ANCHORE_GATES_REPORT} ${S3_CSV_LOCATION}"
 
 
-          sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_csv_gen.py output/${BASIC_PATH_FOR_DATA}/openscap/${S3_OSCAP_CVE_REPORT} output/${BASIC_PATH_FOR_DATA}/openscap/${S3_OSCAP_REPORT} output/${BASIC_PATH_FOR_DATA}/twistlock/${S3_TWISTLOCK_REPORT} output/${BASIC_PATH_FOR_DATA}/anchore/${S3_ANCHORE_SECURITY_REPORT} output/${BASIC_PATH_FOR_DATA}/anchore/${S3_ANCHORE_GATES_REPORT} ${S3_CSV_LOCATION}"
+          sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_csv_gen.py output/${S3_OSCAP_LOCATION}/${S3_OSCAP_CVE_REPORT} output/${S3_OSCAP_LOCATION}/${S3_OSCAP_REPORT} output/${S3_TWISTLOCK_LOCATION}/${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}/${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}/${S3_ANCHORE_GATES_REPORT} ${S3_CSV_LOCATION}"
+
+                "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
+                "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
+                "Anchore - <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}\"> ${S3_ANCHORE_GATES_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT}\"> ${S3_ANCHORE_SECURITY_REPORT}  </a><br>\n" 
 
         } //script
       } // steps
