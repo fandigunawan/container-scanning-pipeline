@@ -117,7 +117,7 @@ pipeline {
 
           S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
 
-          S3_CSV_LOCATION = "${BASIC_PATH_FOR_DATA}/csvs/"
+          S3_CSV_LOCATION = "${BASIC_PATH_FOR_DATA}/csvs"
 
         } //script
       } // steps
