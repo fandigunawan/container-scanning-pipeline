@@ -5,6 +5,8 @@ import re
 import json
 import os
 
+csv_dir = ""
+
 
 def main():
     generate_all_reports(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
@@ -18,7 +20,7 @@ def generate_all_reports(oscap, oval, twistlock, anchore_sec, anchore_gates, inp
     anc_sec_count = generate_anchore_sec_report(anchore_sec)
     anc_gate_count = generate_anchore_gates_report(anchore_gates)
 
-    global csv_dir = input_csv_dir
+    csv_dir = input_csv_dir
 
     generate_summary_report(oscap_fail_count,
                             oval_fail_count,
