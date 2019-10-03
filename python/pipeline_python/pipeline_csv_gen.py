@@ -9,7 +9,6 @@ import os
 def main():
     global csv_dir
     csv_dir = sys.argv[6]
-    csv_dir = csv_dir + "csvs"
     if not os.path.exists(csv_dir):
         os.mkdir(csv_dir)
     generate_all_reports(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
