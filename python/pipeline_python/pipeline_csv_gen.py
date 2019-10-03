@@ -9,6 +9,9 @@ import os
 def main():
     global csv_dir
     csv_dir = sys.argv[6]
+    csv_dir = csv_dir + "csvs"
+    if not os.path.exists(csv_dir):
+        os.mkdir(csv_dir)
     generate_all_reports(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
 
 
@@ -30,8 +33,6 @@ def generate_all_reports(oscap, oval, twistlock, anchore_sec, anchore_gates):
 
 # SUMMARY REPORT
 def generate_summary_report(osc, ovf, tlf, asf, agf):
-    if not os.path.exists(csv_dir):
-        os.mkdir(csv_dir)
     sum_data = open(csv_dir + '/summary.csv', 'w')
     csv_writer = csv.writer(sum_data)
 
