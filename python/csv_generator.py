@@ -2,7 +2,6 @@ import report_helpers
 import csv
 import json
 
-csv_dir = "/tmp/csvs"
 debug = 0
 
 path_to_oscap_file = ""
@@ -18,8 +17,11 @@ def main():
         path_to_oval_file,
         path_to_twistlock_file,
         path_to_anchore_sec_file,
-        path_to_anchore_gates_file
+        path_to_anchore_gates_file,
+        path_for_output
     )
+
+csv_dir = path_for_output
 
 
 def generate_all_reports(oscap, oval, twistlock, anchore_sec, anchore_gates):
