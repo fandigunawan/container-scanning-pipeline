@@ -509,7 +509,7 @@ pipeline {
       } // steps
     } // stage AWS Download
 
-    stage('Python Things') {
+    stage('Create CSV Output') {
       steps {
         script {
           sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/python-app-container/python/pipeline_python/pipeline_csv_gen.py -P output/"
@@ -520,7 +520,7 @@ pipeline {
 
         } //script
       } // steps
-    } // stage Python Things
+    } // stage Create CSV Output
 
     stage('Tar and Upload to AWS, Delete Artifacts') {
       steps {
