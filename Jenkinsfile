@@ -491,7 +491,7 @@ pipeline {
       } // steps
     } // stage
 
-    stage('Create tar of all output') {
+    stage('Create tar and CSV of all output') {
       steps {
         script {
 
