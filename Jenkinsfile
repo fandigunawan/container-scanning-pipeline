@@ -503,10 +503,10 @@ pipeline {
                     path: "${BASIC_PATH_FOR_DATA}/",
                     force:true)
 
-          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/python-app-container/python/pipeline_python/pipeline_csv_gen.py"
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/python-app-container/python/pipeline_python/pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/pipeline_csv_gen.py"
           // OSCAP, OVAL, TWISTLOCK, ANCHORE_SEC, ANCHORE_GATES
-          echo "sh /opt/rh/rh-python36/root/bin/python3 pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_OSCAP_CVE_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_OSCAP_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/{S3_TWISTLOCK_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_ANCHORE_SECURITY_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_ANCHORE_GATES_REPORT}"
-          sh "/opt/rh/rh-python36/root/bin/python3 pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_OSCAP_CVE_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_OSCAP_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/{S3_TWISTLOCK_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_ANCHORE_SECURITY_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_ANCHORE_GATES_REPORT} output/${ROOT_FOR_REPO_IMAGE}/"
+          echo "sh /opt/rh/rh-python36/root/bin/python3 output/${ROOT_FOR_REPO_IMAGE}/pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_OSCAP_CVE_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_OSCAP_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/{S3_TWISTLOCK_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_ANCHORE_SECURITY_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}/${S3_ANCHORE_GATES_REPORT}"
+          sh "/opt/rh/rh-python36/root/bin/python3 pipeline_csv_gen.py output/${ROOT_FOR_REPO_IMAGE}/${S3_OSCAP_CVE_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_OSCAP_REPORT} output/${ROOT_FOR_REPO_IMAGE}/{S3_TWISTLOCK_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_ANCHORE_SECURITY_REPORT} output/${ROOT_FOR_REPO_IMAGE}/${S3_ANCHORE_GATES_REPORT} output/${ROOT_FOR_REPO_IMAGE}/"
 
           echo "output/${BASIC_PATH_FOR_DATA}/"
           sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
