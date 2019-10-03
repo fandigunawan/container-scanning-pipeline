@@ -499,6 +499,7 @@ pipeline {
             // OSCAP, OVAL, TWISTLOCK, ANCHORE_SEC, ANCHORE_GATES
             sh "/opt/rh/rh-python36/root/bin/python3 pipeline_csv_gen.py /tmp/${S3_OSCAP_CVE_REPORT} /tmp/${S3_OSCAP_REPORT} /tmp/{S3_TWISTLOCK_REPORT} /tmp/${S3_ANCHORE_SECURITY_REPORT} /tmp/${S3_ANCHORE_GATES_REPORT}"
 
+            echo "done with crappy python"
         } //script
       } // steps
     } // stage Generate Report CSVs
