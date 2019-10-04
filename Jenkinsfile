@@ -726,9 +726,10 @@ pipeline {
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
                 "Tar of reports and signature - <a href=\"${S3_HTML_LINK}${S3_TAR_LOCATION}\"> ${S3_TAR_FILENAME}  </a><br>\n" +
                 "<h4>Tool reports:</h3>\n" +
-                "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
-                "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
-                "Anchore - <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}\"> ${S3_ANCHORE_GATES_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT}\"> ${S3_ANCHORE_SECURITY_REPORT}  </a><br>\n" +
+                "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv\"> Compliance  </a>, <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}oval.csv\"> OVAL  </a><br>\n" +
+                "TwistLock - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv\"> TwistLock  </a><br>\n" +
+                "Anchore - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_gates.csv\"> Gates </a>, <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv\"> Security  </a><br>\n" +
+                "Summary Report - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv\"> Summary  </a><br>\n" +
                 "<p><p>" +
                 previousRuns +
                 footerSlug
