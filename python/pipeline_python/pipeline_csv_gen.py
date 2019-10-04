@@ -61,7 +61,7 @@ def generate_summary_report(osc, ovf, tlf, asf, agf):
     csv_writer.writerow("")
     date_str = 'Scans performed on: ' + str(osc[2])
     #csv_writer.writerow(['Scans performed on:', ]) # need date scanned
-    sha_str = "On container layer sha256:" + agf[1]
+    sha_str = "Scans performed on container layer sha256:" + agf[1]
     csv_writer.writerow([sha_str])
 
 
