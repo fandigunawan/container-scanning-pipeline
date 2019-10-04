@@ -514,6 +514,7 @@ pipeline {
       } // steps
     } // stage AWS Download
 
+/*
     stage('Create CSV Output') {
       steps {
         script {
@@ -525,7 +526,6 @@ pipeline {
       } // steps
     } // stage Create CSV Output
 
-/*
     stage('Check CVEs Against Whitelist') {
       steps {
         script {
