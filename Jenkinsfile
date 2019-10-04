@@ -567,22 +567,6 @@ pipeline {
       } // steps
     } // stage Create tar of all output, delete Artifacts
 
-
-    stage('Copying image to S3') {
-
-          echo "${REPO_NAME} ${IMAGE_TAG}"
-          echo "sh /opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
-          sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
-
-
-    stage('Check CVEs Against Whitelist') {
-      steps {
-        script {
-
-        } //script
-      } // steps
-    } // stage Create CSV Output
-
     stage('Tar and Upload to AWS, Delete Artifacts') {
       steps {
         script {
