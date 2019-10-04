@@ -257,6 +257,7 @@ def generate_anchore_sec_report(anchore_sec):
             count += 1
         csv_writer.writerow(line.values())
     anchore_data.close()
+    return len(anchore_cves)
 
 
 def get_anchore_full(anchore_file):
