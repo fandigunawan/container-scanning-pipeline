@@ -514,7 +514,6 @@ pipeline {
       } // steps
     } // stage AWS Download
 
-/*
     stage('Create CSV Output') {
       steps {
         script {
@@ -547,25 +546,6 @@ pipeline {
         } //script
       } // steps
     } // stage Check Whitelist
-*/
-    stage('Tar and Upload to AWS, Delete Artifacts') {
-      steps {
-        script {
-          withAWS(credentials:'s3BucketCredentials') {
-
-            echo "output/${BASIC_PATH_FOR_DATA}/"
-            sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
-
-            s3Upload(file: "${S3_TAR_FILENAME}",
-                bucket: "${S3_REPORT_BUCKET}",
-                path:"${BASIC_PATH_FOR_DATA}/")
-
-            sh "rm -fr output;rm ${S3_TAR_FILENAME}"
-
-          } //withAWS
-        } //script
-      } // steps
-    } // stage Create tar of all output, delete Artifacts
 
     stage('Tar and Upload to AWS, Delete Artifacts') {
       steps {
