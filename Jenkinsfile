@@ -117,7 +117,7 @@ pipeline {
 
           S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
 
-          S3_CSV_LOCATION = "${BASIC_PATH_FOR_DATA}/csvs"
+          S3_CSV_LOCATION = "${BASIC_PATH_FOR_DATA}/csvs/"
 
         } //script
       } // steps
@@ -572,6 +572,23 @@ pipeline {
 
           echo "sh /opt/rh/rh-python36/root/bin/python3 output/pipeline_csv_gen.py output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT} output/${S3_CSV_LOCATION}"
           sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_csv_gen.py output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT} output/${S3_CSV_LOCATION}"
+
+        // upload to S3
+        withAWS(credentials:'s3BucketCredentials') {
+
+            def currentIdent = awsIdentity()
+            writeFile(file: "${S3_SIGNATURE_FILENAME}", text: signature)
+
+            s3Upload(file: "${S3_MANIFEST_NAME}",
+                  bucket: "${S3_REPORT_BUCKET}",
+                  path:"${S3_CSV_LOCATION}")
+
+            s3Upload(file: "${S3_SIGNATURE_FILENAME}",
+                  bucket: "${S3_REPORT_BUCKET}",
+                  path:"${S3_CSV_LOCATION}")
+
+
+          } //withAWS
           
         } //script
       } // steps
