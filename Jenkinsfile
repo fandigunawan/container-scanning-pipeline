@@ -82,7 +82,7 @@ pipeline {
 
   stages {
 
-    stage('Finish initializing environment') {
+    stage('Initializing Environment') {
       steps {
         script {
 
@@ -121,7 +121,7 @@ pipeline {
 
         } //script
       } // steps
-    } // stage Finish initializing environment
+    } // stage Initializing environment
 
 
     stage('Pull Docker Image') {
@@ -647,7 +647,7 @@ pipeline {
     } // stage
 
 
-    stage('create report.html') {
+    stage('Create Repository Mapping Website') {
 
       environment {
         PUBLIC_KEY = credentials('ContainerSigningPublicKey')
