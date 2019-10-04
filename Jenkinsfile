@@ -537,7 +537,7 @@ pipeline {
           } catch(exception) {
             //whilelist scan failed for whatever reason
             if (testOrProduction == "Test") {
-              echo "Scan failed, proceeding since this is a test run.
+              echo "Scan failed, proceeding since this is a test run."
             } else {
               error("Build failed due to non-Whitelisted CVEs being found.")
             }
