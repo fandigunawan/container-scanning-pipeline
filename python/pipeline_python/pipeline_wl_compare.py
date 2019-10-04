@@ -69,7 +69,7 @@ def pipeline_whitelist_compare(image_name, image_version, oscap, oval, twist, an
     anchore_cves = get_anchore_full(anc_sec)
     # print("Anchore Sec Set Length: ", len(anchore_cves))
     for anc in anchore_cves:
-        vuln_set.add(anc['I DONT KNOW WHAT GOES HERE'])
+        vuln_set.add(anc['cve'])
 
     # anchore_gates = report_helpers.get_anchore_gates_full(anc_gates)
     # print("Anchore Gates Set Length: ", len(anchore_cves))
