@@ -226,6 +226,7 @@ pipeline {
               } // withCredentials
             } //node
           } //script
+         } // steps
         } // stage
 
         stage('OpenSCAP CVE Scan') {
@@ -279,9 +280,9 @@ pipeline {
                   //copy files to s3
                   sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_CVE_REPORT} ${openscap_artifact_path}${S3_OSCAP_CVE_REPORT}"
 
-                } // script
               } // withCredentials
-            } //node
+             } //node
+            } //script
           } // steps
         } // stage
 
