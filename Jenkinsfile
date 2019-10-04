@@ -124,8 +124,7 @@ pipeline {
     } // stage Finish initializing environment
 
 
-    stage('Pull docker image') {
-
+    stage('Pull Docker Image') {
       steps {
 
         echo "Pushing ${REPO_NAME}:${IMAGE_TAG} to Nexus Staging"
@@ -169,11 +168,65 @@ pipeline {
       }// steps
     } //stage
 
-    stage('Run tools in parallel') {
+    stage('Run Scans in Parallel') {
 
       parallel {
 
-        stage('OpenSCAP Scan') {
+        stage('OpenSCAP Compliance Scan') {
+
+          when {
+            anyOf {
+              environment name: "toolsToRun", value: "All"
+              environment name: "toolsToRun", value: "OpenSCAP"
+            } // anyOf
+          } // when
+
+          script {
+
+              def remote = [:]
+              remote.name = "node"
+              remote.host = "${env.OSCAP_NODE}"
+              remote.allowAnyHosts = true
+
+              openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_OSCAP_LOCATION}"
+
+              node {
+
+                withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+
+                  image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
+                  remote.user = userName
+                  remote.identityFile = identity
+
+                  withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                  }
+
+                  //grab openSCAP version and parse
+                  openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
+                  echo openScapVersionDump
+                  def versionMatch = openScapVersionDump =~ /[0-9]+[.][0-9]+[.][0-9]+/
+                  if (versionMatch) {
+                    openScapVersion = '{"version": "' + versionMatch[0] + '"}'
+                    echo openScapVersion
+                  }
+
+                  //must set regexp variables to null to prevent java.io.NotSerializableException
+                  versionMatch = null
+
+                  //run scans
+                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+
+                  //copy files to s3
+                  sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_REPORT} ${openscap_artifact_path}${S3_OSCAP_REPORT}"
+
+                } // script
+              } // withCredentials
+            } //node
+          } // steps
+        } // stage
+
+        stage('OpenSCAP CVE Scan') {
 
           when {
             anyOf {
@@ -219,12 +272,10 @@ pipeline {
                   versionMatch = null
 
                   //run scans
-                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                   sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/${S3_OSCAP_CVE_REPORT}"
 
                   //copy files to s3
                   sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_CVE_REPORT} ${openscap_artifact_path}${S3_OSCAP_CVE_REPORT}"
-                  sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_REPORT} ${openscap_artifact_path}${S3_OSCAP_REPORT}"
 
                 } // script
               } // withCredentials
@@ -492,12 +543,10 @@ pipeline {
       } // steps
     } // stage
 
-    stage('Download all the things') {
+    stage('Download Tools and Scans') {
       steps {
         script {
           withAWS(credentials:'s3BucketCredentials') {
-
-
             s3Download(file:'output',
                 bucket:"${S3_REPORT_BUCKET}",
                 path: "${BASIC_PATH_FOR_DATA}/",
@@ -514,7 +563,7 @@ pipeline {
       } // steps
     } // stage AWS Download
 
-    stage('Create CSV Output') {
+    stage('Create CSV Scan Output') {
       steps {
         script {
 
@@ -537,7 +586,7 @@ pipeline {
           } catch(exception) {
             //whilelist scan failed for whatever reason
             if (testOrProduction == "Test") {
-              echo "Scan failed, proceeding since this is a test run."
+              echo "Whitelist comparison failed, proceeding since this is a test run."
             } else {
               error("Build failed due to non-Whitelisted CVEs being found.")
             }
@@ -547,7 +596,7 @@ pipeline {
       } // steps
     } // stage Check Whitelist
 
-    stage('Tar and Upload to AWS, Delete Artifacts') {
+    stage('Tar and Upload Artifacts to AWS') {
       steps {
         script {
           withAWS(credentials:'s3BucketCredentials') {
