@@ -525,6 +525,7 @@ pipeline {
       } // steps
     } // stage Create CSV Output
 
+/*
     stage('Check CVEs Against Whitelist') {
       steps {
         script {
@@ -545,8 +546,8 @@ pipeline {
 
         } //script
       } // steps
-    } // stage Create CSV Output
-
+    } // stage Check Whitelist
+*/
     stage('Tar and Upload to AWS, Delete Artifacts') {
       steps {
         script {
