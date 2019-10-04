@@ -534,7 +534,7 @@ pipeline {
             echo "${REPO_NAME} ${IMAGE_TAG}"
             echo "sh /opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
             sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
-          } catch() {
+          } catch(exception) {
             //whilelist scan failed for whatever reason
             if (testOrProduction == "Test") {
               echo "Scan failed, proceeding since this is a test run.
