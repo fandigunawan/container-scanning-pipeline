@@ -273,8 +273,6 @@ def get_anchore_full(anchore_file):
             fix = x[4]
             url = x[5]
 
-            # print(cve)
-
             ret = {
                 'tag': tag,
                 'cve': cve,
@@ -284,7 +282,7 @@ def get_anchore_full(anchore_file):
                 'url': url
             }
 
-            cves.append(cve)
+            cves.append(ret)
         return cves
 
 
