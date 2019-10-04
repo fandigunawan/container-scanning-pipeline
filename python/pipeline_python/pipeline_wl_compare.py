@@ -30,7 +30,7 @@ def main():
                                sys.argv[7])
 
     print(x)
-    os.exit(x)
+    sys.exit(x)
 
 
 def pipeline_whitelist_compare(image_name, image_version, oscap, oval, twist, anc_sec, anc_gates):
