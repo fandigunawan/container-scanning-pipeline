@@ -521,10 +521,62 @@ pipeline {
           echo "sh /opt/rh/rh-python36/root/bin/python3 output/pipeline_csv_gen.py output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT} output/${S3_CSV_LOCATION}"
           sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_csv_gen.py output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT} output/${S3_CSV_LOCATION}"
           
+        } //script
+      } // steps
+    } // stage Create CSV Output
+
+    stage('Check CVEs Against Whitelist') {
+      steps {
+        script {
+          //error out if this is a production run and there are findings
+          //if no findings or a test, proceed
+          try {
+            echo "${REPO_NAME} ${IMAGE_TAG}"
+            echo "sh /opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
+            sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
+          } catch {
+            //whilelist scan failed for whatever reason
+            if (testOrProduction == "Test") {
+              echo "Scan failed, proceeding since this is a test run.
+            } else {
+              error("Build failed due to non-Whitelisted CVEs being found.")
+            }
+          }
+
+        } //script
+      } // steps
+    } // stage Create CSV Output
+
+    stage('Tar and Upload to AWS, Delete Artifacts') {
+      steps {
+        script {
+          withAWS(credentials:'s3BucketCredentials') {
+
+            echo "output/${BASIC_PATH_FOR_DATA}/"
+            sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
+
+            s3Upload(file: "${S3_TAR_FILENAME}",
+                bucket: "${S3_REPORT_BUCKET}",
+                path:"${BASIC_PATH_FOR_DATA}/")
+
+            sh "rm -fr output;rm ${S3_TAR_FILENAME}"
+
+          } //withAWS
+        } //script
+      } // steps
+    } // stage Create tar of all output, delete Artifacts
+
+
+    stage('Copying image to S3') {
+
           echo "${REPO_NAME} ${IMAGE_TAG}"
           echo "sh /opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
           sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
 
+
+    stage('Check CVEs Against Whitelist') {
+      steps {
+        script {
 
         } //script
       } // steps
