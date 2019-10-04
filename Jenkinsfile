@@ -579,14 +579,9 @@ pipeline {
             def currentIdent = awsIdentity()
             writeFile(file: "${S3_SIGNATURE_FILENAME}", text: signature)
 
-            s3Upload(file: "${S3_MANIFEST_NAME}",
+            s3Upload(file: "${S3_CSV_LOCATION}",
                   bucket: "${S3_REPORT_BUCKET}",
                   path:"${S3_CSV_LOCATION}")
-
-            s3Upload(file: "${S3_SIGNATURE_FILENAME}",
-                  bucket: "${S3_REPORT_BUCKET}",
-                  path:"${S3_CSV_LOCATION}")
-
 
           } //withAWS
           
