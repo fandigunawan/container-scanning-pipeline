@@ -32,7 +32,7 @@ def generate_all_reports(oscap, oval, twistlock, anchore_sec, anchore_gates):
 
 # SUMMARY REPORT
 def generate_summary_report(osc, ovf, tlf, asf, agf):
-    sum_data = open(csv_dir + '/summary.csv', 'w')
+    sum_data = open(csv_dir + 'summary.csv', 'w')
     csv_writer = csv.writer(sum_data)
 
     csv_writer.writerow(['DRAFT'])
@@ -71,7 +71,7 @@ def generate_summary_report(osc, ovf, tlf, asf, agf):
 
 def generate_oscap_report(oscap):
     oscap_cves = get_oscap_full(oscap)
-    oscap_data = open(csv_dir + '/oscap.csv', 'w')
+    oscap_data = open(csv_dir + 'oscap.csv', 'w')
     csv_writer = csv.writer(oscap_data)
     count = 0
     fail_count = 0
@@ -144,7 +144,7 @@ def get_oscap_full(oscap_file):
 # OVAL CSV
 def generate_oval_report(oval):
     oval_cves = get_oval_full(oval)
-    oval_data = open(csv_dir + '/oval.csv', 'w')
+    oval_data = open(csv_dir + 'oval.csv', 'w')
     csv_writer = csv.writer(oval_data)
     count = 0
     fail_count = 0
@@ -192,7 +192,7 @@ def get_oval_full(oval_file):
 # TWISTLOCK CSV
 def generate_twistlock_report(twistlock):
     tl_cves = get_twistlock_full(twistlock)
-    tl_data = open(csv_dir + '/tl.csv', 'w')
+    tl_data = open(csv_dir + 'tl.csv', 'w')
     csv_writer = csv.writer(tl_data)
     count = 0
     for line in tl_cves:
@@ -247,7 +247,7 @@ def get_twistlock_full(twistlock_file):
 # ANCHORE SECURITY CSV
 def generate_anchore_sec_report(anchore_sec):
     anchore_cves = get_anchore_full(anchore_sec)
-    anchore_data = open(csv_dir + '/anchore_security.csv', 'w')
+    anchore_data = open(csv_dir + 'anchore_security.csv', 'w')
     csv_writer = csv.writer(anchore_data)
     count = 0
     for line in anchore_cves:
@@ -291,7 +291,7 @@ def get_anchore_full(anchore_file):
 # ANCHORE GATES CSV
 def generate_anchore_gates_report(anchore_gates):
     anchore_g = get_anchore_gates_full(anchore_gates)
-    anchore_data = open(csv_dir + '/anchore_gates.csv', 'w')
+    anchore_data = open(csv_dir + 'anchore_gates.csv', 'w')
     csv_writer = csv.writer(anchore_data)
     count = 0
     stop_count = 0
