@@ -181,6 +181,9 @@ pipeline {
             } // anyOf
           } // when
 
+          steps {
+            echo 'OpenSCAP Compliance Scan'
+
           script {
 
               def remote = [:]
@@ -220,10 +223,9 @@ pipeline {
                   //copy files to s3
                   sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_REPORT} ${openscap_artifact_path}${S3_OSCAP_REPORT}"
 
-                } // script
               } // withCredentials
             } //node
-          } // steps
+          } //script
         } // stage
 
         stage('OpenSCAP CVE Scan') {
@@ -236,7 +238,7 @@ pipeline {
           } // when
 
           steps {
-            echo 'OpenSCAP Compliance Scan'
+            echo 'OpenSCAP CVE Scan'
 
             script {
 
