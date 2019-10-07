@@ -29,7 +29,7 @@ def main():
                                sys.argv[6],
                                sys.argv[7])
 
-    print(x)
+    #print(x)
     sys.exit(x)
 
 
@@ -86,6 +86,8 @@ def pipeline_whitelist_compare(image_name, image_version, oscap, oval, twist, an
     else:
         print("NON-WHITELISTED VULNERABILITIES FOUND")
         delta = vuln_set.difference(wl_set)
+        print("Vuln Set Delta: ", delta)
+        print("Vuln Set Delta Length: ", len(delta))
         return (delta)
         # print("DELTA" + str(delta))
         # print("DELTA SIZE: ", len(delta))
