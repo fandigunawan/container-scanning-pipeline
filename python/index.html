@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Vunerability Demo Stuff</title>
+    <link rel="stylesheet" ype="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.min.css" media="screen">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script src="scripts.js"></script>
+
+</head>
+<body>
+
+
+    <div class=" content">
+        <div class="left-panel col-sm- text-center">
+
+            <div id="whitelist-avail" class="panel panel-default">
+                <h3>Available Gitlab Whitelist</h3>
+
+                <div class="panel-heading text-center">Select Whitelist</div>
+                <div id="btn-list" class="btn-group-vertical panel panel-default" > </div>
+            </div>
+        
+          
+            <div id="collapse-control" class="panel panel-default btn-group-vertical hide">
+              <h3>Panel Control</h3>
+
+              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#whitelist-avail">Available Whitelists</button>
+              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#cve">Current Whitelist</button>
+              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#run-deets" id="but-scans">Scan Results</button>
+              <button type="button" class="btn btn-secondary" data-toggle="collapse" data-target="#whitelist-diff" id="but-diff">Differences</button>
+              
+            </div>  
+
+        </div>
+
+        <div class="right-panel col-lg-" >
+
+
+
+            <div id="banner">
+               <div id="splash" class="replaceme jumbotron text-center">
+                  <h1>Container Hardening Whitelist CVE Viewer</h1>
+                  <img src="img-safe.svg" alt="Redhat Safe">      
+
+                </div>
+
+                <table id="banner-info" class="hide table table-stripped">
+                    <tr>
+                        <td><b>Image Name:</b></td>
+                        <td id="image-name"></td>
+                        <td><b>Image Version:</b></td>
+                        <td id="image-version"></td>
+                        <td><b>Image Branch:</b></td>
+                        <td id="image-branch"></td>
+                    </tr>
+                    <tr>
+                        <td><b>Parent Image:</b></td>
+                        <td id="parent-image"></td>
+                        <td><b>Parent Version:</b></td>
+                        <td id="parent-version"></td>
+                        <td></td>
+                        <td></td>
+                   </tr>
+                </table>
+            </div>
+
+            <b id="cve-label" class="hide labelz" data-toggle="collapse" data-target="#cve">Current Whitelist</b>
+
+            <div id="cve" class="hide">
+                <pre id="cve-table" >
+                    <table id="cve-data"  class="table table-hover">
+                        <tr> 
+                            <th>Image Whitelist</th>
+                            <th>Parent Whitelist</th>
+                            <th>Full Whitelist</th>
+                        </tr>
+                        <tr valign="top">
+                            <td id="delta"></td>
+                            <td id="parents"></td>
+                            <td id="complete"></td>
+                        </tr>
+                    </table>
+                </pre>
+            </div>
+
+            <div id="jenkins-runs" class="hide">
+                    <table id="jenkins-table">
+                        <tr>
+                          <th>Compare to Latest Jenkins Runs:</th>
+                        </tr>
+                        <tr>
+                            <td id="runs"></td>
+                        </tr>
+                    </table>
+            </div>
+          
+
+
+           <b id="deets-label" class="hide labelz" data-toggle="collapse" data-target="#run-deets"> Jenkins Scan Results </b>
+            <div id="run-deets" class="collapse hide"> 
+
+                    <table id="deets-table" class="table table-hover">
+                        <tr>
+                          <th>Total</th>
+                          <th>OSCAP</th>
+                          <th>OVAL</th>
+                          <th>Twistlock</th>
+                          <th>Anchore</th>
+                        </tr>
+                        <tr valign="top">
+                            <td id="total"></td>
+                            <td id="oscap"></td>
+                            <td id="oval"></td>
+                            <td id="twistlock"></td>
+                            <td id="anchore"></td>
+                        </tr>
+                    </table>
+            </div>
+      
+	    <b id="diff-label" class="hide labelz" data-toggle="collapse" data-target="#whitelist-diff">Differences in Current Whitelist and Jenkins Run Scan</b> 
+            <div id="whitelist-diff" class="collapse hide">
+                <table id="diff" class="table table-hover">
+                    
+                        <tr align="top">
+                            <td><b> Difference Count:</b></td><td id="delta-count"></td>
+                        </tr>
+                        <tr>
+                            <td><b>Difference List:</b></td><td id="delta-list"></td>
+                        </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingDiv">
+        <img src="./loading.gif" />
+    </div>
+  </div>
+</body>
+</html>
+

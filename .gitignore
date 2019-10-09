@@ -1,2 +1,4 @@
+*.pyc
+python/index.html-og
 /.project
 /.pydevproject
