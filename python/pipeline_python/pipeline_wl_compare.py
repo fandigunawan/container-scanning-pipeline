@@ -80,7 +80,7 @@ def pipeline_whitelist_compare(image_name, image_version, oscap, oval, twist, an
     print("Vuln Set: ", vuln_set)
     print("Vuln Set Length: ", len(vuln_set))
 
-    if vuln_set in wl_set:
+    if len(vuln_set) == 0:
         print("ALL VULNERABILITIES WHITELISTED")
         return 0
     else:
