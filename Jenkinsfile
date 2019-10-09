@@ -70,7 +70,7 @@ pipeline {
           description: "Which tools to run?",
           name: 'toolsToRun')
 
-    string(defaultValue: "up/openjdk-v1.8-ubi7-stigd",
+    string(defaultValue: "",
             name: 'REPO_NAME',
             description: "Name of repo to be used by Docker, Nexus and all Scanning tools")
 
@@ -78,27 +78,22 @@ pipeline {
             name: 'IMAGE_TAG',
             description: "Image tag to be used by Docker, Nexus and all Scanning tools")
 
-     choice(name: 'VENDOR_PRODUCT',
-           choices: ['anchore', 'cyberfactory', 'dsop',
-                     'gitlab', 'opensource', 'redhat',
-                     'twistlock'],
-           description: 'What vendor is being scanned')
-
-
     } // parameters
 
   stages {
 
-    stage('Finish initializing environment') {
+    stage('Initializing Environment') {
       steps {
         script {
 
           def repo_image_only = REPO_NAME.split("/").last()
 
           if (testOrProduction == "Production") {
-            ROOT = "container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
+            //ROOT = "container-scan-reports/${repo_image_only}"
+            ROOT = "container-scan-reports/${REPO_NAME}"
           } else {
-            ROOT = "testing/container-scan-reports/${VENDOR_PRODUCT}/${repo_image_only}"
+            //ROOT = "testing/container-scan-reports/${repo_image_only}"
+            ROOT = "testing/container-scan-reports/${REPO_NAME}"
           }
           echo "ROOT=${ROOT}"
 
@@ -122,14 +117,14 @@ pipeline {
 
           S3_TAR_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_TAR_FILENAME}"
 
+          S3_CSV_LOCATION = "${BASIC_PATH_FOR_DATA}/csvs/"
 
         } //script
       } // steps
-    } // stage Finish initializing environment
+    } // stage Initializing environment
 
 
-    stage('Pull docker image') {
-
+    stage('Pull Docker Image') {
       steps {
 
         echo "Pushing ${REPO_NAME}:${IMAGE_TAG} to Nexus Staging"
@@ -156,6 +151,7 @@ pipeline {
               } // withCredentials
 
               def imageInfo = sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
+              dcarApproval = sshCommand remote: remote, command: "sudo docker inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
 
               //need to extract the sha256 value for signature
               def shaMatch = imageInfo =~ /sha256[:].+/
@@ -172,11 +168,11 @@ pipeline {
       }// steps
     } //stage
 
-    stage('Run tools in parallel') {
+    stage('Run Scans in Parallel') {
 
       parallel {
 
-        stage('OpenSCAP Scan') {
+        stage('OpenSCAP Compliance Scan') {
 
           when {
             anyOf {
@@ -187,6 +183,63 @@ pipeline {
 
           steps {
             echo 'OpenSCAP Compliance Scan'
+
+          script {
+
+              def remote = [:]
+              remote.name = "node"
+              remote.host = "${env.OSCAP_NODE}"
+              remote.allowAnyHosts = true
+
+              openscap_artifact_path = "s3://${S3_REPORT_BUCKET}/${S3_OSCAP_LOCATION}"
+
+              node {
+
+                withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+
+                  image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
+                  remote.user = userName
+                  remote.identityFile = identity
+
+                  withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                  }
+
+                  //grab openSCAP version and parse
+                  openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
+                  echo openScapVersionDump
+                  def versionMatch = openScapVersionDump =~ /[0-9]+[.][0-9]+[.][0-9]+/
+                  if (versionMatch) {
+                    openScapVersion = '{"version": "' + versionMatch[0] + '"}'
+                    echo openScapVersion
+                  }
+
+                  //must set regexp variables to null to prevent java.io.NotSerializableException
+                  versionMatch = null
+
+                  //run scans
+                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+
+                  //copy files to s3
+                  sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_REPORT} ${openscap_artifact_path}${S3_OSCAP_REPORT}"
+
+              } // withCredentials
+            } //node
+          } //script
+         } // steps
+        } // stage
+
+        stage('OpenSCAP CVE Scan') {
+
+          when {
+            anyOf {
+              environment name: "toolsToRun", value: "All"
+              environment name: "toolsToRun", value: "OpenSCAP"
+            } // anyOf
+          } // when
+
+          steps {
+            echo 'OpenSCAP CVE Scan'
 
             script {
 
@@ -222,16 +275,14 @@ pipeline {
                   versionMatch = null
 
                   //run scans
-                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                   sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/${S3_OSCAP_CVE_REPORT}"
 
                   //copy files to s3
                   sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_CVE_REPORT} ${openscap_artifact_path}${S3_OSCAP_CVE_REPORT}"
-                  sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_REPORT} ${openscap_artifact_path}${S3_OSCAP_REPORT}"
 
-                } // script
               } // withCredentials
-            } //node
+             } //node
+            } //script
           } // steps
         } // stage
 
@@ -495,31 +546,89 @@ pipeline {
       } // steps
     } // stage
 
-    stage('Create tar of all output') {
+    stage('Download Tools and Scans') {
+      steps {
+        script {
+          withAWS(credentials:'s3BucketCredentials') {
+            s3Download(file:'output',
+                bucket:"${S3_REPORT_BUCKET}",
+                path: "${BASIC_PATH_FOR_DATA}/",
+                force:true)
+
+            echo "output/${BASIC_PATH_FOR_DATA}/"
+          } //withAWS
+          
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/python-app-container/python/pipeline_python/pipeline_csv_gen.py -P output/"
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/python-app-container/python/pipeline_python/pipeline_wl_compare.py -P output/"
+          echo "downloaded python scripts."
+          
+        } //script
+      } // steps
+    } // stage AWS Download
+
+    stage('Create CSV Scan Output') {
       steps {
         script {
 
+          echo "sh /opt/rh/rh-python36/root/bin/python3 output/pipeline_csv_gen.py output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT} output/${S3_CSV_LOCATION}"
+          sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_csv_gen.py output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT} output/${S3_CSV_LOCATION}"
+
+        // upload to S3
+        withAWS(credentials:'s3BucketCredentials') {
+
+            def currentIdent = awsIdentity()
+            writeFile(file: "${S3_SIGNATURE_FILENAME}", text: signature)
+
+            s3Upload(file: "output/${S3_CSV_LOCATION}",
+                  bucket: "${S3_REPORT_BUCKET}",
+                  path:"${S3_CSV_LOCATION}")
+
+          } //withAWS
+          
+        } //script
+      } // steps
+    } // stage Create CSV Output
+
+    stage('Check CVEs Against Whitelist') {
+      steps {
+        script {
+          //error out if this is a production run and there are findings
+          //if no findings or a test, proceed
+          try {
+            echo "${REPO_NAME} ${IMAGE_TAG}"
+            echo "sh /opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
+            sh "/opt/rh/rh-python36/root/bin/python3 output/pipeline_wl_compare.py ${REPO_NAME} ${IMAGE_TAG} output/${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT} output/${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT} output/${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT} output/${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}"
+          } catch(exception) {
+            //whilelist scan failed for whatever reason
+            if (testOrProduction == "Test") {
+              echo "Whitelist comparison failed, proceeding since this is a test run."
+            } else {
+              error("Build failed due to non-Whitelisted CVEs being found.")
+            }
+          } //end try block
+
+        } //script
+      } // steps
+    } // stage Check Whitelist
+
+    stage('Tar and Upload Artifacts to AWS') {
+      steps {
+        script {
           withAWS(credentials:'s3BucketCredentials') {
 
+            echo "output/${BASIC_PATH_FOR_DATA}/"
+            sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
 
-            s3Download(file:'output',
-                    bucket:"${S3_REPORT_BUCKET}",
-                    path: "${BASIC_PATH_FOR_DATA}/",
-                    force:true)
+            s3Upload(file: "${S3_TAR_FILENAME}",
+                bucket: "${S3_REPORT_BUCKET}",
+                path:"${BASIC_PATH_FOR_DATA}/")
 
-              echo "output/${BASIC_PATH_FOR_DATA}/"
-              sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
-
-              s3Upload(file: "${S3_TAR_FILENAME}",
-                    bucket: "${S3_REPORT_BUCKET}",
-                    path:"${BASIC_PATH_FOR_DATA}/")
-
-              sh "rm -fr output;rm ${S3_TAR_FILENAME}"
+            sh "rm -fr output;rm ${S3_TAR_FILENAME}"
 
           } //withAWS
         } //script
       } // steps
-    } // stage Create tar of all output
+    } // stage Create tar of all output, delete Artifacts
 
 
     stage('Copying image to S3') {
@@ -550,7 +659,7 @@ pipeline {
     } // stage
 
 
-    stage('create report.html') {
+    stage('Create Repository Mapping Website') {
 
       environment {
         PUBLIC_KEY = credentials('ContainerSigningPublicKey')
@@ -564,6 +673,7 @@ pipeline {
 
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>${REPO_NAME} Artifacts</h1>" +
+              "<h3>Container Approval Status: ${dcarApproval}</h3>" +
               "<p> Image manifests have been signed with key:<br>" +
               "<pre>${publicKey}</pre>" +
               "<p>Verifying Image Instructions:<ol>" +
@@ -616,9 +726,10 @@ pipeline {
                 "Version Documentation - <a href=\"${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}\"> ${S3_DOCUMENTATION_FILENAME}  </a><br>\n" +
                 "Tar of reports and signature - <a href=\"${S3_HTML_LINK}${S3_TAR_LOCATION}\"> ${S3_TAR_FILENAME}  </a><br>\n" +
                 "<h4>Tool reports:</h3>\n" +
-                "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_REPORT}\"> ${S3_OSCAP_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_OSCAP_LOCATION}${S3_OSCAP_CVE_REPORT}\"> ${S3_OSCAP_CVE_REPORT}  </a><br>\n" +
-                "TwistLock - <a href=\"${S3_HTML_LINK}${S3_TWISTLOCK_LOCATION}${S3_TWISTLOCK_REPORT}\"> ${S3_TWISTLOCK_REPORT}  </a><br>\n" +
-                "Anchore - <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_GATES_REPORT}\"> ${S3_ANCHORE_GATES_REPORT}  </a>, <a href=\"${S3_HTML_LINK}${S3_ANCHORE_LOCATION}${S3_ANCHORE_SECURITY_REPORT}\"> ${S3_ANCHORE_SECURITY_REPORT}  </a><br>\n" +
+                "OpenSCAP - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv\"> Compliance  </a>, <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}oval.csv\"> OVAL  </a><br>\n" +
+                "TwistLock - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv\"> TwistLock  </a><br>\n" +
+                "Anchore - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_gates.csv\"> Gates </a>, <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv\"> Security  </a><br>\n" +
+                "Summary Report - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv\"> Summary  </a><br>\n" +
                 "<p><p>" +
                 previousRuns +
                 footerSlug
