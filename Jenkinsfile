@@ -558,8 +558,8 @@ pipeline {
             echo "output/${BASIC_PATH_FOR_DATA}/"
           } //withAWS
           
-          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/python-app-container/python/pipeline_python/pipeline_csv_gen.py -P output/"
-          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/python-app-container/python/pipeline_python/pipeline_wl_compare.py -P output/"
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/python/pipeline_python/pipeline_csv_gen.py -P output/"
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/python/pipeline_python/pipeline_wl_compare.py -P output/"
           echo "downloaded python scripts."
           
         } //script
