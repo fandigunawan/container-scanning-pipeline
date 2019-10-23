@@ -602,8 +602,10 @@ pipeline {
             //whilelist scan failed for whatever reason
             if (testOrProduction == "Test") {
               echo "Whitelist comparison failed, proceeding since this is a test run."
+            if (dcarApproval != "approved") {
+              echo "Whitelist comparison failed, proceeding since container is not yet approved."
             } else {
-              error("Build failed due to non-Whitelisted CVEs being found.")
+              error("Build failed due to non-Whitelisted CVEs being found and container is in \"approved\" status.")
             }
           } //end try block
 
