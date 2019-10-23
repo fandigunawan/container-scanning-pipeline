@@ -234,7 +234,7 @@ def get_oscap_fails(oscap_file):
 
 
 def does_image_exist(proj, im_name, im_tag):
-    all_wls = get_whitelist_filenames(proj)
+    all_wls = get_whitelist_filenames(proj, im_name)
 
     for item in all_wls:
         print(item['basename'], item['filename'])
@@ -244,8 +244,8 @@ def does_image_exist(proj, im_name, im_tag):
     return False
 
 
-def get_whitelist_filenames(project):
-    wl_fns = project.search('blobs', 'authorized_approvers')
+def get_whitelist_filenames(project, im_name):
+    wl_fns = project.search('blobs', im_name)
     return wl_fns
 
 
@@ -259,7 +259,7 @@ def get_whitelist_file_contents(proj, item_path, item_ref):
 
 
 def get_complete_whitelist_for_image(proj, im_name, im_tag):
-    all_wls = get_whitelist_filenames(proj)
+    all_wls = get_whitelist_filenames(proj, im_name)
     total_wl = []
 
     for item in all_wls:
@@ -282,7 +282,7 @@ def get_complete_whitelist_for_image(proj, im_name, im_tag):
 
 
 def get_whitelist_for_image(proj, im_name, im_tag):
-    all_wls = get_whitelist_filenames(proj)
+    all_wls = get_whitelist_filenames(proj, im_name)
     wl = []
 
     for item in all_wls:
