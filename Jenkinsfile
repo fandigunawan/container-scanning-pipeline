@@ -19,6 +19,8 @@ pipeline {
 
   environment {
     NEXUS_SERVER = credentials('NexusServerAddress')
+    NEXUS_USERNAME = credentials('NexusUsername')
+    NEXUS_PASSWORD = credentials('NexusPassword')
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     OSCAP_NODE = credentials('OpenSCAPNode')
@@ -146,9 +148,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
 
-              withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
-              } // withCredentials
+              sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
 
               def imageInfo = sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
               dcarApproval = sshCommand remote: remote, command: "sudo docker inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
@@ -201,9 +201,7 @@ pipeline {
                   remote.user = userName
                   remote.identityFile = identity
 
-                  withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                    sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
-                  }
+                  sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
 
                   //grab openSCAP version and parse
                   openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
@@ -258,9 +256,7 @@ pipeline {
                   remote.user = userName
                   remote.identityFile = identity
 
-                  withCredentials([usernamePassword(credentialsId: 'Nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                    sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
-                  }
+                  sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
 
                   //grab openSCAP version and parse
                   openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
