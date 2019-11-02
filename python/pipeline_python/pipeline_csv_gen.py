@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import re
 import json
 import os
-
+import pandas
 
 def main():
     global csv_dir
@@ -29,6 +29,24 @@ def generate_all_reports(oscap, oval, twistlock, anchore_sec, anchore_gates):
                             anc_gate_count
                             )
 
+    convert_to_excel()
+
+# convert to Excel file
+def convert_to_excel():
+    read_sum = pandas.read_csv(csv_dir + 'summary.csv')
+    read_oscap = pandas.read_csv(csv_dir + 'oscap.csv')
+    read_oval = pandas.read_csv(csv_dir + 'oval.csv')
+    read_tl = pandas.read_csv(csv_dir + 'tl.csv')
+    read_security = pandas.read_csv(csv_dir + 'anchore_security.csv')
+    read_gates = pandas.read_csv(csv_dir + 'anchore_gates.csv')
+    with pandas.ExcelWriter(csv_dir + 'all_scans.xlsx') as writer:
+        read_sum.to_excel(writer, sheet_name='Summary')
+        read_oscap.to_excel(writer, sheet_name='OpenSCAP - DISA Compliance')
+        read_oval.to_excel(writer, sheet_name='OpenSCAP - OVAL Results')
+        read_tl.to_excel(writer, sheet_name='Twistlock Vulnerability Results')
+        read_security.to_excel(writer, sheet_name='Anchore CVE Results')
+        read_gates.to_excel(writer, sheet_name='Anchore Compliance Results')
+    writer.save()
 
 # SUMMARY REPORT
 def generate_summary_report(osc, ovf, tlf, asf, agf):
