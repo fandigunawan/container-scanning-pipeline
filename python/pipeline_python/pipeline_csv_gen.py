@@ -53,8 +53,8 @@ def generate_summary_report(osc, ovf, tlf, asf, agf):
     sum_data = open(csv_dir + 'summary.csv', 'w')
     csv_writer = csv.writer(sum_data)
 
-    csv_writer.writerow(['DRAFT'])
-    csv_writer.writerow(['UNCLASSIFIED//FOUO'])
+    csv_writer.writerow(['DRAFT','','',''])
+    csv_writer.writerow(['UNCLASSIFIED//FOUO','','',''])
 
     header = ['Scan', 'Automated Findings', 'Manual Checks', 'Total']
     osl = ['OpenSCAP - DISA Compliance', osc[0], osc[1], osc[0]+osc[1]]
@@ -79,7 +79,7 @@ def generate_summary_report(osc, ovf, tlf, asf, agf):
     csv_writer.writerow("")
     date_str = 'Scans performed on: ' + str(osc[2])
     #csv_writer.writerow(['Scans performed on:', ]) # need date scanned
-    sha_str = "Scans performed on container layer sha256:" + agf[1]
+    sha_str = "Scans performed on container layer sha256:" + agf[1] + ",,,"
     csv_writer.writerow([sha_str])
 
 
@@ -91,6 +91,8 @@ def generate_oscap_report(oscap):
     fail_count = 0
     nc_count = 0
     scanned = ""
+    # print a blank header to set column width
+    csv_writer.writerow(['','','','','','','','','','','','','','','','','',''])
     for line in oscap_cves:
         if count == 0:
             header = line.keys()
@@ -162,6 +164,8 @@ def generate_oval_report(oval):
     csv_writer = csv.writer(oval_data)
     count = 0
     fail_count = 0
+    # print a blank header to set column width
+    csv_writer.writerow(['','','','','','','','','','','','','','','','','',''])
     for line in oval_cves:
         if count == 0:
             header = line.keys()
@@ -209,6 +213,8 @@ def generate_twistlock_report(twistlock):
     tl_data = open(csv_dir + 'tl.csv', 'w')
     csv_writer = csv.writer(tl_data)
     count = 0
+    # print a blank header to set column width
+    csv_writer.writerow(['','','','','','','','','','','','','','','','','',''])
     for line in tl_cves:
         if count == 0:
             header = line.keys()
@@ -264,6 +270,8 @@ def generate_anchore_sec_report(anchore_sec):
     anchore_data = open(csv_dir + 'anchore_security.csv', 'w')
     csv_writer = csv.writer(anchore_data)
     count = 0
+    # print a blank header to set column width
+    csv_writer.writerow(['','','','','','','','','','','','','','','','','',''])
     for line in anchore_cves:
         if count == 0:
             header = line.keys()
@@ -308,6 +316,8 @@ def generate_anchore_gates_report(anchore_gates):
     csv_writer = csv.writer(anchore_data)
     count = 0
     stop_count = 0
+    # print a blank header to set column width
+    csv_writer.writerow(['','','','','','','','','','','','','','','','','',''])
     for line in anchore_g:
         if count == 0:
             header = line.__dict__.keys()
