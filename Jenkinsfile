@@ -729,6 +729,7 @@ pipeline {
                 "Anchore - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_gates.csv\"> Gates </a>, <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv\"> Security  </a><br>\n" +
                 "Summary Report - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv\"> Summary  </a><br>\n" +
                 "<p><p>" +
+                "Full Report - <a href=\"${S3_HTML_LINK}${S3_CSV_LOCATION}all_scans.xlsx\"> All Scans rolled up into one Excel File</a><br>\n" +
                 previousRuns +
                 footerSlug
 
