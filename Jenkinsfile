@@ -666,6 +666,7 @@ pipeline {
       steps {
         script {
           withAWS(credentials:'s3BucketCredentials') {
+            echo "testing repo map json style"
 
             def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
             def repo_map = [:]
@@ -689,7 +690,7 @@ pipeline {
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
             footerSlug = "-------------------------------------------------------</body></html>"
-            repo_map.put("Repo_Name",${REPO_NAME})
+            repo_map.put("Repo_Name","${REPO_NAME}")
             repo_map.put("Approval_Status",${dcarApproval})
             repo_map.put("Public_Key",${publicKey})
             repo_map.put("Image_Sha",${PUBLIC_IMAGE_SHA})
