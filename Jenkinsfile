@@ -668,7 +668,7 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
 
             def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
-
+            def repo_map = [:]
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>${REPO_NAME} Artifacts</h1>" +
               "<h3>Container Approval Status: ${dcarApproval}</h3>" +
@@ -689,7 +689,14 @@ pipeline {
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
             footerSlug = "-------------------------------------------------------</body></html>"
-
+            repo_map.put("Repo_Name",${REPO_NAME})
+            repo_map.put("Approval_Status",${dcarApproval})
+            repo_map.put("Public_Key",${publicKey})
+            repo_map.put("Image_Sha",${PUBLIC_IMAGE_SHA})
+            repo_map.put("Image_Name",${S3_IMAGE_NAME})
+            repo_map.put("Image_Tag",${IMAGE_TAG})
+            repo_map.put("HTML_Link","${S3_HTML_LINK}${S3_IMAGE_LOCATION}")
+            
             //first time this runs there is no file so need to create
             try {
               s3Download(file:'repo_map.html',
@@ -733,13 +740,43 @@ pipeline {
                 previousRuns +
                 footerSlug
 
+            repo_map.put("Build_Number",${BUILD_NUMBER})
+            repo_map.put("Image_Manifest ","${S3_HTML_LINK}${S3_MANIFEST_LOCATION}")
+            repo_map.put("Manifest_Name",${S3_MANIFEST_NAME})
+            repo_map.put("PGP_Signature","${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}")
+            repo_map.put("Signature_Name",${S3_SIGNATURE_FILENAME})
+            repo_map.put("Version_Documentation","${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}")
+            repo_map.put("Tar_Location","${S3_HTML_LINK}${S3_TAR_LOCATION}")
+            repo_map.put("Tar_Name",${S3_TAR_FILENAME})oval.csv
+            repo_map.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
+            repo_map.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
+            repo_map.put("TwistLock_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv")
+            repo_map.put("Anchore_Gates_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_gates.csv")
+            repo_map.put("Anchore_Security_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv")
+            repo_map.put("Summary_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv")
+            repo_map.put("Full_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}all_scans.xlsx")
+
+
             echo newFile
 
+            def repo_map_json = JsonOutput.toJson( repo_map )
+            echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
+
+            new File("repo.json").write(repo_map_json)
+            writeFile(file: 'repo_map.json', repo_map_json)
 
 
 
             s3Upload(file: "repo_map.html",
+                  bucket: "${S3_REPORT_BUCKET}",
+                  path:"${ROOT}/")
+
+            s3Upload(file: "repo.json",
+                  bucket: "${S3_REPORT_BUCKET}",
+                  path:"${ROOT}/")
+
+            s3Upload(file: "repo_map.json",
                   bucket: "${S3_REPORT_BUCKET}",
                   path:"${ROOT}/")
 
