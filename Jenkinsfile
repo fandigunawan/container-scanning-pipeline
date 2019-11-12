@@ -691,11 +691,11 @@ pipeline {
 
             footerSlug = "-------------------------------------------------------</body></html>"
             repo_map.put("Repo_Name","${REPO_NAME}")
-            repo_map.put("Approval_Status",${dcarApproval})
-            repo_map.put("Public_Key",${publicKey})
-            repo_map.put("Image_Sha",${PUBLIC_IMAGE_SHA})
-            repo_map.put("Image_Name",${S3_IMAGE_NAME})
-            repo_map.put("Image_Tag",${IMAGE_TAG})
+            repo_map.put("Approval_Status","${dcarApproval}")
+            repo_map.put("Public_Key","${publicKey}")
+            repo_map.put("Image_Sha","${PUBLIC_IMAGE_SHA}")
+            repo_map.put("Image_Name","${S3_IMAGE_NAME}")
+            repo_map.put("Image_Tag","${IMAGE_TAG}")
             repo_map.put("HTML_Link","${S3_HTML_LINK}${S3_IMAGE_LOCATION}")
             
             //first time this runs there is no file so need to create
@@ -707,6 +707,8 @@ pipeline {
             } catch(AmazonS3Exception) {
               sh "echo '${headerSlug}' > repo_map.html"
             }
+
+            
 
 
             //read file and look for header
@@ -741,14 +743,14 @@ pipeline {
                 previousRuns +
                 footerSlug
 
-            repo_map.put("Build_Number",${BUILD_NUMBER})
+            repo_map.put("Build_Number","${BUILD_NUMBER}")
             repo_map.put("Image_Manifest ","${S3_HTML_LINK}${S3_MANIFEST_LOCATION}")
-            repo_map.put("Manifest_Name",${S3_MANIFEST_NAME})
+            repo_map.put("Manifest_Name","${S3_MANIFEST_NAME}")
             repo_map.put("PGP_Signature","${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}")
-            repo_map.put("Signature_Name",${S3_SIGNATURE_FILENAME})
+            repo_map.put("Signature_Name","${S3_SIGNATURE_FILENAME}")
             repo_map.put("Version_Documentation","${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}")
             repo_map.put("Tar_Location","${S3_HTML_LINK}${S3_TAR_LOCATION}")
-            repo_map.put("Tar_Name",${S3_TAR_FILENAME})oval.csv
+            repo_map.put("Tar_Name","${S3_TAR_FILENAME})oval.csv")
             repo_map.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
             repo_map.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
             repo_map.put("TwistLock_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv")
@@ -763,9 +765,16 @@ pipeline {
             def repo_map_json = JsonOutput.toJson( repo_map )
             echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
-
-            new File("repo.json").write(repo_map_json)
-            writeFile(file: 'repo_map.json', repo_map_json)
+            try {
+              s3Download(file:'repo_map.json',
+                      bucket:"${S3_REPORT_BUCKET}",
+                      path: "${ROOT}/repo_map.json",
+                      force:true)
+            } catch(AmazonS3Exception) {
+              sh "echo '${repo_map_json}' > repo_map.json"
+            }
+            
+            writeFile(file: 'repo_map.json', text: repo_map_json)
 
 
 
@@ -773,9 +782,6 @@ pipeline {
                   bucket: "${S3_REPORT_BUCKET}",
                   path:"${ROOT}/")
 
-            s3Upload(file: "repo.json",
-                  bucket: "${S3_REPORT_BUCKET}",
-                  path:"${ROOT}/")
 
             s3Upload(file: "repo_map.json",
                   bucket: "${S3_REPORT_BUCKET}",
