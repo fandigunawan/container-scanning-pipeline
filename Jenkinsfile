@@ -669,7 +669,7 @@ pipeline {
             echo "testing repo map json style"
 
             def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
-            def repo_map = [:]
+            def repo_map = ["currentrun":]
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>${REPO_NAME} Artifacts</h1>" +
               "<h3>Container Approval Status: ${dcarApproval}</h3>" +
@@ -750,7 +750,7 @@ pipeline {
             repo_map.put("Signature_Name","${S3_SIGNATURE_FILENAME}")
             repo_map.put("Version_Documentation","${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}")
             repo_map.put("Tar_Location","${S3_HTML_LINK}${S3_TAR_LOCATION}")
-            repo_map.put("Tar_Name","${S3_TAR_FILENAME})")
+            repo_map.put("Tar_Name","${S3_TAR_FILENAME}")
             repo_map.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
             repo_map.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
             repo_map.put("TwistLock_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv")
