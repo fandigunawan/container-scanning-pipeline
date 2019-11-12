@@ -669,7 +669,7 @@ pipeline {
             echo "testing repo map json style"
 
             def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
-            def repo_map = [:]
+            def current_repo = [:]
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>${REPO_NAME} Artifacts</h1>" +
               "<h3>Container Approval Status: ${dcarApproval}</h3>" +
@@ -690,13 +690,13 @@ pipeline {
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
             footerSlug = "-------------------------------------------------------</body></html>"
-            repo_map.put("Repo_Name","${REPO_NAME}")
-            repo_map.put("Approval_Status","${dcarApproval}")
-            repo_map.put("Public_Key","${publicKey}")
-            repo_map.put("Image_Sha","${PUBLIC_IMAGE_SHA}")
-            repo_map.put("Image_Name","${S3_IMAGE_NAME}")
-            repo_map.put("Image_Tag","${IMAGE_TAG}")
-            repo_map.put("HTML_Link","${S3_HTML_LINK}${S3_IMAGE_LOCATION}")
+            current_repo.put("Repo_Name","${REPO_NAME}")
+            current_repo.put("Approval_Status","${dcarApproval}")
+            current_repo.put("Public_Key","${publicKey}")
+            current_repo.put("Image_Sha","${PUBLIC_IMAGE_SHA}")
+            current_repo.put("Image_Name","${S3_IMAGE_NAME}")
+            current_repo.put("Image_Tag","${IMAGE_TAG}")
+            current_repo.put("HTML_Link","${S3_HTML_LINK}${S3_IMAGE_LOCATION}")
             
             //first time this runs there is no file so need to create
             try {
@@ -743,33 +743,39 @@ pipeline {
                 previousRuns +
                 footerSlug
 
-            repo_map.put("Build_Number","${BUILD_NUMBER}")
-            repo_map.put("Image_Manifest ","${S3_HTML_LINK}${S3_MANIFEST_LOCATION}")
-            repo_map.put("Manifest_Name","${S3_MANIFEST_NAME}")
-            repo_map.put("PGP_Signature","${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}")
-            repo_map.put("Signature_Name","${S3_SIGNATURE_FILENAME}")
-            repo_map.put("Version_Documentation","${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}")
-            repo_map.put("Tar_Location","${S3_HTML_LINK}${S3_TAR_LOCATION}")
-            repo_map.put("Tar_Name","${S3_TAR_FILENAME}")
-            repo_map.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
-            repo_map.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
-            repo_map.put("TwistLock_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv")
-            repo_map.put("Anchore_Gates_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_gates.csv")
-            repo_map.put("Anchore_Security_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv")
-            repo_map.put("Summary_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv")
-            repo_map.put("Full_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}all_scans.xlsx")
+            current_repo.put("Build_Number","${BUILD_NUMBER}")
+            current_repo.put("Image_Manifest ","${S3_HTML_LINK}${S3_MANIFEST_LOCATION}")
+            current_repo.put("Manifest_Name","${S3_MANIFEST_NAME}")
+            current_repo.put("PGP_Signature","${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}")
+            current_repo.put("Signature_Name","${S3_SIGNATURE_FILENAME}")
+            current_repo.put("Version_Documentation","${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}")
+            current_repo.put("Tar_Location","${S3_HTML_LINK}${S3_TAR_LOCATION}")
+            current_repo.put("Tar_Name","${S3_TAR_FILENAME}")
+            current_repo.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
+            current_repo.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
+            current_repo.put("TwistLock_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv")
+            current_repo.put("Anchore_Gates_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_gates.csv")
+            current_repo.put("Anchore_Security_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv")
+            current_repo.put("Summary_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv")
+            current_repo.put("Full_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}all_scans.xlsx")
             
-            current_repo=[:]
-            current_repo.put("current", repo_map )
+            repo_map=[:]
+            repo_map.put( "current", current_repo )
             if(previousRuns!=""){
-              def prevRunsSplit = previousRuns.split('--------------<p>')
+              def prevRunsSplit = previousRuns.split("<p><h2>")
+              def prevRunsMap = [:]
               for (int i in prevRunsSplit){
-                echo prevRunsSplit[i]
-              } 
+                if(i==0){continue;}
+                def splitRun = prevRunsSplit.split("</a><br>")
+                prevRunsMap.put(i,splitRun)
+                def splitHeader = splitRun[0].split(" ")
+                repo_map.put(splitHeader[2],splitRun)
+              }
+               
             }
             echo newFile
 
-            def repo_map_json = JsonOutput.toJson( current_repo )
+            def repo_map_json = JsonOutput.toJson( repo_map )
             echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
             try {
