@@ -666,7 +666,6 @@ pipeline {
       steps {
         script {
           withAWS(credentials:'s3BucketCredentials') {
-            echo "testing repo map json style"
 
             def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
             def current_repo = [:]
@@ -707,8 +706,6 @@ pipeline {
             } catch(AmazonS3Exception) {
               sh "echo '${headerSlug}' > repo_map.html"
             }
-
-            
 
 
             //read file and look for header
@@ -763,11 +760,13 @@ pipeline {
             repo_map.put( "current", current_repo )
             if(previousRuns!=""){
               def prevRunsSplit = previousRuns.split("<p><h2>")
-              def prevRunsMap = [:]
-              for (int i in prevRunsSplit){
-                if(i==0){continue;}
-                def splitRun = prevRunsSplit.split("</a><br>")
-                prevRunsMap.put(i,splitRun)
+              i = 0
+              for (item in prevRunsSplit){
+                if(i==0){
+                  i++
+                  continue
+                }
+                def splitRun = item.split("</a><br>")
                 def splitHeader = splitRun[0].split(" ")
                 repo_map.put(splitHeader[2],splitRun)
               }
