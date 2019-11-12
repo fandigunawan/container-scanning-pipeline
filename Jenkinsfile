@@ -761,11 +761,15 @@ pipeline {
             
             current_repo=[:]
             current_repo.put("current", repo_map )
-            echo current_repo
-            
+            if(previousRuns!=""){
+              def prevRunsSplit = previousRuns.split('--------------<p>')
+              for (int i in prevRunsSplit){
+                echo prevRunsSplit[i]
+              } 
+            }
             echo newFile
 
-            def repo_map_json = JsonOutput.toJson( repo_map )
+            def repo_map_json = JsonOutput.toJson( current_repo )
             echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
             try {
