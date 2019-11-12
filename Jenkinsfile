@@ -669,7 +669,7 @@ pipeline {
             echo "testing repo map json style"
 
             def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
-            def repo_map = ["currentrun":]
+            def repo_map = [:]
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>${REPO_NAME} Artifacts</h1>" +
               "<h3>Container Approval Status: ${dcarApproval}</h3>" +
@@ -758,8 +758,11 @@ pipeline {
             repo_map.put("Anchore_Security_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv")
             repo_map.put("Summary_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv")
             repo_map.put("Full_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}all_scans.xlsx")
-
-
+            
+            current_repo=[:]
+            current_repo.put("current", repo_map )
+            echo current_repo
+            
             echo newFile
 
             def repo_map_json = JsonOutput.toJson( repo_map )
