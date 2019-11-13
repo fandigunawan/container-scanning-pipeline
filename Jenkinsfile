@@ -12,7 +12,6 @@ anchoreVersion = '{}'
 openScapVersion = '{}'
 twistLockVersion = '{"version": "19.0.317"}'
 
-
 // Start of pipeline
 pipeline {
   agent { label 'master' }
@@ -57,8 +56,6 @@ pipeline {
     S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
     S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
     S3_ANCHORE_LOCATION = " "
-
-
 
   }  // environment
 
@@ -769,12 +766,12 @@ pipeline {
                 def splitRun = item.split("</a><br>")
                 def splitHeader = splitRun[0].split(" ")
                 repo_map.put(splitHeader[2],splitRun)
-              }
-               
+              }  
             }
             echo newFile
 
             def repo_map_json = JsonOutput.toJson( repo_map )
+            echo "repo_map"
             echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
             try {
@@ -788,12 +785,9 @@ pipeline {
             
             writeFile(file: 'repo_map.json', text: repo_map_json)
 
-
-
             s3Upload(file: "repo_map.html",
                   bucket: "${S3_REPORT_BUCKET}",
                   path:"${ROOT}/")
-
 
             s3Upload(file: "repo_map.json",
                   bucket: "${S3_REPORT_BUCKET}",
@@ -801,14 +795,10 @@ pipeline {
 
             //record this as the latest in DynamoDB
 
-
-
           } //withAWS
         } //script
       } // steps
     } // stage Update directory
-
-
 
 //    stage('Clean up Docker artifacts') {
 //      steps {
