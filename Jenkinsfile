@@ -448,8 +448,6 @@ pipeline {
       } // steps
     } // stage
 
-
-
     stage('Signing image') {
       environment {
         //this is file reference
@@ -756,6 +754,7 @@ pipeline {
             repo_map=[:]
             repo_map.put( "current", current_repo )
             if(previousRuns!=""){
+    
               def prevRunsSplit = previousRuns.split("<p><h2>")
               i = 0
               for (item in prevRunsSplit){
@@ -763,7 +762,9 @@ pipeline {
                   i++
                   continue
                 }
-                def splitRun = item.split("</a><br>")
+                item = item.minus("<p>")
+                item = item.minus("<p>")
+                def splitRun = item.split("<br>\n")
                 def splitHeader = splitRun[0].split(" ")
                 repo_map.put(splitHeader[2],splitRun)
               }  
