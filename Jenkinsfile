@@ -706,7 +706,7 @@ pipeline {
             //must set regexp variables to null to prevent java.io.NotSerializableException
             headerMatch = null
 
-            echo previousRuns
+            //echo previousRuns
 
             // add this run
             newFile = headerSlug +
@@ -765,7 +765,7 @@ pipeline {
         
             repo_map=[:]
             repo_map_json = ""
-            
+            echo "before if ....." 
             if(b_prev_json){
               echo "prev json" 
               prev_json_file = readFile(file: 'repo_map.json')
