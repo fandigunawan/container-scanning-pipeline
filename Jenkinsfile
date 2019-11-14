@@ -663,7 +663,7 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
 
             def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
-            def current_repo = [:]
+            
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>${REPO_NAME} Artifacts</h1>" +
               "<h3>Container Approval Status: ${dcarApproval}</h3>" +
@@ -684,13 +684,6 @@ pipeline {
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
             footerSlug = "-------------------------------------------------------</body></html>"
-            current_repo.put("Repo_Name","${REPO_NAME}")
-            current_repo.put("Approval_Status","${dcarApproval}")
-            current_repo.put("Public_Key","${publicKey}")
-            current_repo.put("Image_Sha","${PUBLIC_IMAGE_SHA}")
-            current_repo.put("Image_Name","${S3_IMAGE_NAME}")
-            current_repo.put("Image_Tag","${IMAGE_TAG}")
-            current_repo.put("HTML_Link","${S3_HTML_LINK}${S3_IMAGE_LOCATION}")
             
             //first time this runs there is no file so need to create
             try {
@@ -735,44 +728,56 @@ pipeline {
                 previousRuns +
                 footerSlug
 
-            current_repo.put("Build_Number","${BUILD_NUMBER}")
-            current_repo.put("Image_Manifest ","${S3_HTML_LINK}${S3_MANIFEST_LOCATION}")
-            current_repo.put("Manifest_Name","${S3_MANIFEST_NAME}")
-            current_repo.put("PGP_Signature","${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}")
-            current_repo.put("Signature_Name","${S3_SIGNATURE_FILENAME}")
-            current_repo.put("Version_Documentation","${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}")
-            current_repo.put("Tar_Location","${S3_HTML_LINK}${S3_TAR_LOCATION}")
-            current_repo.put("Tar_Name","${S3_TAR_FILENAME}")
-            current_repo.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
-            current_repo.put("OpenSCAP_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
-            current_repo.put("TwistLock_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv")
-            current_repo.put("Anchore_Gates_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_gates.csv")
-            current_repo.put("Anchore_Security_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv")
-            current_repo.put("Summary_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv")
-            current_repo.put("Full_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}all_scans.xlsx")
+            def this_run_repo = [:]
+            this_run_repo.put("Repo_Name","${REPO_NAME}")
+            this_run_repo.put("Approval_Status","${dcarApproval}")
+            this_run_repo.put("Public_Key","${publicKey}")
+            this_run_repo.put("Image_Sha","${PUBLIC_IMAGE_SHA}")
+            this_run_repo.put("Image_Name","${S3_IMAGE_NAME}")
+            this_run_repo.put("Image_Tag","${IMAGE_TAG}")
+            this_run_repo.put("HTML_Link","${S3_HTML_LINK}${S3_IMAGE_LOCATION}")
+            //old header slug would end here but all in same json key
+            this_run_repo.put("Build_Number","${BUILD_NUMBER}")
+            this_run_repo.put("Image_Manifest ","${S3_HTML_LINK}${S3_MANIFEST_LOCATION}")
+            this_run_repo.put("Manifest_Name","${S3_MANIFEST_NAME}")
+            this_run_repo.put("PGP_Signature","${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}")
+            this_run_repo.put("Signature_Name","${S3_SIGNATURE_FILENAME}")
+            this_run_repo.put("Version_Documentation","${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}")
+            this_run_repo.put("Tar_Location","${S3_HTML_LINK}${S3_TAR_LOCATION}")
+            this_run_repo.put("Tar_Name","${S3_TAR_FILENAME}")
+            this_run_repo.put("OpenSCAP_Compliance_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
+            this_run_repo.put("OpenSCAP_OVAL_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oval.csv")
+            this_run_repo.put("TwistLock_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv")
+            this_run_repo.put("Anchore_Gates_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_gates.csv")
+            this_run_repo.put("Anchore_Security_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv")
+            this_run_repo.put("Summary_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv")
+            this_run_repo.put("Full_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}all_scans.xlsx")
             
+            //first time this runs there is no file so need to create
+            b_prev_json = true
+            try {
+              s3Download(file:'repo_map.json',
+                      bucket:"${S3_REPORT_BUCKET}",
+                      path: "${ROOT}/repo_map.json",
+                      force:true)
+            } catch(AmazonS3Exception) {
+              b_prev_json =false
+            }
+        
             repo_map=[:]
-            repo_map.put( "current", current_repo )
-            if(previousRuns!=""){
-    
-              def prevRunsSplit = previousRuns.split("<p><h2>")
-              i = 0
-              for (item in prevRunsSplit){
-                if(i==0){
-                  i++
-                  continue
-                }
-                item = item.minus("<p>")
-                item = item.minus("<p>")
-                def splitRun = item.split("<br>\n")
-                def splitHeader = splitRun[0].split(" ")
-                repo_map.put(splitHeader[2],splitRun)
-              }  
+            repo_map.put( "${BUILD_NUMBER}", this_run_repo )
+
+            repoJsonObject = new JSONObject(repo_map) 
+            if(b_prev_json){
+              prev_json_file = readFile(file: 'repo_map.json')
+              prev_json = new JsonSlurper().parseText(prev_json_file) 
+              repo_map = repoJsonObject + repo_map
+                         
             }
             echo newFile
 
             def repo_map_json = JsonOutput.toJson( repo_map )
-            echo "repo_map"
+            echo "repo_map.. \n"
             echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
             try {
@@ -782,6 +787,7 @@ pipeline {
                       force:true)
             } catch(AmazonS3Exception) {
               sh "echo '${repo_map_json}' > repo_map.json"
+          
             }
             
             writeFile(file: 'repo_map.json', text: repo_map_json)
