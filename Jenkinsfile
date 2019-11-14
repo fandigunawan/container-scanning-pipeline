@@ -695,7 +695,6 @@ pipeline {
               sh "echo '${headerSlug}' > repo_map.html"
             }
 
-
             //read file and look for header
             map = readFile(file: 'repo_map.html')
 
@@ -765,32 +764,52 @@ pipeline {
             }
         
             repo_map=[:]
-            repo_map.put( "${BUILD_NUMBER}", this_run_repo )
-
-            repoJsonObject = new JSONObject(repo_map) 
+            repo_map_json = ""
+            
             if(b_prev_json){
+              echo "prev json" 
               prev_json_file = readFile(file: 'repo_map.json')
-              prev_json = new JsonSlurper().parseText(prev_json_file) 
-              repo_map = repoJsonObject + repo_map
-                         
+              prev_json = prev_json_file.substring(1);
+              echo prev_json
+              echo "repo map statement" 
+              repo_map.put( "${BUILD_NUMBER}", this_run_repo )
+              
+              //repo_map = JsonOutput.toJson( repo_map )
+              //prev_json = JsonOutput.toJson(prev_jsons  )
+              //this_prev_json = prev_json.substring(1);
+              this_run_repo = null
+              prev_json = null 
+            
+              repo_map_json = JsonOutput.toJson( repo_map )
+              repo_map = null
+              echo "rplace all repo jason map"
+              repo_map_json.replaceAll("}}","} ,")
+              //repo_map_json += prev_json;
+                   
+            }
+            else{
+              echo "else statement"
+              repo_map.put( "${BUILD_NUMBER}", this_run_repo )
+              repo_map_json = JsonOutput.toJson( repo_map )
             }
             echo newFile
 
-            def repo_map_json = JsonOutput.toJson( repo_map )
+            repo_map = null
             echo "repo_map.. \n"
             echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
-            try {
+            /*try {
               s3Download(file:'repo_map.json',
                       bucket:"${S3_REPORT_BUCKET}",
                       path: "${ROOT}/repo_map.json",
                       force:true)
             } catch(AmazonS3Exception) {
               sh "echo '${repo_map_json}' > repo_map.json"
-          
-            }
+            }*/
             
             writeFile(file: 'repo_map.json', text: repo_map_json)
+            
+            //repo_map_json = null
 
             s3Upload(file: "repo_map.html",
                   bucket: "${S3_REPORT_BUCKET}",
