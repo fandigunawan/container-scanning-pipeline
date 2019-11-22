@@ -12,7 +12,6 @@ anchoreVersion = '{}'
 openScapVersion = '{}'
 twistLockVersion = '{"version": "19.0.317"}'
 
-
 // Start of pipeline
 pipeline {
   agent { label 'master' }
@@ -57,8 +56,6 @@ pipeline {
     S3_ANCHORE_GATES_REPORT = "anchore_gates.json"
     S3_ANCHORE_SECURITY_REPORT = "anchore_security.json"
     S3_ANCHORE_LOCATION = " "
-
-
 
   }  // environment
 
@@ -451,8 +448,6 @@ pipeline {
       } // steps
     } // stage
 
-
-
     stage('Signing image') {
       environment {
         //this is file reference
@@ -668,7 +663,7 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
 
             def publicKey = sh(script: "cat ${PUBLIC_KEY}", returnStdout: true)
-
+            
             headerSlug = "<!DOCTYPE html><html><body>" +
               "<h1>${REPO_NAME} Artifacts</h1>" +
               "<h3>Container Approval Status: ${dcarApproval}</h3>" +
@@ -689,7 +684,7 @@ pipeline {
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
             footerSlug = "-------------------------------------------------------</body></html>"
-
+            
             //first time this runs there is no file so need to create
             try {
               s3Download(file:'repo_map.html',
@@ -699,7 +694,6 @@ pipeline {
             } catch(AmazonS3Exception) {
               sh "echo '${headerSlug}' > repo_map.html"
             }
-
 
             //read file and look for header
             map = readFile(file: 'repo_map.html')
@@ -712,7 +706,7 @@ pipeline {
             //must set regexp variables to null to prevent java.io.NotSerializableException
             headerMatch = null
 
-            echo previousRuns
+            //echo previousRuns
 
             // add this run
             newFile = headerSlug +
@@ -733,26 +727,96 @@ pipeline {
                 previousRuns +
                 footerSlug
 
-            echo newFile
+            def this_run_repo = [:]
+            this_run_repo.put("Repo_Name","${REPO_NAME}")
+            this_run_repo.put("Approval_Status","${dcarApproval}")
+            this_run_repo.put("Public_Key","${publicKey}")
+            this_run_repo.put("Image_Sha","${PUBLIC_IMAGE_SHA}")
+            this_run_repo.put("Image_Name","${S3_IMAGE_NAME}")
+            this_run_repo.put("Image_Tag","${IMAGE_TAG}")
+            this_run_repo.put("HTML_Link","${S3_HTML_LINK}${S3_IMAGE_LOCATION}")
+            //old header slug would end here but all in same json key
+            this_run_repo.put("Build_Number","${BUILD_NUMBER}")
+            this_run_repo.put("Image_Manifest ","${S3_HTML_LINK}${S3_MANIFEST_LOCATION}")
+            this_run_repo.put("Manifest_Name","${S3_MANIFEST_NAME}")
+            this_run_repo.put("PGP_Signature","${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}")
+            this_run_repo.put("Signature_Name","${S3_SIGNATURE_FILENAME}")
+            this_run_repo.put("Version_Documentation","${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}")
+            this_run_repo.put("Tar_Location","${S3_HTML_LINK}${S3_TAR_LOCATION}")
+            this_run_repo.put("Tar_Name","${S3_TAR_FILENAME}")
+            this_run_repo.put("OpenSCAP_Compliance_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
+            this_run_repo.put("OpenSCAP_OVAL_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oval.csv")
+            this_run_repo.put("TwistLock_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}tl.csv")
+            this_run_repo.put("Anchore_Gates_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_gates.csv")
+            this_run_repo.put("Anchore_Security_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}anchore_security.csv")
+            this_run_repo.put("Summary_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}summary.csv")
+            this_run_repo.put("Full_Report","${S3_HTML_LINK}${S3_CSV_LOCATION}all_scans.xlsx")
+            
+            //first time this runs there is no file so need to create
+            b_prev_json = true
+            try {
+              s3Download(file:'repo_map.json',
+                      bucket:"${S3_REPORT_BUCKET}",
+                      path: "${ROOT}/repo_map.json",
+                      force:true)
+            } catch(AmazonS3Exception) {
+              b_prev_json =false
+            }
+        
+            repo_map=[:]
+            repo_map_json = ""
+            echo "before if ....." 
+            if(b_prev_json){
+              echo "prev json" 
+              prev_json_file = readFile(file: 'repo_map.json')
+              prev_json = prev_json_file.substring(1);
+              echo prev_json
+      
+              repo_map.put( "${BUILD_NUMBER}", this_run_repo )
+            
+              repo_map_json = JsonOutput.toJson( repo_map )
+              
+              echo "rplace all repo jason map:"
+              repo_map_json = repo_map_json.replaceAll("}}","} ,")
+              echo repo_map_json
+              repo_map_json = repo_map_json + prev_json
+              //repo_map_json = repo_map_json.substring(,a.length())
+                
+            }
+            else{
+              echo "else statement"
+              repo_map.put( "${BUILD_NUMBER}", this_run_repo )
+              repo_map_json = JsonOutput.toJson( repo_map )
+            }
+            
 
+            
+            echo "repo_map.. \n"
+            echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
-
-
+            
+            
+            writeFile(file: 'repo_map.json', text: repo_map_json)
+            //clean up for serializeable errors in new json libs 
+            this_run_repo = null
+            prev_json = null 
+            repo_map = null
+            repo_map_json = null
 
             s3Upload(file: "repo_map.html",
                   bucket: "${S3_REPORT_BUCKET}",
                   path:"${ROOT}/")
 
+            s3Upload(file: "repo_map.json",
+                  bucket: "${S3_REPORT_BUCKET}",
+                  path:"${ROOT}/")
+
             //record this as the latest in DynamoDB
-
-
 
           } //withAWS
         } //script
       } // steps
     } // stage Update directory
-
-
 
 //    stage('Clean up Docker artifacts') {
 //      steps {
