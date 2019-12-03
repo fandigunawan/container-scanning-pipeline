@@ -40,7 +40,7 @@ def convert_to_excel():
     read_security = pandas.read_csv(csv_dir + 'anchore_security.csv')
     read_gates = pandas.read_csv(csv_dir + 'anchore_gates.csv')
     with pandas.ExcelWriter(csv_dir + 'all_scans.xlsx') as writer:
-        read_sum.to_excel(writer, sheet_name='Summary', startrow=1, header=False)
+        read_sum.to_excel(writer, sheet_name='Summary', startrow=1, header=False, index=False)
         read_oscap.to_excel(writer, sheet_name='OpenSCAP - DISA Compliance', startrow=1, header=False, index=False)
         read_oval.to_excel(writer, sheet_name='OpenSCAP - OVAL Results', startrow=1, header=False, index=False)
         read_tl.to_excel(writer, sheet_name='Twistlock Vulnerability Results', startrow=1, header=False, index=False)
