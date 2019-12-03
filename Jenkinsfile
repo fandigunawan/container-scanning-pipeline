@@ -153,7 +153,7 @@ pipeline {
               sshCommand remote: remote, command: "sudo podman pull ${image_full_path}"
               dcarApproval = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
               PUBLIC_IMAGE_SHA = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Digest}}' ${image_full_path}"
-
+              echo PUBLIC_IMAGE_SHA
               //need to extract the sha256 value for signature
               //def shaMatch = imageInfo =~ /sha256[:].+/
               //if (shaMatch) {
