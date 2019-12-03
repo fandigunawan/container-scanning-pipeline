@@ -26,6 +26,7 @@ pipeline {
 
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
+    PUBLIC_IMAGE_TAG = ""
 
     S3_IMAGE_NAME = " "
     S3_IMAGE_LOCATION = " "
@@ -142,6 +143,7 @@ pipeline {
             withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
 
               image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
+              
               remote.user = userName
               remote.identityFile = identity
 
@@ -157,6 +159,9 @@ pipeline {
               }
               //must set regexp variables to null to prevent java.io.NotSerializableException
               shaMatch = null
+              image_full_sha_path = "${NEXUS_SERVER}/${REPO_NAME}:${PUBLIC_IMAGE_SHA}"
+              echo "Sha Path"
+              echo image_full_sha_path
 
 
             } //withCredentials
