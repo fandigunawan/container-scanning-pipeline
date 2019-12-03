@@ -147,10 +147,10 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
 
-              sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
+              sshCommand remote: remote, sudo: true, command: "podman login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
 
-              def imageInfo = sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
-              dcarApproval = sshCommand remote: remote, command: "sudo docker inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
+              def imageInfo = sshCommand remote: remote, command: "sudo podman pull ${image_full_path}"
+              dcarApproval = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
 
               //need to extract the sha256 value for signature
               def shaMatch = imageInfo =~ /sha256[:].+/
@@ -160,9 +160,7 @@ pipeline {
               //must set regexp variables to null to prevent java.io.NotSerializableException
               shaMatch = null
               image_full_sha_path = "${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA}"
-              echo "Sha Path"
-              echo image_full_sha_path
-
+           
 
             } //withCredentials
           } //node
@@ -203,7 +201,7 @@ pipeline {
                   remote.user = userName
                   remote.identityFile = identity
 
-                  sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                  sshCommand remote: remote, command: "sudo podman login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
 
                   //grab openSCAP version and parse
                   openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
@@ -258,7 +256,7 @@ pipeline {
                   remote.user = userName
                   remote.identityFile = identity
 
-                  sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                  sshCommand remote: remote, command: "sudo podman login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
 
                   //grab openSCAP version and parse
                   openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
@@ -491,10 +489,10 @@ pipeline {
     \"critical\": {
         \"type\": \"atomic container signature\",
         \"image\": {
-            \"docker-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\"
+            \"podman-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\"
         },
         \"identity\": {
-            \"docker-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
+            \"podman-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
         }
     },
     \"optional\": {
@@ -647,7 +645,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
 
-              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};"
+              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};"
 
 
             } // withCredentials
@@ -683,8 +681,8 @@ pipeline {
               "<p>Downloading and Running the image:<ol>" +
               "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
               "<li>Retrieve the image by downloading it: <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a></li>" + 
-              "<li>Load the image into local docker registry: <code> docker load -i ./${S3_IMAGE_NAME} </code></li>" +
-              "<li>Run the image with:<code> docker run ${REPO_NAME}:${IMAGE_TAG} </code></li>" +
+              "<li>Load the image into local podman registry: <code> podman load -i ./${S3_IMAGE_NAME} </code></li>" +
+              "<li>Run the image with:<code> podman run ${REPO_NAME}:${IMAGE_TAG} </code></li>" +
               "</ol>" +
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
@@ -844,7 +842,7 @@ pipeline {
 //              remote.user = userName
 //              remote.identityFile = identity
 
-//              sshCommand remote: remote, command: "if [[ \$(sudo docker images -q ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rmi ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --force; fi && if [[ \$(sudo docker ps -a -q | grep ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rm ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}; fi"
+//              sshCommand remote: remote, command: "if [[ \$(sudo podman images -q ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo podman rmi ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --force; fi && if [[ \$(sudo podman ps -a -q | grep ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo podman rm ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}; fi"
 
 //	          } //withCredentials
 //	        } // node
