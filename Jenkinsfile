@@ -159,7 +159,7 @@ pipeline {
               }
               //must set regexp variables to null to prevent java.io.NotSerializableException
               shaMatch = null
-              image_full_sha_path = "${NEXUS_SERVER}/${REPO_NAME}:${PUBLIC_IMAGE_SHA}"
+              image_full_sha_path = "${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA}"
               echo "Sha Path"
               echo image_full_sha_path
 
