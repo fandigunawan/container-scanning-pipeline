@@ -149,14 +149,16 @@ pipeline {
 
               sshCommand remote: remote, sudo: true, command: "podman login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
 
-              def imageInfo = sshCommand remote: remote, command: "sudo podman pull ${image_full_path}"
+              //def imageInfo = 
+              sshCommand remote: remote, command: "sudo podman pull ${image_full_path}"
               dcarApproval = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
+              PUBLIC_IMAGE_SHA = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Digest}}' ${image_full_path}"
 
               //need to extract the sha256 value for signature
-              def shaMatch = imageInfo =~ /sha256[:].+/
-              if (shaMatch) {
-                 PUBLIC_IMAGE_SHA = shaMatch[0]
-              }
+              //def shaMatch = imageInfo =~ /sha256[:].+/
+              //if (shaMatch) {
+              //   PUBLIC_IMAGE_SHA = shaMatch[0]
+              //}
               //must set regexp variables to null to prevent java.io.NotSerializableException
               shaMatch = null
               image_full_sha_path = "${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA}"
