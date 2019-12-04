@@ -448,6 +448,44 @@ pipeline {
       } // steps
     } // stage
 
+    stage('Copying image to S3') {
+
+      steps {
+
+        script {
+          def remote = [:]
+          remote.name = "node"
+          remote.host = "${env.OSCAP_NODE}"
+          remote.allowAnyHosts = true
+
+          //siging the image
+          node {
+
+            //store path and name of image on s3
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+              remote.user = userName
+              remote.identityFile = identity
+              output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
+              sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};
+              sha256sum \$e;
+              sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
+              """
+
+              def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
+              if(!matcher){
+                error("could not extract sha256 from image tar")
+              }
+
+              def tar_sha256 = matcher[0]
+
+              echo "SHA256 TAR $tar_sha256"
+
+            } // withCredentials
+          } // node
+        }//script
+      } // steps
+    } // stage
+
     stage('Signing image') {
       environment {
         //this is file reference
@@ -486,7 +524,8 @@ pipeline {
     \"critical\": {
         \"type\": \"atomic container signature\",
         \"image\": {
-            \"podman-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\"
+            \"podman-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\",
+            \"image-tar-sha256\" : \"$tar_sha256\"
         },
         \"identity\": {
             \"podman-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
@@ -777,9 +816,7 @@ pipeline {
         
             repo_map=[:]
             repo_map_json = ""
-            echo "before if ....." 
             if(b_prev_json){
-              echo "prev json" 
               prev_json_file = readFile(file: 'repo_map.json')
               prev_json = prev_json_file.substring(1);
               echo prev_json
@@ -791,7 +828,6 @@ pipeline {
               repo_map_json = repo_map_json.replaceAll("}}","} ,")
               echo repo_map_json
               repo_map_json = repo_map_json + prev_json
-              //repo_map_json = repo_map_json.substring(,a.length())
                 
             }
             else{
