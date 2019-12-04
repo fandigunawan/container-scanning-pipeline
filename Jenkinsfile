@@ -153,7 +153,7 @@ pipeline {
               sshCommand remote: remote, command: "sudo podman pull ${image_full_path}"
               dcarApproval = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
               PUBLIC_IMAGE_SHA = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Digest}}' ${image_full_path}"
-              echo PUBLIC_IMAGE_SHA
+              
               //need to extract the sha256 value for signature
               //def shaMatch = imageInfo =~ /sha256[:].+/
               //if (shaMatch) {
@@ -646,8 +646,20 @@ pipeline {
             withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
+              output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
+              sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};
+              sha256sum \$e >
+              sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
+              """
 
-              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};"
+              def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
+              if(!matcher){
+                error("could not extract sha256 from image tar")
+              }
+
+              def tar_sha256 = matcher[0]
+
+              echo "SHA256 TAR $tar_sha256"
 
 
             } // withCredentials
