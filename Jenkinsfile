@@ -642,7 +642,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
               output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
-              sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
+              sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
               """
