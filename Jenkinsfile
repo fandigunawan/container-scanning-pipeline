@@ -266,7 +266,7 @@ pipeline {
                   versionMatch = null
 
                   //run scans
-                  sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_sha_path} --report /tmp/${S3_OSCAP_CVE_REPORT}"
+                  sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/${S3_OSCAP_CVE_REPORT}"
 
                   //copy files to s3
                   sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_CVE_REPORT} ${openscap_artifact_path}${S3_OSCAP_CVE_REPORT}"
