@@ -470,13 +470,13 @@ pipeline {
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
               """
-
+              tar_sha256 = ""
               def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
               if(!matcher){
                 error("could not extract sha256 from image tar")
               }
 
-              def tar_sha256 = matcher[0]
+              tar_sha256 = matcher[0]
 
               echo "SHA256 TAR $tar_sha256"
 
