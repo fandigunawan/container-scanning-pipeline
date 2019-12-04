@@ -661,6 +661,8 @@ pipeline {
 
               echo "SHA256 TAR $tar_sha256"
 
+              echo "find me $output"
+
 
             } // withCredentials
           } // node
