@@ -466,7 +466,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
               output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
-              sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};
+              sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
               """
@@ -663,45 +663,7 @@ pipeline {
     } // stage Create tar of all output, delete Artifacts
 
 
-    stage('Copying image to S3') {
-
-      steps {
-
-        script {
-          def remote = [:]
-          remote.name = "node"
-          remote.host = "${env.OSCAP_NODE}"
-          remote.allowAnyHosts = true
-
-          //siging the image
-          node {
-
-            //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-              remote.user = userName
-              remote.identityFile = identity
-              output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
-              sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};
-              sha256sum \$e;
-              sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
-              """
-
-              def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
-              if(!matcher){
-                error("could not extract sha256 from image tar")
-              }
-
-              def tar_sha256 = matcher[0]
-
-              echo "SHA256 TAR $tar_sha256"
-
-            } // withCredentials
-          } // node
-        }//script
-      } // steps
-    } // stage
-
-
+    
     stage('Create Repository Mapping Website') {
 
       environment {
