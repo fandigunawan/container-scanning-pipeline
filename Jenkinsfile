@@ -154,15 +154,8 @@ pipeline {
               dcarApproval = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
               PUBLIC_IMAGE_SHA = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Digest}}' ${image_full_path}"
               
-              //need to extract the sha256 value for signature
-              //def shaMatch = imageInfo =~ /sha256[:].+/
-              //if (shaMatch) {
-              //   PUBLIC_IMAGE_SHA = shaMatch[0]
-              //}
-              //must set regexp variables to null to prevent java.io.NotSerializableException
-              shaMatch = null
               image_full_sha_path = "${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA}"
-           
+              echo "Full name with sha $image_full_sha_path"
 
             } //withCredentials
           } //node
@@ -218,7 +211,7 @@ pipeline {
                   versionMatch = null
 
                   //run scans
-                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_sha_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
 
                   //copy files to s3
                   sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_REPORT} ${openscap_artifact_path}${S3_OSCAP_REPORT}"
@@ -273,7 +266,7 @@ pipeline {
                   versionMatch = null
 
                   //run scans
-                  sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_path} --report /tmp/${S3_OSCAP_CVE_REPORT}"
+                  sshCommand remote: remote, command: "sudo oscap-docker image-cve ${image_full_sha_path} --report /tmp/${S3_OSCAP_CVE_REPORT}"
 
                   //copy files to s3
                   sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_CVE_REPORT} ${openscap_artifact_path}${S3_OSCAP_CVE_REPORT}"
@@ -324,7 +317,9 @@ pipeline {
                   withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
 
                       //run the TwistLock scan
-                      sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
+                      //old working
+                      //sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
+                      sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
 
                       // TODO get version can't find an API call for this
                       // twistLockVersion = sshCommand remote: remote, command: " curl -k -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET ${TWISTLOCK_SERVER}/api/v1/settings/_Ping"
@@ -647,7 +642,7 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
               output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
-              sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};
+              sudo podman save -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
               """
@@ -660,9 +655,6 @@ pipeline {
               def tar_sha256 = matcher[0]
 
               echo "SHA256 TAR $tar_sha256"
-
-              echo "find me $output"
-
 
             } // withCredentials
           } // node
@@ -691,6 +683,7 @@ pipeline {
               "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
               "<li>Import key with:<code> gpg --import public.asc </code></li>" +
+              "<li>Trust the imported public key:<code>  gpg --sign-key test_dod@redhat.com  </code></li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
               "</ol>" +
@@ -795,7 +788,6 @@ pipeline {
             
               repo_map_json = JsonOutput.toJson( repo_map )
               
-              echo "rplace all repo jason map:"
               repo_map_json = repo_map_json.replaceAll("}}","} ,")
               echo repo_map_json
               repo_map_json = repo_map_json + prev_json
