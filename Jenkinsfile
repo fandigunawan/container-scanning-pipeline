@@ -149,7 +149,6 @@ pipeline {
 
               sshCommand remote: remote, sudo: true, command: "podman login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
 
-              //def imageInfo = 
               sshCommand remote: remote, command: "sudo podman pull ${image_full_path}"
               dcarApproval = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
               PUBLIC_IMAGE_SHA = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Digest}}' ${image_full_path}"
@@ -453,15 +452,13 @@ pipeline {
           remote.host = "${env.OSCAP_NODE}"
           remote.allowAnyHosts = true
 
-          //siging the image
           node {
-
             //store path and name of image on s3
             withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
               output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
-              sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};
+              sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${IMAGE_TAG};
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
               """
@@ -796,12 +793,9 @@ pipeline {
               repo_map_json = JsonOutput.toJson( repo_map )
             }
             
-
-            
             echo "repo_map.. \n"
             echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
-            
             
             writeFile(file: 'repo_map.json', text: repo_map_json)
             //clean up for serializeable errors in new json libs 
