@@ -23,7 +23,7 @@ pipeline {
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     OSCAP_NODE = credentials('OpenSCAPNode')
-
+    GPG_KEY = "test_dod@redhat.com"
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
     PUBLIC_IMAGE_TAG = ""
@@ -211,7 +211,8 @@ pipeline {
                   versionMatch = null
 
                   //run scans
-                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_sha_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+                 // sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_sha_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
+                  sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
 
                   //copy files to s3
                   sshCommand remote: remote, command: "/usr/bin/aws s3 cp /tmp/${S3_OSCAP_REPORT} ${openscap_artifact_path}${S3_OSCAP_REPORT}"
@@ -318,8 +319,8 @@ pipeline {
 
                       //run the TwistLock scan
                       //old working
-                      //sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
-                      sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
+                      sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
+//                      sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
 
                       // TODO get version can't find an API call for this
                       // twistLockVersion = sshCommand remote: remote, command: " curl -k -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET ${TWISTLOCK_SERVER}/api/v1/settings/_Ping"
@@ -327,7 +328,8 @@ pipeline {
 
                       // Pull latest report from the twistlock console
                       // and save to s3
-  		                sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} &limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/bin/aws s3 cp - ${twistlock_artifact_path}${S3_TWISTLOCK_REPORT}"
+  		               // sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} &limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/bin/aws s3 cp - ${twistlock_artifact_path}${S3_TWISTLOCK_REPORT}"
+                      sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} &limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/bin/aws s3 cp - ${twistlock_artifact_path}${S3_TWISTLOCK_REPORT}"
 
                   } // withCredentials
                 } // withCredentials
@@ -536,7 +538,6 @@ pipeline {
         \"timestamp\": ${unixTime}
     }
 }"""
-
               echo containerDocumentation
 
               writeFile(file: "${S3_MANIFEST_NAME}", text: containerDocumentation)
@@ -649,7 +650,7 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
 
             echo "output/${BASIC_PATH_FOR_DATA}/"
-            sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
+            sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
 
             s3Upload(file: "${S3_TAR_FILENAME}",
                 bucket: "${S3_REPORT_BUCKET}",
@@ -684,7 +685,7 @@ pipeline {
               "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
               "<li>Import key with:<code> gpg --import public.asc </code></li>" +
-              "<li>Trust the imported public key:<code>  gpg --sign-key test_dod@redhat.com  </code></li>" +
+              "<li>Trust the imported public key:<code>  gpg --sign-key ${GPG_KEY} </code></li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
               "</ol>" +
