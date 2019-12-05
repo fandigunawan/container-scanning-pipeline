@@ -482,6 +482,7 @@ pipeline {
     } // stage
 
 
+
     stage('Signing image') {
       environment {
         //this is file reference
