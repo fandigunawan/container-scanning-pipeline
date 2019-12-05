@@ -481,6 +481,7 @@ pipeline {
       } // steps
     } // stage
 
+
     stage('Signing image') {
       environment {
         //this is file reference
@@ -515,22 +516,24 @@ pipeline {
 
               echo gpgVersion
 
-              def containerDocumentation = """{
-    \"critical\": {
-        \"type\": \"atomic container signature\",
-        \"image\": {
-            \"podman-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\",
-            \"image-tar-sha256\" : \"$tar_sha256\"
-        },
-        \"identity\": {
-            \"podman-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
-        }
-    },
-    \"optional\": {
-        \"creator\": \"${gpgVersion}\",
-        \"timestamp\": ${unixTime}
-    }
-}"""
+              def containerDocumentation = """
+              {
+                \"critical\": {
+                    \"type\": \"atomic container signature\",
+                    \"image\": {
+                        \"podman-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\",
+                        \"image-tar-sha256\" : \"$tar_sha256\"
+                    },
+                    \"identity\": {
+                        \"podman-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
+                    }
+                },
+                \"optional\": {
+                    \"creator\": \"${gpgVersion}\",
+                    \"timestamp\": ${unixTime}
+                }
+            }
+            """
               echo containerDocumentation
 
               writeFile(file: "${S3_MANIFEST_NAME}", text: containerDocumentation)
@@ -643,7 +646,7 @@ pipeline {
           withAWS(credentials:'s3BucketCredentials') {
 
             echo "output/${BASIC_PATH_FOR_DATA}/"
-            sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/${SPECIFIC_FOLDER_FOR_RUN}"
+            sh "tar cvfz ${S3_TAR_FILENAME} -C output/${ROOT_FOR_REPO_IMAGE}/  ${SPECIFIC_FOLDER_FOR_RUN}"
 
             s3Upload(file: "${S3_TAR_FILENAME}",
                 bucket: "${S3_REPORT_BUCKET}",
@@ -678,7 +681,7 @@ pipeline {
               "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
               "<li>Import key with:<code> gpg --import public.asc </code></li>" +
-              "<li>Trust the imported public key:<code>  gpg --sign-key ${GPG_KEY} </code></li>" +
+              "<li>Trust the imported public key:<code>  gpg --sign-key test_dod@redhat.com  </code></li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
               "</ol>" +
