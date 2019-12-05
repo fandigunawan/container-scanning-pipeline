@@ -153,9 +153,6 @@ pipeline {
               sshCommand remote: remote, command: "sudo podman pull ${image_full_path}"
               dcarApproval = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
               PUBLIC_IMAGE_SHA = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Digest}}' ${image_full_path}"
-              
-              image_full_sha_path = "${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA}"
-              echo "Full name with sha $image_full_sha_path"
 
             } //withCredentials
           } //node
@@ -196,7 +193,7 @@ pipeline {
                   remote.user = userName
                   remote.identityFile = identity
 
-                  sshCommand remote: remote, command: "sudo podman login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                  sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
 
                   //grab openSCAP version and parse
                   openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
@@ -211,7 +208,6 @@ pipeline {
                   versionMatch = null
 
                   //run scans
-                 // sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_sha_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
                   sshCommand remote: remote, command: "sudo oscap-docker image ${image_full_path} xccdf eval --profile xccdf_org.ssgproject.content_profile_stig-rhel7-disa --report /tmp/${S3_OSCAP_REPORT} /usr/share/xml/scap/ssg/content/ssg-rhel7-ds.xml"
 
                   //copy files to s3
@@ -252,7 +248,7 @@ pipeline {
                   remote.user = userName
                   remote.identityFile = identity
 
-                  sshCommand remote: remote, command: "sudo podman login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
+                  sshCommand remote: remote, command: "sudo docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER}"
 
                   //grab openSCAP version and parse
                   openScapVersionDump = sshCommand remote: remote, command: "oscap -V"
@@ -318,9 +314,7 @@ pipeline {
                   withCredentials([usernamePassword(credentialsId: 'TwistLock', usernameVariable: 'TWISTLOCK_USERNAME', passwordVariable: 'TWISTLOCK_PASSWORD')]) {
 
                       //run the TwistLock scan
-                      //old working
                       sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
-//                      sshCommand remote: remote, command: "sudo curl -k -ssl -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' ${TWISTLOCK_SERVER}/api/v1/util/twistcli -o twistcli && sudo chmod +x ./twistcli && sudo ./twistcli images scan ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} --user ${TWISTLOCK_USERNAME} --password '${TWISTLOCK_PASSWORD}' --address ${TWISTLOCK_SERVER} --details ${REPO_NAME}:${IMAGE_TAG}"
 
                       // TODO get version can't find an API call for this
                       // twistLockVersion = sshCommand remote: remote, command: " curl -k -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET ${TWISTLOCK_SERVER}/api/v1/settings/_Ping"
@@ -328,8 +322,7 @@ pipeline {
 
                       // Pull latest report from the twistlock console
                       // and save to s3
-  		               // sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA} &limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/bin/aws s3 cp - ${twistlock_artifact_path}${S3_TWISTLOCK_REPORT}"
-                      sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} &limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/bin/aws s3 cp - ${twistlock_artifact_path}${S3_TWISTLOCK_REPORT}"
+  		                sshCommand remote: remote, command: "curl -k -s -u ${TWISTLOCK_USERNAME}:'${TWISTLOCK_PASSWORD}' -H 'Content-Type: application/json' -X GET '${TWISTLOCK_SERVER}/api/v1/scans?search=${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}&limit=1&reverse=true&type=twistcli' | python -m json.tool | /usr/bin/aws s3 cp - ${twistlock_artifact_path}${S3_TWISTLOCK_REPORT}"
 
                   } // withCredentials
                 } // withCredentials
