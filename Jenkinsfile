@@ -520,7 +520,7 @@ pipeline {
                     \"type\": \"atomic container signature\",
                     \"image\": {
                         \"podman-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\",
-                        \"image-tar-sha256\" : \"$tar_sha256\"
+                        \"image-tar-sha256-checksum\" : \"$tar_sha256\"
                     },
                     \"identity\": {
                         \"podman-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
@@ -682,6 +682,8 @@ pipeline {
               "<li>Trust the imported public key:<code>  gpg --sign-key test_dod@redhat.com  </code></li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
+              "<li>Verify that the sha tag matches the signed manifest.json entry for the manifest-digest: ${PUBLIC_IMAGE_SHA}" +
+              "<li>HAsh the image to verify that the result matches the sha256 checksum entry in manifest.json: <code> sha256sum ${S3_TAR_FILENAME} </code> +
               "</ol>" +
               "<p>Downloading and Running the image:<ol>" +
               "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
