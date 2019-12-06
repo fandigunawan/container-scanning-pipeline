@@ -683,7 +683,7 @@ pipeline {
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
               "<li>Verify that the sha tag matches the signed manifest.json entry for the manifest-digest: ${PUBLIC_IMAGE_SHA}" +
-              "<li>HAsh the image to verify that the result matches the sha256 checksum entry in manifest.json: <code> sha256sum ${S3_TAR_FILENAME} </code> +
+              "<li>Hash the image to verify that the result matches the sha256 checksum entry in manifest.json: <code> sha256sum ${S3_TAR_FILENAME}</code>" +
               "</ol>" +
               "<p>Downloading and Running the image:<ol>" +
               "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
