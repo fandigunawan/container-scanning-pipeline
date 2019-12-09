@@ -443,6 +443,12 @@ pipeline {
     } // stage
 
     stage('Sign and Copy Image to S3') {
+      environment {
+        //this is file reference
+        SIGNING_KEY = credentials('ContainerSigningKey')
+        //actual passphrase
+        SIGNING_KEY_PASSPHRASE = credentials('ContainerSigningKeyPassphrase')
+      }  // environment
 
       steps {
 
