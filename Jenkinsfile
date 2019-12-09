@@ -456,10 +456,12 @@ pipeline {
 
           node {
             //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')], [file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
+            withCredentials([
+              sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName'),
+              file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
+
               remote.user = userName
               remote.identityFile = identity
-              withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
 
                 echo "entering ssh"
                 output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$e\" EXIT || exit 255;
@@ -486,8 +488,8 @@ pipeline {
                 }
                 //throw error if doesnt match
                 //upload signature to s3 for the tar
-              } //withCredentials file
-            } // withCredentials ssh
+              
+            } // withCredentials
           } // node
         }//script
       } // steps
