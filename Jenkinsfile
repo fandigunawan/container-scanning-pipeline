@@ -476,6 +476,13 @@ pipeline {
                 }
                 tar_sha256 = matcher[0]
                 echo "SHA256 TAR $tar_sha256"
+
+                def signatureMatch = signature =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
+                def signature = ""
+                if (signatureMatch) {
+                  signature = signatureMatch[0]
+                  echo signature
+                }
               
             } // withCredentials
           } // node
