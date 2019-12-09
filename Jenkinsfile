@@ -452,11 +452,7 @@ pipeline {
           remote.host = "${env.OSCAP_NODE}"
           remote.allowAnyHosts = true
 
-
-        //  withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
-          //      signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${S3_MANIFEST_NAME};cat \$f;",
-            //                returnStdout: true)
-             // } //withCredentials
+          echo "test stage"
 
           node {
             //store path and name of image on s3
