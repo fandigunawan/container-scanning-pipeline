@@ -469,31 +469,47 @@ pipeline {
               remote.user = userName
               remote.identityFile = identity
 
-                echo "entering ssh"
-                output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$e\" EXIT || exit 255;
-                sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
-                gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' \$e ;cat \$f;
-                sha256sum \$e;
-                sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
-                """
-                echo "exit ssh"
-                echo output
-                tar_sha256 = ""
-                def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
-                if(!matcher){
-                  error("could not extract sha256 from image tar")
-                }
-                tar_sha256 = matcher[0]
-                echo "SHA256 TAR $tar_sha256"
+              echo "entering ssh"
+              output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$e\" EXIT || exit 255;
+              sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
+              gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' \$e ;cat \$f;
+              sha256sum \$e;
+              sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
+              """
+              echo "exit ssh"
+              echo output
+              tar_sha256 = ""
+              def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
+              if(!matcher){
+                error("could not extract sha256 from image tar")
+              }
+              tar_sha256 = matcher[0]
+              echo "SHA256 TAR $tar_sha256"
 
-                def signatureMatch = output =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
-                def signature = ""
-                if (signatureMatch) {
-                  signature = signatureMatch[0]
-                  echo signature
-                }
-                //throw error if doesnt match
-                //upload signature to s3 for the tar
+              def signatureMatch = output =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
+              def signature = ""
+              if (signatureMatch) {
+                signature = signatureMatch[0]
+                //must set regexp variables to null to prevent java.io.NotSerializableException
+                signatureMatch = null
+              } 
+              else {
+                error("could not extract gpg signature from image tar")
+              }
+               
+
+              withAWS(credentials:'s3BucketCredentials') {
+
+                  def currentIdent = awsIdentity()
+                  writeFile(file: "${S3_IMAGE_LOCATION}.sig", text: signature)
+
+
+                  s3Upload(file: "${S3_IMAGE_LOCATION}.sig",
+                        bucket: "${S3_REPORT_BUCKET}",
+                        path:"${S3_SIGNATURE_LOCATION}.sig")
+
+
+              } //withAWS
               
             } // withCredentials
           } // node
