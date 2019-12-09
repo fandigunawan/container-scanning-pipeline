@@ -456,10 +456,10 @@ pipeline {
 
           node {
             //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')], [file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
               remote.user = userName
               remote.identityFile = identity
-              withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
+              
                 echo "entering ssh"
                 output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$e\" EXIT || exit 255;
                 sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
@@ -476,7 +476,7 @@ pipeline {
                 }
                 tar_sha256 = matcher[0]
                 echo "SHA256 TAR $tar_sha256"
-              }
+              
             } // withCredentials
           } // node
         }//script
