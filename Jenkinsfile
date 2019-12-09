@@ -456,7 +456,7 @@ pipeline {
 
           node {
             //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')] {
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
               remote.user = userName
               remote.identityFile = identity
               withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
