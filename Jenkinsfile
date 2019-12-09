@@ -489,6 +489,7 @@ pipeline {
               def signatureMatch = output =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
               def signature = ""
               if (signatureMatch) {
+                echo "found signature"
                 signature = signatureMatch[0]
                 //must set regexp variables to null to prevent java.io.NotSerializableException
                 signatureMatch = null
