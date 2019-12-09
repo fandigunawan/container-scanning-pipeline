@@ -112,6 +112,9 @@ pipeline {
           S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
 
           S3_IMAGE_NAME = "${repo_image_only}-${IMAGE_TAG}.tar"
+          S3_IMAGE_SIGNATURE = "${repo_image_only}-${IMAGE_TAG}.sig"
+          S3_IMAGE_SIGNATURE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_SIGNATURE}"
+
           S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
           S3_TAR_FILENAME = "${repo_image_only}-${IMAGE_TAG}-reports-signature.tar.gz"
 
@@ -470,14 +473,14 @@ pipeline {
               remote.identityFile = identity
 
               echo "entering ssh"
-              output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$e\" EXIT || exit 255;
+              output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"rm \$f;rm -rf \$g\"; \"sudo rm \$e\" EXIT || exit 255;
               sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
               gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' \$e ;cat \$f;
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
               """
               echo "exit ssh"
-              echo output
+            
               tar_sha256 = ""
               def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
               if(!matcher){
@@ -488,6 +491,7 @@ pipeline {
 
               def signatureMatch = output =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
               def signature = ""
+             
               if (signatureMatch) {
                 echo "found signature"
                 signature = signatureMatch[0]
@@ -502,12 +506,12 @@ pipeline {
               withAWS(credentials:'s3BucketCredentials') {
 
                   def currentIdent = awsIdentity()
-                  writeFile(file: "${S3_IMAGE_LOCATION}.sig", text: signature)
+                  writeFile(file: "${S3_IMAGE_SIGNATURE}", text: signature)
 
 
-                  s3Upload(file: "${S3_IMAGE_LOCATION}.sig",
+                  s3Upload(file: "${S3_IMAGE_SIGNATURE}",
                         bucket: "${S3_REPORT_BUCKET}",
-                        path:"${S3_SIGNATURE_LOCATION}.sig")
+                        path:"${S3_IMAGE_SIGNATURE_LOCATION}")
 
 
               } //withAWS
