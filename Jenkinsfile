@@ -474,9 +474,7 @@ pipeline {
                 if(!matcher){
                   error("could not extract sha256 from image tar")
                 }
-
                 tar_sha256 = matcher[0]
-
                 echo "SHA256 TAR $tar_sha256"
               }
             } // withCredentials
