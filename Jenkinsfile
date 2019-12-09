@@ -460,15 +460,19 @@ pipeline {
 
           node {
             //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')],[file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')],
+                            [file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
               remote.user = userName
               remote.identityFile = identity
+              echo "entering ssh"
               output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
               sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${IMAGE_TAG};
               gpg --homedir ./ --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir ./-o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' \$e ;cat \$f;
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
               """
+              echo "exit ssh"
+              echo output
               tar_sha256 = ""
               def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
               if(!matcher){
