@@ -442,7 +442,7 @@ pipeline {
       } // steps
     } // stage
 
-    stage('Copying image to S3') {
+    stage('Sign and Copy Image to S3') {
 
       steps {
 
@@ -452,9 +452,15 @@ pipeline {
           remote.host = "${env.OSCAP_NODE}"
           remote.allowAnyHosts = true
 
+
+        //  withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
+          //      signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${S3_MANIFEST_NAME};cat \$f;",
+            //                returnStdout: true)
+             // } //withCredentials
+
           node {
             //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')],[file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
               remote.user = userName
               remote.identityFile = identity
               output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
@@ -480,7 +486,7 @@ pipeline {
 
 
 
-    stage('Signing image') {
+    stage('Signing Manifest') {
       environment {
         //this is file reference
         SIGNING_KEY = credentials('ContainerSigningKey')
@@ -495,7 +501,7 @@ pipeline {
           //siging the image
           node {
 
-            echo 'Signing container'
+            echo 'Signing Manifest'
 
               def unixTime = sh(
                          script: 'date +%s',
@@ -583,8 +589,8 @@ pipeline {
             echo "output/${BASIC_PATH_FOR_DATA}/"
           } //withAWS
           
-          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/python/pipeline_python/pipeline_csv_gen.py -P output/"
-          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/python/pipeline_python/pipeline_wl_compare.py -P output/"
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/pipeline_python/pipeline_csv_gen.py -P output/"
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/pipeline_python/pipeline_wl_compare.py -P output/"
           echo "downloaded python scripts."
           
         } //script
