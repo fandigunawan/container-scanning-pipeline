@@ -23,9 +23,10 @@ pipeline {
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     OSCAP_NODE = credentials('OpenSCAPNode')
-
+    GPG_KEY = "test_dod@redhat.com"
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
+    PUBLIC_IMAGE_TAG = ""
 
     S3_IMAGE_NAME = " "
     S3_IMAGE_LOCATION = " "
@@ -142,22 +143,15 @@ pipeline {
             withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
 
               image_full_path = "${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}"
+              
               remote.user = userName
               remote.identityFile = identity
 
-              sshCommand remote: remote, sudo: true, command: "docker login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
+              sshCommand remote: remote, sudo: true, command: "podman login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
 
-              def imageInfo = sshCommand remote: remote, command: "sudo docker pull ${image_full_path}"
-              dcarApproval = sshCommand remote: remote, command: "sudo docker inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
-
-              //need to extract the sha256 value for signature
-              def shaMatch = imageInfo =~ /sha256[:].+/
-              if (shaMatch) {
-                 PUBLIC_IMAGE_SHA = shaMatch[0]
-              }
-              //must set regexp variables to null to prevent java.io.NotSerializableException
-              shaMatch = null
-
+              sshCommand remote: remote, command: "sudo podman pull ${image_full_path}"
+              dcarApproval = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
+              PUBLIC_IMAGE_SHA = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Digest}}' ${image_full_path}"
 
             } //withCredentials
           } //node
@@ -448,6 +442,44 @@ pipeline {
       } // steps
     } // stage
 
+    stage('Copying image to S3') {
+
+      steps {
+
+        script {
+          def remote = [:]
+          remote.name = "node"
+          remote.host = "${env.OSCAP_NODE}"
+          remote.allowAnyHosts = true
+
+          node {
+            //store path and name of image on s3
+            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
+              remote.user = userName
+              remote.identityFile = identity
+              output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
+              sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${IMAGE_TAG};
+              sha256sum \$e;
+              sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
+              """
+              tar_sha256 = ""
+              def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
+              if(!matcher){
+                error("could not extract sha256 from image tar")
+              }
+
+              tar_sha256 = matcher[0]
+
+              echo "SHA256 TAR $tar_sha256"
+
+            } // withCredentials
+          } // node
+        }//script
+      } // steps
+    } // stage
+
+
+
     stage('Signing image') {
       environment {
         //this is file reference
@@ -482,22 +514,24 @@ pipeline {
 
               echo gpgVersion
 
-              def containerDocumentation = """{
-    \"critical\": {
-        \"type\": \"atomic container signature\",
-        \"image\": {
-            \"docker-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\"
-        },
-        \"identity\": {
-            \"docker-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
-        }
-    },
-    \"optional\": {
-        \"creator\": \"${gpgVersion}\",
-        \"timestamp\": ${unixTime}
-    }
-}"""
-
+              def containerDocumentation = """
+              {
+                \"critical\": {
+                    \"type\": \"atomic container signature\",
+                    \"image\": {
+                        \"podman-manifest-digest\": \"${PUBLIC_IMAGE_SHA}\",
+                        \"image-tar-sha256-checksum\" : \"$tar_sha256\"
+                    },
+                    \"identity\": {
+                        \"podman-reference\": \"${PUBLIC_DOCKER_HOST}/${REPO_NAME}:${IMAGE_TAG}\"
+                    }
+                },
+                \"optional\": {
+                    \"creator\": \"${gpgVersion}\",
+                    \"timestamp\": ${unixTime}
+                }
+            }
+            """
               echo containerDocumentation
 
               writeFile(file: "${S3_MANIFEST_NAME}", text: containerDocumentation)
@@ -624,34 +658,7 @@ pipeline {
     } // stage Create tar of all output, delete Artifacts
 
 
-    stage('Copying image to S3') {
-
-      steps {
-
-        script {
-          def remote = [:]
-          remote.name = "node"
-          remote.host = "${env.OSCAP_NODE}"
-          remote.allowAnyHosts = true
-
-          //siging the image
-          node {
-
-            //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-              remote.user = userName
-              remote.identityFile = identity
-
-              sshCommand remote: remote, command: "e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;sudo docker save -o \$e ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG};sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};"
-
-
-            } // withCredentials
-          } // node
-        }//script
-      } // steps
-    } // stage
-
-
+    
     stage('Create Repository Mapping Website') {
 
       environment {
@@ -672,14 +679,17 @@ pipeline {
               "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
               "<li>Import key with:<code> gpg --import public.asc </code></li>" +
+              "<li>Trust the imported public key:<code>  gpg --sign-key test_dod@redhat.com  </code></li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
+              "<li>Verify that the sha tag matches the signed manifest.json entry for the manifest-digest: ${PUBLIC_IMAGE_SHA}" +
+              "<li>Hash the image to verify that the result matches the sha256 checksum entry in manifest.json: <code> sha256sum ${S3_TAR_FILENAME}</code>" +
               "</ol>" +
               "<p>Downloading and Running the image:<ol>" +
               "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
               "<li>Retrieve the image by downloading it: <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a></li>" + 
-              "<li>Load the image into local docker registry: <code> docker load -i ./${S3_IMAGE_NAME} </code></li>" +
-              "<li>Run the image with:<code> docker run ${REPO_NAME}:${IMAGE_TAG} </code></li>" +
+              "<li>Load the image into local podman registry: <code> podman load -i ./${S3_IMAGE_NAME} </code></li>" +
+              "<li>Run the image with:<code> podman run ${REPO_NAME}:${IMAGE_TAG} </code></li>" +
               "</ol>" +
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
 
@@ -765,9 +775,7 @@ pipeline {
         
             repo_map=[:]
             repo_map_json = ""
-            echo "before if ....." 
             if(b_prev_json){
-              echo "prev json" 
               prev_json_file = readFile(file: 'repo_map.json')
               prev_json = prev_json_file.substring(1);
               echo prev_json
@@ -776,11 +784,9 @@ pipeline {
             
               repo_map_json = JsonOutput.toJson( repo_map )
               
-              echo "rplace all repo jason map:"
               repo_map_json = repo_map_json.replaceAll("}}","} ,")
               echo repo_map_json
               repo_map_json = repo_map_json + prev_json
-              //repo_map_json = repo_map_json.substring(,a.length())
                 
             }
             else{
@@ -789,12 +795,9 @@ pipeline {
               repo_map_json = JsonOutput.toJson( repo_map )
             }
             
-
-            
             echo "repo_map.. \n"
             echo repo_map_json
             writeFile(file: 'repo_map.html', text: newFile)
-            
             
             writeFile(file: 'repo_map.json', text: repo_map_json)
             //clean up for serializeable errors in new json libs 
@@ -839,7 +842,7 @@ pipeline {
 //              remote.user = userName
 //              remote.identityFile = identity
 
-//              sshCommand remote: remote, command: "if [[ \$(sudo docker images -q ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rmi ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --force; fi && if [[ \$(sudo docker ps -a -q | grep ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo docker rm ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}; fi"
+//              sshCommand remote: remote, command: "if [[ \$(sudo podman images -q ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo podman rmi ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG} --force; fi && if [[ \$(sudo podman ps -a -q | grep ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}) ]]; then sudo podman rm ${NEXUS_SERVER}/${REPO_NAME}:${IMAGE_TAG}; fi"
 
 //	          } //withCredentials
 //	        } // node
