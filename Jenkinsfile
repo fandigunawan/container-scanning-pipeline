@@ -475,7 +475,7 @@ pipeline {
               echo "entering ssh"
               output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$f; rm -rf \$g;sudo rm \$e \" EXIT || exit 255;
               sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
-              gpg --import  --homedir \$g  --passphrase '${SIGNING_KEY_PASSPHRASE}' --batch ${PRIVATE_KEY} ; ls \$g; gpg --detach-sign --homedir \$g --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch --pinentry-mode loopback --yes --armor -o \$f  \$e ; cat \$f;
+              gpg --import  --homedir \$g  --passphrase '${SIGNING_KEY_PASSPHRASE}' --batch ${PRIVATE_KEY} ; ls \$g; gpg --detach-sign --homedir \$g --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch  loopback --yes --armor -o \$f  \$e ; cat \$f;
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
               """
@@ -499,7 +499,9 @@ pipeline {
                 signatureMatch = null
               } 
               else {
-                error("could not extract gpg signature from image tar")
+                echo "did not find signature dumping output"
+                signature = output
+                //error("could not extract gpg signature from image tar")
               }
                
               withAWS(credentials:'s3BucketCredentials') {
