@@ -464,66 +464,66 @@ pipeline {
 
           echo "test stage"
 
-          node {
-            //store path and name of image on s3
-            withCredentials([
-              sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName'),
-              file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
+          
+          //store path and name of image on s3
+          withCredentials([
+            sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName'),
+            file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
 
-              remote.user = userName
-              remote.identityFile = identity
+            remote.user = userName
+            remote.identityFile = identity
 
 //signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${S3_MANIFEST_NAME};cat \$f;",
 //                            returnStdout: true)
 
 
-              echo "entering sh"
-              output = sh(script: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \" rm \$f; rm -rf \$g; rm \$e \" EXIT || exit 255;
-              podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
-              gpg --import  --homedir \$g  --passphrase '${SIGNING_KEY_PASSPHRASE}' --batch ${PRIVATE_KEY} ; ls \$g; gpg --detach-sign --homedir \$g --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch  loopback --yes --armor -o \$f  \$e ; cat \$f;
-              sha256sum \$e;
-              chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};""" , returnStdout: true)
-              echo "exit sh"
+            echo "entering sh"
+            output = sh(script: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \" rm \$f; rm -rf \$g; rm \$e \" EXIT || exit 255;
+            podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
+            gpg --import  --homedir \$g  --passphrase '${SIGNING_KEY_PASSPHRASE}' --batch ${PRIVATE_KEY} ; ls \$g; gpg --detach-sign --homedir \$g --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch  loopback --yes --armor -o \$f  \$e ; cat \$f;
+            sha256sum \$e;
+            chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};""" , returnStdout: true)
+            echo "exit sh"
+          
+            tar_sha256 = ""
+            def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
+            if(!matcher){
+              error("could not extract sha256 from image tar")
+            }
+            tar_sha256 = matcher[0]
+            echo "SHA256 TAR $tar_sha256"
+
+            def signatureMatch = output =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
+            signature = ""
             
-              tar_sha256 = ""
-              def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
-              if(!matcher){
-                error("could not extract sha256 from image tar")
-              }
-              tar_sha256 = matcher[0]
-              echo "SHA256 TAR $tar_sha256"
+            if (signatureMatch) {
+              echo "found signature"
+              signature = signatureMatch[0]
+              //must set regexp variables to null to prevent java.io.NotSerializableException
+              signatureMatch = null
+            } 
+            else {
+              echo "did not find signature dumping output"
+              //signature = output
+              signature = "temp"
+              //error("could not extract gpg signature from image tar")
+            }
+          } // withCredentials
+          echo "enter aws block"
+          withAWS(credentials:'s3BucketCredentials') {
+                echo "write file"
+                def currentIdent = awsIdentity()
+                echo signature
+                
+                writeFile(file:"${REPO_NAME}.sig", text: signature)
 
-              def signatureMatch = output =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
-              signature = ""
-             
-              if (signatureMatch) {
-                echo "found signature"
-                signature = signatureMatch[0]
-                //must set regexp variables to null to prevent java.io.NotSerializableException
-                signatureMatch = null
-              } 
-              else {
-                echo "did not find signature dumping output"
-                //signature = output
-                signature = "temp"
-                //error("could not extract gpg signature from image tar")
-              }
-            } // withCredentials
-            echo "enter aws block"
-            withAWS(credentials:'s3BucketCredentials') {
-                  echo "write file"
-                  def currentIdent = awsIdentity()
-                  echo signature
-                  
-                  writeFile(file:"${REPO_NAME}.sig", text: signature)
-
-                  echo "uploading"
-                  s3Upload(file: "${REPO_NAME}.sig",
-                        bucket: "${S3_REPORT_BUCKET}",
-                        path:"${BASIC_PATH_FOR_DATA}/${REPO_NAME}.sig")
-                  echo "uploaded"
-            } //withAWS
-          } // node
+                echo "uploading"
+                s3Upload(file: "${REPO_NAME}.sig",
+                      bucket: "${S3_REPORT_BUCKET}",
+                      path:"${BASIC_PATH_FOR_DATA}/${REPO_NAME}.sig")
+                echo "uploaded"
+          } //withAWS
+          
         }//script
       } // steps
     } // stage
