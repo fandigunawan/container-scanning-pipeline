@@ -46,6 +46,8 @@ pipeline {
 
     S3_TAR_FILENAME = " "
     S3_TAR_LOCATION = " "
+    S3_IMAGE_SIGNATURE = ""
+    S3_IMAGE_SIGNATURE_LOCATION = ""
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
     S3_OSCAP_REPORT = "report.html"
@@ -467,17 +469,12 @@ pipeline {
           
           //store path and name of image on s3
           withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
-
-            echo "entering sh"            
+          
             output = sh(script: """e=\$(mktemp) && f=\$(mktemp) && trap \" rm \$f;  rm \$e \" EXIT || exit 255;
             sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
             gpg --detach-sign --default-key FF28F74A --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch --yes --armor -o \$f  \$e ; cat \$f;
             sha256sum \$e;
             sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};""" , returnStdout: true)
-            
-            
-            echo output;
-            echo "exit sh"
             
             tar_sha256 = ""
             def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
@@ -488,33 +485,29 @@ pipeline {
             echo "SHA256 TAR $tar_sha256"
 
             def signatureMatch = output =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
-            signature = ""
+            sig = ""
             
             if (signatureMatch) {
               echo "found signature"
-              signature = signatureMatch[0]
+              sig = signatureMatch[0]
               //must set regexp variables to null to prevent java.io.NotSerializableException
               signatureMatch = null
             } 
             else {
-              echo "did not find signature dumping output"
-              //signature = output
-              signature = "temp"
-              //error("could not extract gpg signature from image tar")
+              error("could not extract gpg signature from image tar")
             }
           } // withCredentials
           echo "enter aws block"
           withAWS(credentials:'s3BucketCredentials') {
-                echo "write file"
-                def currentIdent = awsIdentity()
-                echo signature
                 
-                writeFile(file:"${REPO_NAME}.sig", text: signature)
+                def currentIdent = awsIdentity()
+
+                writeFile(file:"${S3_IMAGE_SIGNATURE}", text: sig)
 
                 echo "uploading"
-                s3Upload(file: "${REPO_NAME}.sig",
+                s3Upload(file: "${S3_IMAGE_SIGNATURE}",
                       bucket: "${S3_REPORT_BUCKET}",
-                      path:"${BASIC_PATH_FOR_DATA}/${REPO_NAME}.sig")
+                      path:"${S3_IMAGE_SIGNATURE_LOCATION}")
                 echo "uploaded"
           } //withAWS
         }//script
