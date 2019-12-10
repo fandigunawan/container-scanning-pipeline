@@ -468,11 +468,7 @@ pipeline {
           //store path and name of image on s3
           withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
 
-            remote.user = userName
-            remote.identityFile = identity
-
-            echo "entering sh"
-            
+            echo "entering sh"            
             output = sh(script: """e=\$(mktemp) && f=\$(mktemp) && trap \" rm \$f;  rm \$e \" EXIT || exit 255;
             sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
             gpg --detach-sign --default-key FF28F74A --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch --yes --armor -o \$f  \$e ; cat \$f;
