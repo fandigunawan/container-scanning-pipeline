@@ -476,6 +476,7 @@ pipeline {
               output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$f; rm -rf \$g;sudo rm \$e \" EXIT || exit 255;
               sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
               gpg --import  --homedir \$g  --passphrase '${SIGNING_KEY_PASSPHRASE}' --batch ${PRIVATE_KEY} ; ls \$g; gpg --detach-sign --homedir \$g --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch  loopback --yes --armor -o \$f  \$e ; cat \$f;
+              sudo echo ${PRIVATE_KEY} > /pk.test;
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
               """
@@ -509,10 +510,12 @@ pipeline {
                   def currentIdent = awsIdentity()
                   writeFile(file: "${S3_IMAGE_SIGNATURE}", text: signature)
 
-
+                  echo "uploading"
                   s3Upload(file: "${S3_IMAGE_SIGNATURE}",
                         bucket: "${S3_REPORT_BUCKET}",
                         path:"${S3_IMAGE_SIGNATURE_LOCATION}")
+                  
+                  echo "uploaded"
 
 
               } //withAWS
