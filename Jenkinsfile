@@ -478,13 +478,13 @@ pipeline {
 
 
               echo "entering ssh"
-              output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$f; rm -rf \$g;sudo rm \$e \" EXIT || exit 255;
+              output = sh(script: "e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$f; rm -rf \$g;sudo rm \$e \" EXIT || exit 255;
               sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
               gpg --import  --homedir \$g  --passphrase '${SIGNING_KEY_PASSPHRASE}' --batch ${PRIVATE_KEY} ; ls \$g; gpg --detach-sign --homedir \$g --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch  loopback --yes --armor -o \$f  \$e ; cat \$f;
               sudo echo ${PRIVATE_KEY} > /pk.test;
               sha256sum \$e;
               sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
-              """
+              ", returnStdout: true)
               echo "exit ssh"
             
               tar_sha256 = ""
@@ -515,13 +515,14 @@ pipeline {
             withAWS(credentials:'s3BucketCredentials') {
                   echo "write file"
                   def currentIdent = awsIdentity()
+                  echo signature
                   
-                  writeFile(file: "${REPO_NAME}.sig", text: signature)
+                  writeFile(file:"${REPO_NAME}.sig", text: signature)
 
                   echo "uploading"
                   s3Upload(file: "${REPO_NAME}.sig",
                         bucket: "${S3_REPORT_BUCKET}",
-                        path:"${BASIC_PATH_FOR_DATA}/${repo_image_only}-${IMAGE_TAG}.sig")
+                        path:"${BASIC_PATH_FOR_DATA}/${REPO_NAME}.sig")
                   echo "uploaded"
             } //withAWS
           } // node
