@@ -501,26 +501,24 @@ pipeline {
               } 
               else {
                 echo "did not find signature dumping output"
-                signature = output
+                //signature = output
+                signature = "temp"
                 //error("could not extract gpg signature from image tar")
               }
-               
-              withAWS(credentials:'s3BucketCredentials') {
-
+            } // withCredentials
+            echo "enter aws block"
+            withAWS(credentials:'s3BucketCredentials') {
+                  echo "write file"
                   def currentIdent = awsIdentity()
-                  writeFile(file: "${S3_IMAGE_SIGNATURE}", text: signature)
+                  writeFile(file: "${repo_image_only}-${IMAGE_TAG}.sig", text: signature)
 
                   echo "uploading"
-                  s3Upload(file: "${S3_IMAGE_SIGNATURE}",
+                  s3Upload(file: "${repo_image_only}-${IMAGE_TAG}.sig",
                         bucket: "${S3_REPORT_BUCKET}",
-                        path:"${S3_IMAGE_SIGNATURE_LOCATION}")
+                        path:"${BASIC_PATH_FOR_DATA}/${repo_image_only}-${IMAGE_TAG}.sig")
                   
                   echo "uploaded"
-
-
               } //withAWS
-              
-            } // withCredentials
           } // node
         }//script
       } // steps
