@@ -478,7 +478,7 @@ pipeline {
 
 
             echo "entering sh"
-            output = sh(script: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \" rm \$f; rm -rf \$g; rm \$e \" EXIT || exit 255;
+            output = sh(script: """hostname; which podman ; e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \" rm \$f; rm -rf \$g; rm \$e \" EXIT || exit 255;
             podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
             gpg --import  --homedir \$g  --passphrase '${SIGNING_KEY_PASSPHRASE}' --batch ${PRIVATE_KEY} ; ls \$g; gpg --detach-sign --homedir \$g --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch  loopback --yes --armor -o \$f  \$e ; cat \$f;
             sha256sum \$e;
@@ -523,7 +523,6 @@ pipeline {
                       path:"${BASIC_PATH_FOR_DATA}/${REPO_NAME}.sig")
                 echo "uploaded"
           } //withAWS
-          
         }//script
       } // steps
     } // stage
