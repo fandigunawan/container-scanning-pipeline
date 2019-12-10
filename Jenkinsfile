@@ -466,25 +466,23 @@ pipeline {
 
           
           //store path and name of image on s3
-          withCredentials([
-            sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName'),
-            file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
+          withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
 
             remote.user = userName
             remote.identityFile = identity
 
-//signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${S3_MANIFEST_NAME};cat \$f;",
-//                            returnStdout: true)
-
-
             echo "entering sh"
-            output = sh(script: """hostname; which podman ; e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \" rm \$f; rm -rf \$g; rm \$e \" EXIT || exit 255;
-            podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
-            gpg --import  --homedir \$g  --passphrase '${SIGNING_KEY_PASSPHRASE}' --batch ${PRIVATE_KEY} ; ls \$g; gpg --detach-sign --homedir \$g --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch  loopback --yes --armor -o \$f  \$e ; cat \$f;
+            
+            output = sh(script: """e=\$(mktemp) && f=\$(mktemp) && trap \" rm \$f;  rm \$e \" EXIT || exit 255;
+            sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
+            gpg --detach-sign --default-key FF28F74A --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch --yes --armor -o \$f  \$e ; cat \$f;
             sha256sum \$e;
-            chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};""" , returnStdout: true)
+            sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};""" , returnStdout: true)
+            
+            
+            echo output;
             echo "exit sh"
-          
+            
             tar_sha256 = ""
             def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
             if(!matcher){
@@ -724,6 +722,7 @@ pipeline {
               "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
               "<li>Import key with:<code> gpg --import public.asc </code></li>" +
+              "<li>Create a personal gpg key if not yet created</li>" +
               "<li>Trust the imported public key:<code>  gpg --sign-key test_dod@redhat.com  </code></li>" +
               "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
               "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
