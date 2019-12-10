@@ -518,13 +518,11 @@ pipeline {
                         path:"${BASIC_PATH_FOR_DATA}/${repo_image_only}-${IMAGE_TAG}.sig")
                   
                   echo "uploaded"
-              } //withAWS
+            } //withAWS
           } // node
         }//script
       } // steps
     } // stage
-
-
 
     stage('Signing Manifest') {
       environment {
