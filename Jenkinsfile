@@ -711,8 +711,9 @@ pipeline {
               "<li>Import key with:<code> gpg --import public.asc </code></li>" +
               "<li>Create a personal gpg key if not yet created</li>" +
               "<li>Trust the imported public key:<code>  gpg --sign-key test_dod@redhat.com  </code></li>" +
-              "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
-              "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
+              "<li>Download the image manifest (manifest.json), and PGP signatures (${S3_IMAGE_NAME}.sig and signature.sig) below</li>" +
+              "<li>Verify manifest with:<code> gpg --verify signature.sig manifest.json</code></li>" +
+              "<li>Verify image with:<code> gpg --verify ${S3_IMAGE_NAME}.sig ${S3_IMAGE_NAME}</code></li>" +
               "<li>Verify that the sha tag matches the signed manifest.json entry for the manifest-digest: ${PUBLIC_IMAGE_SHA}" +
               "<li>Hash the image to verify that the result matches the sha256 checksum entry in manifest.json: <code> sha256sum ${S3_TAR_FILENAME}</code>" +
               "</ol>" +
