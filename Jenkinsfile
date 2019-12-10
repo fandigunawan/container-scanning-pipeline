@@ -446,6 +446,7 @@ pipeline {
     } // stage
 
     stage('Sign and Copy Image to S3') {
+      agent { label 'oscap' }
       environment {
         //this is file reference
         SIGNING_KEY = credentials('ContainerSigningKey')
@@ -471,6 +472,10 @@ pipeline {
 
               remote.user = userName
               remote.identityFile = identity
+
+//signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${S3_MANIFEST_NAME};cat \$f;",
+//                            returnStdout: true)
+
 
               echo "entering ssh"
               output = sshCommand remote: remote, command: """e=\$(mktemp) && f=\$(mktemp) && g=\$(mktemp -d) && trap \"sudo rm \$f; rm -rf \$g;sudo rm \$e \" EXIT || exit 255;
@@ -510,13 +515,13 @@ pipeline {
             withAWS(credentials:'s3BucketCredentials') {
                   echo "write file"
                   def currentIdent = awsIdentity()
-                  writeFile(file: "${repo_image_only}-${IMAGE_TAG}.sig", text: signature)
+                  
+                  writeFile(file: "${REPO_NAME}.sig", text: signature)
 
                   echo "uploading"
-                  s3Upload(file: "${repo_image_only}-${IMAGE_TAG}.sig",
+                  s3Upload(file: "${REPO_NAME}.sig",
                         bucket: "${S3_REPORT_BUCKET}",
                         path:"${BASIC_PATH_FOR_DATA}/${repo_image_only}-${IMAGE_TAG}.sig")
-                  
                   echo "uploaded"
             } //withAWS
           } // node
@@ -554,8 +559,6 @@ pipeline {
               }
               //must set regexp variables to null to prevent java.io.NotSerializableException
               gpgMatch = null
-
-
               echo gpgVersion
 
               def containerDocumentation = """
