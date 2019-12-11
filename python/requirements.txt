@@ -1,8 +1,0 @@
-requests==2.21.0
-python_gitlab==1.10.0
-pyotp==2.3.0
-Flask_RESTful==0.3.7
-Flask_Cors==3.0.8
-Flask==1.0.3
-beautifulsoup4==4.8.0
-gitlab==1.0.2

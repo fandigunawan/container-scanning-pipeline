@@ -46,6 +46,8 @@ pipeline {
 
     S3_TAR_FILENAME = " "
     S3_TAR_LOCATION = " "
+    S3_IMAGE_SIGNATURE = ""
+    S3_IMAGE_SIGNATURE_LOCATION = ""
 
     S3_OSCAP_CVE_REPORT = "report-cve.html"
     S3_OSCAP_REPORT = "report.html"
@@ -112,6 +114,9 @@ pipeline {
           S3_ANCHORE_LOCATION = "${BASIC_PATH_FOR_DATA}/anchore/"
 
           S3_IMAGE_NAME = "${repo_image_only}-${IMAGE_TAG}.tar"
+          S3_IMAGE_SIGNATURE = "${repo_image_only}-${IMAGE_TAG}.sig"
+          S3_IMAGE_SIGNATURE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_SIGNATURE}"
+
           S3_IMAGE_LOCATION = "${BASIC_PATH_FOR_DATA}/${S3_IMAGE_NAME}"
           S3_TAR_FILENAME = "${repo_image_only}-${IMAGE_TAG}-reports-signature.tar.gz"
 
@@ -442,7 +447,14 @@ pipeline {
       } // steps
     } // stage
 
-    stage('Copying image to S3') {
+    stage('Sign and Copy Image to S3') {
+      agent { label 'oscap' }
+      environment {
+        //this is file reference
+        SIGNING_KEY = credentials('ContainerSigningKey')
+        //actual passphrase
+        SIGNING_KEY_PASSPHRASE = credentials('ContainerSigningKeyPassphrase')
+      }  // environment
 
       steps {
 
@@ -452,35 +464,55 @@ pipeline {
           remote.host = "${env.OSCAP_NODE}"
           remote.allowAnyHosts = true
 
-          node {
-            //store path and name of image on s3
-            withCredentials([sshUserPrivateKey(credentialsId: 'secure-build', keyFileVariable: 'identity', usernameVariable: 'userName')]) {
-              remote.user = userName
-              remote.identityFile = identity
-              output = sshCommand remote: remote, command: """e=\$(mktemp) && trap \"sudo rm \$e\" EXIT || exit 255;
-              sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
-              sha256sum \$e;
-              sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};
-              """
-              tar_sha256 = ""
-              def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
-              if(!matcher){
-                error("could not extract sha256 from image tar")
-              }
+          echo "test stage"
 
-              tar_sha256 = matcher[0]
+          
+          //store path and name of image on s3
+          withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
+          
+            output = sh(script: """e=\$(mktemp) && f=\$(mktemp) && trap \" rm \$f;  rm \$e \" EXIT || exit 255;
+            sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
+            gpg --detach-sign --default-key FF28F74A --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch --yes --armor -o \$f  \$e ; cat \$f;
+            sha256sum \$e;
+            sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};""" , returnStdout: true)
+            
+            tar_sha256 = ""
+            def matcher = output =~ /\b[A-Fa-f0-9]{64}\b/
+            if(!matcher){
+              error("could not extract sha256 from image tar")
+            }
+            tar_sha256 = matcher[0]
+            echo "SHA256 TAR $tar_sha256"
 
-              echo "SHA256 TAR $tar_sha256"
+            def signatureMatch = output =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
+            sig = ""
+            if (signatureMatch) {
+              sig = signatureMatch[0]
+              //must set regexp variables to null to prevent java.io.NotSerializableException
+              signatureMatch = null
+            } 
+            else {
+              error("could not extract gpg signature from image tar")
+            }
+          } // withCredentials
+          echo "enter aws block"
+          withAWS(credentials:'s3BucketCredentials') {
+                
+                def currentIdent = awsIdentity()
 
-            } // withCredentials
-          } // node
+                writeFile(file:"${S3_IMAGE_SIGNATURE}", text: sig)
+
+                echo "uploading"
+                s3Upload(file: "${S3_IMAGE_SIGNATURE}",
+                      bucket: "${S3_REPORT_BUCKET}",
+                      path:"${S3_IMAGE_SIGNATURE_LOCATION}")
+                echo "uploaded"
+          } //withAWS
         }//script
       } // steps
     } // stage
 
-
-
-    stage('Signing image') {
+    stage('Signing Manifest') {
       environment {
         //this is file reference
         SIGNING_KEY = credentials('ContainerSigningKey')
@@ -495,7 +527,7 @@ pipeline {
           //siging the image
           node {
 
-            echo 'Signing container'
+            echo 'Signing Manifest'
 
               def unixTime = sh(
                          script: 'date +%s',
@@ -510,8 +542,6 @@ pipeline {
               }
               //must set regexp variables to null to prevent java.io.NotSerializableException
               gpgMatch = null
-
-
               echo gpgVersion
 
               def containerDocumentation = """
@@ -583,8 +613,8 @@ pipeline {
             echo "output/${BASIC_PATH_FOR_DATA}/"
           } //withAWS
           
-          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/python/pipeline_python/pipeline_csv_gen.py -P output/"
-          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/python/pipeline_python/pipeline_wl_compare.py -P output/"
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/pipeline_python/pipeline_csv_gen.py -P output/"
+          sh "wget -c https://dccscr.dsop.io/dsop/container-scanning-pipeline/raw/master/pipeline_python/pipeline_wl_compare.py -P output/"
           echo "downloaded python scripts."
           
         } //script
@@ -679,9 +709,11 @@ pipeline {
               "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
               "<li>Import key with:<code> gpg --import public.asc </code></li>" +
+              "<li>Create a personal gpg key if not yet created</li>" +
               "<li>Trust the imported public key:<code>  gpg --sign-key test_dod@redhat.com  </code></li>" +
-              "<li>Download the image manifest (manifest.json) and PGP signature (signature.sig) below</li>" +
-              "<li>Verify with:<code> gpg --verify signature.sig manifest.json</code></li>" +
+              "<li>Download the image manifest (manifest.json), and PGP signatures (${S3_IMAGE_NAME}.sig and signature.sig) below</li>" +
+              "<li>Verify manifest with:<code> gpg --verify signature.sig manifest.json</code></li>" +
+              "<li>Verify image with:<code> gpg --verify ${S3_IMAGE_NAME}.sig ${S3_IMAGE_NAME}</code></li>" +
               "<li>Verify that the sha tag matches the signed manifest.json entry for the manifest-digest: ${PUBLIC_IMAGE_SHA}" +
               "<li>Hash the image to verify that the result matches the sha256 checksum entry in manifest.json: <code> sha256sum ${S3_TAR_FILENAME}</code>" +
               "</ol>" +
