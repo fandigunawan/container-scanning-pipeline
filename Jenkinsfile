@@ -23,7 +23,6 @@ pipeline {
     S3_REPORT_BUCKET = 'dsop-pipeline-artifacts'
     S3_HTML_LINK = "https://s3-us-gov-west-1.amazonaws.com/dsop-pipeline-artifacts/"
     OSCAP_NODE = credentials('OpenSCAPNode')
-    GPG_KEY = "test_dod@redhat.com"
     PUBLIC_DOCKER_HOST = "${NEXUS_SERVER}"
     PUBLIC_IMAGE_SHA = ""
     PUBLIC_IMAGE_TAG = ""
@@ -459,20 +458,13 @@ pipeline {
       steps {
 
         script {
-          def remote = [:]
-          remote.name = "node"
-          remote.host = "${env.OSCAP_NODE}"
-          remote.allowAnyHosts = true
-
-          echo "test stage"
-
           
           //store path and name of image on s3
           withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
           
             output = sh(script: """e=\$(mktemp) && f=\$(mktemp) && trap \" rm \$f;  rm \$e \" EXIT || exit 255;
             sudo podman save --format=oci-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${PUBLIC_IMAGE_SHA};
-            gpg --detach-sign --default-key FF28F74A --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch --yes --armor -o \$f  \$e ; cat \$f;
+            gpg --detach-sign --default-key 251482B8 --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch --yes --armor -o \$f  \$e ; cat \$f;
             sha256sum \$e;
             sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};""" , returnStdout: true)
             
@@ -502,11 +494,10 @@ pipeline {
 
                 writeFile(file:"${S3_IMAGE_SIGNATURE}", text: sig)
 
-                echo "uploading"
                 s3Upload(file: "${S3_IMAGE_SIGNATURE}",
                       bucket: "${S3_REPORT_BUCKET}",
                       path:"${S3_IMAGE_SIGNATURE_LOCATION}")
-                echo "uploaded"
+                
           } //withAWS
         }//script
       } // steps
@@ -570,7 +561,6 @@ pipeline {
                 signature = sh(script: "g=\$(mktemp -d) && f=\$(mktemp) && trap \"rm \$f;rm -rf \$g\" EXIT || exit 255;gpg --homedir \$g --import --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${PRIVATE_KEY} ;gpg --detach-sign --homedir \$g -o \$f --armor --yes --batch --passphrase '${SIGNING_KEY_PASSPHRASE}' ${S3_MANIFEST_NAME};cat \$f;",
                             returnStdout: true)
               } //withCredentials
-
 
               def signatureMatch = signature =~ /(?s)-----BEGIN PGP SIGNATURE-----.*-----END PGP SIGNATURE-----/
               def signature = ""
