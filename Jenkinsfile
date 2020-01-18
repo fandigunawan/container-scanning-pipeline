@@ -464,7 +464,7 @@ pipeline {
           withCredentials([file(credentialsId: 'ContainerSigningKey', variable: 'PRIVATE_KEY')]) {
           
             output = sh(script: """e=\$(mktemp) && f=\$(mktemp) && trap \" rm \$f;  rm \$e \" EXIT || exit 255;
-            sudo podman save --format=docker -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${IMAGE_TAG};
+            sudo podman save --format=docker-archive -o \$e ${NEXUS_SERVER}/${REPO_NAME}@${IMAGE_TAG};
             gpg --detach-sign --default-key 251482B8 --passphrase '${SIGNING_KEY_PASSPHRASE}'  --batch --yes --armor -o \$f  \$e ; cat \$f;
             sha256sum \$e;
             sudo chmod o+r \$e;/usr/bin/aws s3 cp \$e  s3://${S3_REPORT_BUCKET}/${S3_IMAGE_LOCATION};""" , returnStdout: true)
