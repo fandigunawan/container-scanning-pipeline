@@ -712,7 +712,6 @@ pipeline {
               "<li>Find the SHA tag for run below: ex: ${PUBLIC_IMAGE_SHA}" +
               "<li>Retrieve the image by downloading it: <a href=\"${S3_HTML_LINK}${S3_IMAGE_LOCATION}\"> ${S3_IMAGE_NAME}  </a></li>" + 
               "<li>Load the image into local podman registry: <code> podman load -i ./${S3_IMAGE_NAME} </code></li>" +
-              "<li>(optionally) Ensure the digest SHA256 matches: <code> podman inspect -f '{{.Digest}}' ${image_full_path} </code> - the returned value should be ${PUBLIC_IMAGE_SHA}</li>"
               "<li>Run the image with:<code> podman run ${image_full_path} </code></li>" +
               "</ol>" +
               "<p>\n-------------------------------------------------------<p>\n<p>\n<p>\n<p>\n<p>"
