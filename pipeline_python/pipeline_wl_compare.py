@@ -245,7 +245,7 @@ def does_image_exist(proj, im_name, im_tag):
 
 
 def get_whitelist_filenames(project, im_name):
-    wl_fns = project.search('blobs', im_name)
+    wl_fns = project.search('blobs', im_name, all=True)
     return wl_fns
 
 
