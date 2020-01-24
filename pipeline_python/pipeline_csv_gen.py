@@ -316,6 +316,7 @@ def generate_anchore_gates_report(anchore_gates):
     csv_writer = csv.writer(anchore_data)
     count = 0
     stop_count = 0
+    image_id = "unable_to_determine"
     # print a blank header to set column width
     csv_writer.writerow(['','','','','','','','','','','','','','','','','',''])
     for line in anchore_g:
