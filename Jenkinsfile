@@ -153,7 +153,6 @@ pipeline {
 
               sshCommand remote: remote, sudo: true, command: "podman login  -u ${NEXUS_USERNAME} -p '${NEXUS_PASSWORD}' ${NEXUS_SERVER};"
 
-              #sshCommand remote: remote, command: "sudo podman rmi ${image_full_path}"
               sshCommand remote: remote, command: "sudo podman pull ${image_full_path}"
               dcarApproval = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Config.Labels.dcar_status}}' ${image_full_path}"
               PUBLIC_IMAGE_SHA = sshCommand remote: remote, command: "sudo podman inspect -f '{{.Digest}}' ${image_full_path}"
