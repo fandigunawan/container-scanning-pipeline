@@ -6,6 +6,9 @@ DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 //This is needed for JSON output step
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
+import java.sql.DriverManager
+//sql driver
+DriverManager.registerDriver(new com.mysql.jdbc.Driver())
 
 //variables to store version information in
 anchoreVersion = '{}'
