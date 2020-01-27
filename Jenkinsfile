@@ -127,7 +127,7 @@ pipeline {
       } // steps
     } // stage Initializing environment
 
-
+    //echo test commit
     stage('Pull Docker Image') {
       steps {
 
