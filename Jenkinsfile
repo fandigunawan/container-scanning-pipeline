@@ -6,9 +6,15 @@ DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 //This is needed for JSON output step
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import java.sql.DriverManager
-//sql driver
-DriverManager.registerDriver(new com.mysql.jdbc.Driver())
+//import java.sql.PreparedStatement;
+//import java.sql.ResultSet;
+//import java.sql.SQLException;
+//import java.sql.Connection;
+//import java.sql.DriverManager;
+
+import java.sql.*; 
+import groovy.sql.Sql 
+
 
 //variables to store version information in
 anchoreVersion = '{}'
@@ -89,6 +95,21 @@ pipeline {
     stage('Initializing Environment') {
       steps {
         script {
+
+
+          //test
+          //sql driver
+          DriverManager.registerDriver(new com.mysql.jdbc.Driver())
+          try {
+            connection = DriverManager.getConnection( "jdbc:mysql:3306//maria-whitelist-dev.apps.cluster.dsop.io/", "root","")
+          }
+          catch(Exception ex){
+            println(ex.toString());
+            println(ex.getMessage());
+            println(ex.getStackTrace()); 
+            echo "fail at catch"
+          }
+          sql = "insert into users (username, email,role) values (testuser,test@user.com, contributor)"
 
           def repo_image_only = REPO_NAME.split("/").last()
 
