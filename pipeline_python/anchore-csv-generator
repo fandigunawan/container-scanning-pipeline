@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+import argparse
+import re
+import requests
+import json
+import csv
+
+parser = argparse.ArgumentParser(description="Anchore Image Vuln Report Generator")
+
+parser.add_argument('--u', metavar='user', default='admin', help='Anchore admin username (default=admin)')
+parser.add_argument('--p', metavar='pass', default='foobar', help='Anchore admin password (default=foobar)')
+parser.add_argument('--url', metavar='url', default='http://localhost:8228/v1/', help='Anchore Engine API Service endpoint URL (default=http://localhost:8228/v1/)')
+parser.add_argument('--verify', metavar='verify', default=True, help='Accept self-signed certificates when using TLS/https for anchore endpoint')
+parser.add_argument('--image', metavar='image', default='none', help='Full image tag to get vulnerability info. ex. docker.io/library/alpine:latest')
+
+args = parser.parse_args()
+
+endpoint_url = re.sub("\/+$", '', args.url)
+
+# Get image digest
+
+def getImageDigest():
+    
+    image_query = "/images"
+    digest_request_url = endpoint_url + image_query
+    payload = {'fulltag': args.image, 'history': 'false'}
+
+    try:
+        r = requests.get(digest_request_url, auth=(args.u, args.p), params=payload, verify=args.verify)
+        response_body = r.text
+
+        if r.status_code == 200:
+            # test that the response is valid JSON
+            try:
+                image_list = json.loads(response_body)
+                image_digest = image_list[0]["imageDigest"]
+                return image_digest
+            except:
+                raise Exception("Got 200 response but is not valid JSON")
+
+    except Exception as err:
+        raise err
+
+# Get vulnerabilities for image
+
+def getImageVulns():
+    
+    image_digest = getImageDigest()
+    query_url = "/images/" + image_digest + "/vuln/all"
+    request_url = endpoint_url + query_url
+
+    try:
+        r = requests.get(request_url, auth=(args.u, args.p), verify=args.verify)
+        response_body = r.text
+
+        if r.status_code == 200:
+            # test that the response is valid json
+            try:
+                vuln_dict = json.loads(response_body)
+                for vulnerability in vuln_dict['vulnerabilities']:
+                    # If VulnDB record found, retrive set of reference URLs associated with the record.
+                    if (vulnerability["feed_group"] == "vulndb:vulnerabilities"):
+                        # "http://engine-api:8228/v1" may need to be modified.
+                        vulndb_request_url = vulnerability["url"].replace("http://engine-api:8228/v1", endpoint_url)
+                        r = requests.get(vulndb_request_url, auth=(args.u, args.p))
+                        response_body = r.text
+
+                        if r.status_code == 200:
+                        # test that the response is valid json
+                            try:
+                                vulndb_dict = json.loads(response_body)
+                                for vulndb_vuln in vulndb_dict["vulnerabilities"]:
+                                    vulnerability['url'] = vulndb_vuln["references"] 
+                            
+                            except:
+                                raise Exception("Got 200 response, but data isn't valid JSON")
+
+                return vuln_dict
+
+            except:
+                raise Exception("Got 200 response, but data isn't valid JSON")
+
+    except Exception as err:
+        # if any report fails, raise the error and failstop program
+        raise err
+
+def generateReports():
+
+    vuln_dict = getImageVulns()
+
+    # Create json report
+    try:
+        with open('anchore_vulns.json', 'w') as fp:
+            json.dump(vuln_dict, fp)
+    
+    except Exception as err:
+        raise err
+
+    # Create csv report
+    vuln_list = vuln_dict['vulnerabilities']
+    csv_file = "anchore_vulns.csv"
+    csv_columns = ['tag', 'vuln', 'severity', 'package', 'fix', 'url']
+
+    try:
+        with open(csv_file, 'w') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns, extrasaction='ignore', restval=args.image)
+            writer.writeheader()
+            for data in vuln_list:
+                writer.writerow(data)
+    except IOError:
+        print('I/O error')
+
+generateReports()
