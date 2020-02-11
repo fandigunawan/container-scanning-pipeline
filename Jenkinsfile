@@ -6,14 +6,12 @@ DATETIME_TAG = DATETIME_TAG.toString().replaceAll(":", "")
 //This is needed for JSON output step
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-//import java.sql.PreparedStatement;
-//import java.sql.ResultSet;
-//import java.sql.SQLException;
-//import java.sql.Connection;
-//import java.sql.DriverManager;
+
 
 import java.sql.*; 
 import groovy.sql.Sql 
+
+
 
 
 //variables to store version information in
@@ -97,11 +95,9 @@ pipeline {
         script {
 
 
-          //test
-          //sql driver
-          DriverManager.registerDriver(new com.mysql.jdbc.Driver())
+          
           try {
-            connection = DriverManager.getConnection( "jdbc:mysql:3306//maria-whitelist-dev.apps.cluster.dsop.io/", "root","")
+            Sql.newInstance("jdbc:mysql://maria-whitelist-dev.apps.cluster.dsop.io/wt_db_dev", "root","", "com.mysql.jdbc.Driver")
           }
           catch(Exception ex){
             println(ex.toString());
@@ -257,7 +253,6 @@ pipeline {
 
           steps {
             echo 'OpenSCAP CVE Scan'
-
             script {
 
               def remote = [:]
@@ -544,11 +539,6 @@ pipeline {
 
             echo 'Signing Manifest'
 
-              def unixTime = sh(
-                         script: 'date +%s',
-                         returnStdout: true
-                       ).trim().toString()
-
               def gpgVersionOutput = sh(script: "gpg --version", returnStdout: true).trim()
               def gpgMatch = gpgVersionOutput =~ /gpg.*[0-9]+[.][0-9]+[.][0-9]+/
               def gpgVersion = ""
@@ -573,7 +563,7 @@ pipeline {
                 },
                 \"optional\": {
                     \"creator\": \"${gpgVersion}\",
-                    \"timestamp\": ${unixTime}
+                    \"timestamp\": ${DATETIME_TAG}
                 }
             }
             """
@@ -652,8 +642,7 @@ pipeline {
                   bucket: "${S3_REPORT_BUCKET}",
                   path:"${S3_CSV_LOCATION}")
 
-          } //withAWS
-          
+          } //withAWS       
         } //script
       } // steps
     } // stage Create CSV Output
@@ -677,7 +666,6 @@ pipeline {
               error("Build failed due to non-Whitelisted CVEs being found and container is in \"approved\" status.")
             }
           } //end try block
-
         } //script
       } // steps
     } // stage Check Whitelist
@@ -722,12 +710,12 @@ pipeline {
               "<pre>${publicKey}</pre>" +
               "<p>Verifying Image Instructions:<ol>" +
               "<li>Save key to file (call it public.asc)</li>" +
-              "<li>Import key with:<code> gpg --import public.asc </code></li>" +
+              "<li>Import key with(this only has to be done once as the public key is the same):<code> gpg --import public.asc </code></li>" +
               "<li>Create a personal gpg key if not yet created</li>" +
-              "<li>Trust the imported public key:<code>  gpg --sign-key test_dod@redhat.com  </code></li>" +
+              "<li>Trust the imported public key:<code>  gpg --sign-key dccscr-leadership@redhat.com  </code></li>" +
               "<li>Download the image manifest (manifest.json), and PGP signatures (${S3_IMAGE_NAME}.sig and signature.sig) below</li>" +
               "<li>Verify manifest with:<code> gpg --verify signature.sig manifest.json</code></li>" +
-              "<li>Verify image with:<code> gpg --verify ${S3_IMAGE_NAME}.sig ${S3_IMAGE_NAME}</code></li>" +
+              "<li>Verify image with:<code> gpg --verify ${S3_IMAGE_SIGNATURE} ${S3_IMAGE_NAME}</code></li>" +
               "<li>Verify that the sha tag matches the signed manifest.json entry for the manifest-digest: ${PUBLIC_IMAGE_SHA}" +
               "<li>Hash the image to verify that the result matches the sha256 checksum entry in manifest.json: <code> sha256sum ${S3_TAR_FILENAME}</code>" +
               "</ol>" +
@@ -826,7 +814,7 @@ pipeline {
               prev_json = prev_json_file.substring(1);
               echo prev_json
       
-              repo_map.put( "${BUILD_NUMBER}", this_run_repo )
+              repo_map.put( "${DATETIME_TAG}", this_run_repo )
             
               repo_map_json = JsonOutput.toJson( repo_map )
               
@@ -836,8 +824,7 @@ pipeline {
                 
             }
             else{
-              echo "else statement"
-              repo_map.put( "${BUILD_NUMBER}", this_run_repo )
+              repo_map.put( "${DATETIME_TAG}", this_run_repo )
               repo_map_json = JsonOutput.toJson( repo_map )
             }
             
