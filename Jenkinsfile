@@ -807,6 +807,10 @@ pipeline {
               b_prev_json =false
             }
         
+            //remove special character and millisecod accuracy from date time for integer based sorting
+            DATETIME_INDEX = DATETIME_TAG.toString().replaceAll("T", "")
+            DATETIME_INDEX = DATETIME_INDEX.toString().replaceAll("-", "")
+            DATETIME_INDEX =DATETIME_INDEX.toString().substring(0,14)
             repo_map=[:]
             repo_map_json = ""
             if(b_prev_json){
@@ -814,7 +818,7 @@ pipeline {
               prev_json = prev_json_file.substring(1);
               echo prev_json
       
-              repo_map.put( "${DATETIME_TAG}", this_run_repo )
+              repo_map.put( "${DATETIME_INDEX}", this_run_repo )
             
               repo_map_json = JsonOutput.toJson( repo_map )
               
@@ -824,7 +828,7 @@ pipeline {
                 
             }
             else{
-              repo_map.put( "${DATETIME_TAG}", this_run_repo )
+              repo_map.put( "${DATETIME_INDEX}", this_run_repo )
               repo_map_json = JsonOutput.toJson( repo_map )
             }
             
