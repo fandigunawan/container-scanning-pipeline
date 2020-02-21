@@ -8,10 +8,6 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 
 
-import java.sql.*; 
-import groovy.sql.Sql 
-
-
 
 
 //variables to store version information in
@@ -93,19 +89,6 @@ pipeline {
     stage('Initializing Environment') {
       steps {
         script {
-
-
-          
-          try {
-            Sql.newInstance("jdbc:mysql://maria-whitelist-dev.apps.cluster.dsop.io/wt_db_dev", "root","", "com.mysql.jdbc.Driver")
-          }
-          catch(Exception ex){
-            println(ex.toString());
-            println(ex.getMessage());
-            println(ex.getStackTrace()); 
-            echo "fail at catch"
-          }
-          sql = "insert into users (username, email,role) values (testuser,test@user.com, contributor)"
 
           def repo_image_only = REPO_NAME.split("/").last()
 
@@ -781,11 +764,12 @@ pipeline {
             this_run_repo.put("HTML_Link","${S3_HTML_LINK}${S3_IMAGE_LOCATION}")
             //old header slug would end here but all in same json key
             this_run_repo.put("Build_Number","${BUILD_NUMBER}")
-            this_run_repo.put("Image_Manifest ","${S3_HTML_LINK}${S3_MANIFEST_LOCATION}")
+            this_run_repo.put("Image_Manifest","${S3_HTML_LINK}${S3_MANIFEST_LOCATION}")
             this_run_repo.put("Manifest_Name","${S3_MANIFEST_NAME}")
             this_run_repo.put("PGP_Signature","${S3_HTML_LINK}${S3_SIGNATURE_LOCATION}")
             this_run_repo.put("Signature_Name","${S3_SIGNATURE_FILENAME}")
             this_run_repo.put("Version_Documentation","${S3_HTML_LINK}${S3_DOCUMENTATION_LOCATION}")
+            this_run_repo.put("Directory_TimeStamp","${DATETIME_TAG}")
             this_run_repo.put("Tar_Location","${S3_HTML_LINK}${S3_TAR_LOCATION}")
             this_run_repo.put("Tar_Name","${S3_TAR_FILENAME}")
             this_run_repo.put("OpenSCAP_Compliance_Results","${S3_HTML_LINK}${S3_CSV_LOCATION}oscap.csv")
