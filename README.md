@@ -1,3 +1,9 @@
+# PROJECT ARCHIVED
+The work in this repository has been discontinued. Work has been re-organized 
+under the shared library repository. Please see 
+https://repo1.dsop.io/dsop/jenkins-shared-library for the most current RepoOne
+pipeline related work.
+
 # Container Scanning Pipeline
 
 A staging area for testing and developing the container scanning pipeline, a declarative Jenkins pipeline.
